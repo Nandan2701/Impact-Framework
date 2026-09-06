@@ -438,7 +438,7 @@ function initContactDrawer() {
 
   if (!contactBtn || !drawer || !overlay) return;
 
-  const GMAIL = "vinay25sapkal@gmail.com";
+  const GMAIL = "nandanbhole72@gmail.com";
   const RATING_KEY = "impact-framework-user-rating";
 
   function openDrawer() {
