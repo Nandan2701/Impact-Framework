@@ -1,20 +1,21 @@
 /**
  * ==============================================================================
- * Impact Framework — Google Sheets & Instant Gmail Webhook
+ * Impact Framework — Unified Google Sheets & Instant Gmail Webhook
  * ==============================================================================
- * This script runs inside your Google Sheet (Extensions > Apps Script).
- * Whenever a user clicks "Post" in the Impact Framework app, it automatically:
- *   1. Appends a new row to your Google Spreadsheet.
- *   2. Instantly sends a beautiful HTML notification email to nandanbhole72@gmail.com.
+ * This script handles TWO types of incoming data:
+ *   1. User Reviews (type = "review"):
+ *      - Appends to "Reviews" sheet.
+ *      - Sends instant HTML email alert to nandanbhole72@gmail.com.
+ *
+ *   2. User Tasks (type = "task"):
+ *      - Appends to "User Tasks" sheet (Date, User ID, Quadrant, Action, Task).
+ *      - SILENT LOG: Does NOT send an email to preserve your 100/day email quota!
  * ==============================================================================
-/**
- * RUN THIS ONCE in the Apps Script editor:
- * Select "testRun" from the function dropdown at the top and click "▶ Run".
- * This triggers Google to request and grant the "Spreadsheets" and "Gmail" permissions!
  */
+
 function testRun() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  Logger.log("✓ Successfully connected to sheet: " + sheet.getName());
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  Logger.log("✓ Successfully connected to spreadsheet: " + ss.getName());
   Logger.log("✓ Remaining daily email quota: " + MailApp.getRemainingDailyQuota());
   return "Permissions granted successfully!";
 }
@@ -23,22 +24,66 @@ function doPost(e) {
   try {
     var rawData = e.postData && e.postData.contents ? e.postData.contents : "{}";
     var data = JSON.parse(rawData);
+    var now = new Date();
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
 
+    // ==========================================================================
+    // HANDLER 1: USER TASKS (Silent Logging — NO Email to save quota)
+    // ==========================================================================
+    if (data.type === "task") {
+      var taskSheet = ss.getSheetByName("User Tasks");
+
+      // Auto-create "User Tasks" tab if it does not exist yet
+      if (!taskSheet) {
+        taskSheet = ss.insertSheet("User Tasks");
+        taskSheet.appendRow([
+          "Date & Time",
+          "User ID",
+          "Quadrant",
+          "Action",
+          "Task Content",
+          "Device",
+          "App Version"
+        ]);
+        var taskHeader = taskSheet.getRange("A1:G1");
+        taskHeader.setFontWeight("bold");
+        taskHeader.setBackground("#e8f0fe");
+        taskHeader.setFontColor("#1a73e8");
+        taskSheet.setFrozenRows(1);
+      }
+
+      taskSheet.appendRow([
+        now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
+        data.uid || "anon",
+        data.quadrant_title || data.quadrant || "Unknown Quadrant",
+        data.action || "Added",
+        data.task_text || "",
+        data.device || "desktop",
+        data.app_version || "v1.2.0"
+      ]);
+
+      return ContentService
+        .createTextOutput(JSON.stringify({ status: "success", type: "task", savedAt: now.toISOString() }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ==========================================================================
+    // HANDLER 2: USER REVIEWS (Saves to Sheet + Sends Instant Gmail Alert)
+    // ==========================================================================
     var rating = data.rating || 5;
     var reviewText = data.review || "";
     var deviceType = data.device || (data.isMobile ? "mobile" : "desktop");
     var appVersion = data.app_version || "v1.2.0";
     var characterCount = data.character_count || reviewText.length;
-    var now = new Date();
 
-    // --------------------------------------------------------------------------
-    // 1. SAVE TO GOOGLE SHEET
-    // --------------------------------------------------------------------------
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var reviewSheet = ss.getSheetByName("Reviews") || ss.getSheets()[0];
+    if (reviewSheet.getName() === "User Tasks") {
+      reviewSheet = ss.insertSheet("Reviews");
+    }
 
-    // Auto-create formatted headers if this is a fresh sheet
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow([
+    // Auto-create formatted headers if empty
+    if (reviewSheet.getLastRow() === 0) {
+      reviewSheet.appendRow([
         "Date & Time",
         "Rating (1-5)",
         "Stars",
@@ -47,16 +92,16 @@ function doPost(e) {
         "Device",
         "App Version"
       ]);
-      var headerRange = sheet.getRange("A1:G1");
-      headerRange.setFontWeight("bold");
-      headerRange.setBackground("#f1f3f4");
-      headerRange.setFontColor("#202124");
-      sheet.setFrozenRows(1);
+      var revHeader = reviewSheet.getRange("A1:G1");
+      revHeader.setFontWeight("bold");
+      revHeader.setBackground("#f1f3f4");
+      revHeader.setFontColor("#202124");
+      reviewSheet.setFrozenRows(1);
     }
 
     var starSymbols = "★".repeat(rating) + "☆".repeat(5 - rating);
 
-    sheet.appendRow([
+    reviewSheet.appendRow([
       now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
       rating,
       starSymbols,
@@ -66,9 +111,7 @@ function doPost(e) {
       appVersion
     ]);
 
-    // --------------------------------------------------------------------------
-    // 2. SEND INSTANT NOTIFICATION EMAIL TO GMAIL
-    // --------------------------------------------------------------------------
+    // Send Instant Email Notification to Gmail
     var recipientEmail = "nandanbhole72@gmail.com";
     var emailSubject = "⭐ New " + rating + "-Star Review for Impact Framework";
 
@@ -113,7 +156,7 @@ function doPost(e) {
     });
 
     return ContentService
-      .createTextOutput(JSON.stringify({ status: "success", rating: rating, savedAt: now.toISOString() }))
+      .createTextOutput(JSON.stringify({ status: "success", type: "review", rating: rating, savedAt: now.toISOString() }))
       .setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {

@@ -171,6 +171,9 @@ function createTaskElement(q, task) {
     e.stopPropagation();
     task.done = !task.done;
     render();
+    if (task.done) {
+      logTaskToGoogleSheets("COMPLETED", q, task.text);
+    }
   });
 
   actions.append(delBtn, doneBtn);
@@ -200,6 +203,57 @@ function commitEdit(q, id, value) {
 function removeTask(q, id) {
   state[q] = state[q].filter((t) => t.id !== id);
   render();
+}
+
+// Persistent Anonymous User ID
+function getAnonymousUserId() {
+  let uid = localStorage.getItem("impact_framework_anon_uid");
+  if (!uid) {
+    uid = "usr_" + Math.random().toString(36).substring(2, 7) + Date.now().toString(36).slice(-3);
+    try {
+      localStorage.setItem("impact_framework_anon_uid", uid);
+    } catch (e) {}
+  }
+  return uid;
+}
+
+const QUADRANT_NAMES = {
+  q1: "High Impact, Easy (Do First)",
+  q2: "High Impact, Hard (Schedule)",
+  q3: "Low Impact, Easy (Delegate)",
+  q4: "Low Impact, Hard (Eliminate)"
+};
+
+// Silent Background Task Logger to Google Sheets (NO Email Sent)
+function logTaskToGoogleSheets(action, q, text) {
+  if (!text || !text.trim()) return;
+  const url = (window.IMPACT_CONFIG && window.IMPACT_CONFIG.googleWebhookUrl) || 
+    "https://script.google.com/macros/s/AKfycbxA0SIv6IiO-fkWbSUiV6Vwp6XmwFutVEeCjgPmPiQQlTNuiIZ5uqlJrlIvOOGlUvaK/exec";
+  if (!url) return;
+
+  const isMobile = window.innerWidth <= 768 || "ontouchstart" in window;
+  const payload = {
+    type: "task",
+    uid: getAnonymousUserId(),
+    action: action || "ADDED",
+    quadrant: q,
+    quadrant_title: QUADRANT_NAMES[q] || q,
+    task_text: text.trim(),
+    device: isMobile ? "mobile" : "desktop",
+    app_version: "v1.2.0",
+    timestamp: new Date().toISOString()
+  };
+
+  try {
+    fetch(url, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+  } catch (err) {}
 }
 
 function initAddForms() {
@@ -238,6 +292,9 @@ function initAddForms() {
       state[q].push({ id: uid(), text, done: false });
       input.value = "";
       render();
+
+      // Silent sync to Google Sheet "User Tasks" tab
+      logTaskToGoogleSheets("ADDED", q, text);
 
       // On mobile view: dismiss keypad and slide UI back down smoothly
       if (window.innerWidth <= 640 || "ontouchstart" in window) {
