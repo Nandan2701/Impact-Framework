@@ -7,7 +7,17 @@
  *   1. Appends a new row to your Google Spreadsheet.
  *   2. Instantly sends a beautiful HTML notification email to nandanbhole72@gmail.com.
  * ==============================================================================
+/**
+ * RUN THIS ONCE in the Apps Script editor:
+ * Select "testRun" from the function dropdown at the top and click "▶ Run".
+ * This triggers Google to request and grant the "Spreadsheets" and "Gmail" permissions!
  */
+function testRun() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  Logger.log("✓ Successfully connected to sheet: " + sheet.getName());
+  Logger.log("✓ Remaining daily email quota: " + MailApp.getRemainingDailyQuota());
+  return "Permissions granted successfully!";
+}
 
 function doPost(e) {
   try {

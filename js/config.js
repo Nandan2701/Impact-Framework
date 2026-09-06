@@ -10,5 +10,5 @@
  */
 window.IMPACT_CONFIG = {
   // Paste your deployed Google Apps Script URL here:
-  googleWebhookUrl: ""
+  googleWebhookUrl: "https://script.google.com/macros/s/AKfycbxA0SIv6IiO-fkWbSUiV6Vwp6XmwFutVEeCjgPmPiQQlTNuiIZ5uqlJrlIvOOGlUvaK/exec"
 };
