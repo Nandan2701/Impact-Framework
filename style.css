@@ -734,34 +734,92 @@ body.drawer-open .app-container {
   border-top: 1px solid var(--line-subtle);
 }
 
-.stars-bar {
+/* Rate this app section (Play Store clean layout) */
+.rate-app-section {
   display: flex;
-  gap: 6px;
-  margin-top: 6px;
+  flex-direction: column;
 }
 
-.star-btn {
+.rate-app-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 3px;
+  letter-spacing: -0.01em;
+}
+
+.rate-app-subtitle {
+  font-size: 13.5px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  line-height: 1.3;
+}
+
+.rate-stars-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 280px;
+  margin-bottom: 18px;
+}
+
+.rate-star-btn {
   background: transparent;
   border: none;
-  font-size: 26px;
+  padding: 4px;
   cursor: pointer;
-  color: #d8d4cd;
-  line-height: 1;
-  transition: color 0.15s, transform 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  transition: transform 0.15s ease;
 }
 
-.star-btn:hover,
-.star-btn.active {
-  color: #e5a524;
-  transform: scale(1.15);
+.rate-star-btn:hover {
+  transform: scale(1.18);
+}
+
+.star-svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: #5f6368;
+  stroke-width: 1.8px;
+  stroke-linejoin: round;
+  transition: fill 0.15s ease, stroke 0.15s ease;
+}
+
+/* Golden yellow star color as requested */
+.rate-star-btn.active .star-svg,
+.rate-star-btn.hovered .star-svg {
+  fill: #fbbc04;
+  stroke: #fbbc04;
+}
+
+/* Write a review in blue as requested */
+.write-review-link {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a73e8;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  width: fit-content;
+}
+
+.write-review-link:hover {
+  color: #1557b0;
+  text-decoration: underline;
 }
 
 .rating-feedback {
   font-size: 12px;
-  color: #27ae60;
-  margin-top: 6px;
+  color: #1e8e3e;
+  margin-top: 8px;
   font-weight: 500;
-  min-height: 18px;
+  min-height: 16px;
 }
 
 

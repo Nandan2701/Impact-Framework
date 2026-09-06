@@ -129,22 +129,41 @@
 
       <hr class="drawer-divider">
 
-      <!-- Item 3: Distractionless Rating -->
-      <div class="info-item">
-        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-        </svg>
-        <div class="info-content">
-          <div class="info-label">Rate Impact Framework</div>
-          <div class="stars-bar" id="starsBar">
-            <button class="star-btn" data-rating="1" type="button" aria-label="1 star">★</button>
-            <button class="star-btn" data-rating="2" type="button" aria-label="2 stars">★</button>
-            <button class="star-btn" data-rating="3" type="button" aria-label="3 stars">★</button>
-            <button class="star-btn" data-rating="4" type="button" aria-label="4 stars">★</button>
-            <button class="star-btn" data-rating="5" type="button" aria-label="5 stars">★</button>
-          </div>
-          <div class="rating-feedback" id="ratingFeedback">Tap a star to rate</div>
+      <!-- Item 3: Rate this app (Google Play clean format) -->
+      <div class="rate-app-section">
+        <h3 class="rate-app-title">Rate this app</h3>
+        <p class="rate-app-subtitle">Tell others what you think</p>
+
+        <div class="rate-stars-row" id="starsBar">
+          <button class="rate-star-btn" data-rating="1" type="button" aria-label="1 star">
+            <svg viewBox="0 0 24 24" class="star-svg">
+              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+            </svg>
+          </button>
+          <button class="rate-star-btn" data-rating="2" type="button" aria-label="2 stars">
+            <svg viewBox="0 0 24 24" class="star-svg">
+              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+            </svg>
+          </button>
+          <button class="rate-star-btn" data-rating="3" type="button" aria-label="3 stars">
+            <svg viewBox="0 0 24 24" class="star-svg">
+              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+            </svg>
+          </button>
+          <button class="rate-star-btn" data-rating="4" type="button" aria-label="4 stars">
+            <svg viewBox="0 0 24 24" class="star-svg">
+              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+            </svg>
+          </button>
+          <button class="rate-star-btn" data-rating="5" type="button" aria-label="5 stars">
+            <svg viewBox="0 0 24 24" class="star-svg">
+              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+            </svg>
+          </button>
         </div>
+
+        <a class="write-review-link" id="writeReviewLink" href="mailto:nandanbhole72@gmail.com?subject=Review%20for%20Impact%20Framework&body=Hi%20Nandan%2C%0A%0AHere%20is%20my%20review%20for%20Impact%20Framework%3A%0A%0A" target="_blank" rel="noopener">Write a review</a>
+        <div class="rating-feedback" id="ratingFeedback"></div>
       </div>
     </div>
   </aside>

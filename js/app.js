@@ -480,8 +480,9 @@ function initContactDrawer() {
     });
   }
 
-  // Distractionless Star Rating
+  // Distractionless Star Rating (Rate this app)
   if (starsBar) {
+    const starBtns = starsBar.querySelectorAll(".rate-star-btn, .star-btn");
     const savedRating = parseInt(localStorage.getItem(RATING_KEY), 10) || 0;
     if (savedRating > 0) {
       highlightStars(savedRating);
@@ -490,9 +491,18 @@ function initContactDrawer() {
       }
     }
 
-    starsBar.querySelectorAll(".star-btn").forEach((btn) => {
+    starBtns.forEach((btn) => {
+      const rating = parseInt(btn.dataset.rating, 10);
+
+      // Hover feedback for tactile feel
+      btn.addEventListener("pointerenter", () => {
+        starBtns.forEach((s) => {
+          const r = parseInt(s.dataset.rating, 10);
+          s.classList.toggle("hovered", r <= rating);
+        });
+      });
+
       btn.addEventListener("click", () => {
-        const rating = parseInt(btn.dataset.rating, 10);
         if (!rating) return;
         localStorage.setItem(RATING_KEY, rating.toString());
         highlightStars(rating);
@@ -502,10 +512,16 @@ function initContactDrawer() {
       });
     });
 
+    starsBar.addEventListener("pointerleave", () => {
+      const current = parseInt(localStorage.getItem(RATING_KEY), 10) || 0;
+      highlightStars(current);
+    });
+
     function highlightStars(val) {
-      starsBar.querySelectorAll(".star-btn").forEach((s) => {
+      starBtns.forEach((s) => {
         const r = parseInt(s.dataset.rating, 10);
         s.classList.toggle("active", r <= val);
+        s.classList.remove("hovered");
       });
     }
   }
