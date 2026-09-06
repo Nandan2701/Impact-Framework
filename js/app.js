@@ -210,6 +210,164 @@ function removeTask(q, id) {
   }
 }
 
+// ==============================================================================
+// CLIENT TELEMETRY & ANALYTICS HELPER
+// ==============================================================================
+
+// Helper: Parse Operating System accurately
+function getClientOS() {
+  const ua = navigator.userAgent || "";
+  if (/windows phone/i.test(ua)) return "Windows Phone";
+  if (/win(dows )?nt 10\.0/i.test(ua)) return "Windows 10/11";
+  if (/win(dows )?nt 6\.3/i.test(ua)) return "Windows 8.1";
+  if (/win(dows )?nt 6\.2/i.test(ua)) return "Windows 8";
+  if (/win(dows )?nt 6\.1/i.test(ua)) return "Windows 7";
+  if (/windows/i.test(ua)) return "Windows";
+  if (/android/i.test(ua)) {
+    const match = ua.match(/Android\s([0-9\.]+)/i);
+    return match ? `Android ${match[1]}` : "Android";
+  }
+  if (/ipad|iphone|ipod/i.test(ua)) {
+    const match = ua.match(/OS\s([0-9_]+)/i);
+    return match ? `iOS ${match[1].replace(/_/g, ".")}` : "iOS";
+  }
+  if (/macintosh|mac os x/i.test(ua)) {
+    const match = ua.match(/Mac OS X\s([0-9_]+)/i);
+    return match ? `macOS ${match[1].replace(/_/g, ".")}` : "macOS";
+  }
+  if (/cros/i.test(ua)) return "ChromeOS";
+  if (/linux/i.test(ua)) return "Linux";
+  return "Unknown OS";
+}
+
+// Helper: Parse Browser and Major Version
+function getClientBrowser() {
+  const ua = navigator.userAgent || "";
+  let name = "Unknown Browser";
+  let version = "";
+
+  if (/edg\/([0-9\.]+)/i.test(ua)) {
+    name = "Edge";
+    version = ua.match(/edg\/([0-9\.]+)/i)[1].split(".")[0];
+  } else if (/opr\/([0-9\.]+)/i.test(ua) || /opera/i.test(ua)) {
+    name = "Opera";
+    version = (ua.match(/opr\/([0-9\.]+)/i) || [])[1] || "";
+  } else if (/samsungbrowser\/([0-9\.]+)/i.test(ua)) {
+    name = "Samsung Internet";
+    version = ua.match(/samsungbrowser\/([0-9\.]+)/i)[1].split(".")[0];
+  } else if (/chrome|crios/i.test(ua) && !/edg/i.test(ua)) {
+    name = "Chrome";
+    const m = ua.match(/(?:chrome|crios)\/([0-9\.]+)/i);
+    version = m ? m[1].split(".")[0] : "";
+  } else if (/firefox|fxios/i.test(ua)) {
+    name = "Firefox";
+    const m = ua.match(/(?:firefox|fxios)\/([0-9\.]+)/i);
+    version = m ? m[1].split(".")[0] : "";
+  } else if (/safari/i.test(ua) && !/chrome|crios/i.test(ua)) {
+    name = "Safari";
+    const m = ua.match(/version\/([0-9\.]+)/i);
+    version = m ? m[1].split(".")[0] : "";
+  }
+
+  return version ? `${name} ${version}` : name;
+}
+
+// Helper: Device Category
+function getDeviceType() {
+  const ua = navigator.userAgent || "";
+  const width = window.innerWidth || screen.width;
+  if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+    return "Tablet";
+  }
+  if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|NetFront|Silk-Accelerated|(hpw|web)OS|Fennec|Minimo|Opera M(obi|ini)|Blazer|Dolfin|Dolphin|Skyfire|Zune/i.test(ua) || width <= 768) {
+    return "Mobile";
+  }
+  return "Desktop";
+}
+
+// Helper: Visit count tracker (persisted in localStorage)
+function getVisitCount() {
+  let count = 1;
+  try {
+    count = parseInt(localStorage.getItem("impact_visit_count") || "0", 10);
+    if (!sessionStorage.getItem("impact_session_counted")) {
+      count += 1;
+      localStorage.setItem("impact_visit_count", count.toString());
+      sessionStorage.setItem("impact_session_counted", "1");
+    }
+  } catch (e) {}
+  return count || 1;
+}
+
+// Pre-fetch IP Geolocation on app load and cache in sessionStorage
+function prefetchGeoData() {
+  try {
+    const cached = sessionStorage.getItem("impact_geo_data");
+    if (cached) return;
+    fetch("https://ipwho.is/")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.success !== false) {
+          sessionStorage.setItem(
+            "impact_geo_data",
+            JSON.stringify({
+              ip: data.ip || "",
+              city: data.city || "",
+              region: data.region || "",
+              country: data.country || "",
+              country_code: data.country_code || "",
+              timezone: (data.timezone && data.timezone.id) || ""
+            })
+          );
+        }
+      })
+      .catch(() => {});
+  } catch (e) {}
+}
+
+// Helper to gather complete telemetry snapshot
+function getClientTelemetry() {
+  let geo = {};
+  try {
+    geo = JSON.parse(sessionStorage.getItem("impact_geo_data") || "{}");
+  } catch (e) {}
+
+  let timezone = "";
+  try {
+    timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  } catch (e) {
+    timezone = geo.timezone || "";
+  }
+
+  let referrer = "Direct";
+  try {
+    if (document.referrer) {
+      const parsed = new URL(document.referrer);
+      referrer = parsed.hostname || document.referrer;
+    }
+  } catch (e) {
+    referrer = document.referrer || "Direct";
+  }
+
+  const dpr = window.devicePixelRatio ? `@${window.devicePixelRatio}x` : "";
+  const screenRes = `${window.screen.width}x${window.screen.height} ${dpr}`.trim();
+
+  return {
+    os: getClientOS(),
+    browser: getClientBrowser(),
+    device: getDeviceType(),
+    screen_resolution: screenRes,
+    timezone: timezone || "Asia/Kolkata",
+    language: navigator.language || (navigator.languages && navigator.languages[0]) || "en",
+    referrer: referrer,
+    visit_count: getVisitCount(),
+    ip: geo.ip || "",
+    city: geo.city || "",
+    region: geo.region || "",
+    country: geo.country || ""
+  };
+}
+
 // Persistent Anonymous User ID
 function getAnonymousUserId() {
   let uid = localStorage.getItem("impact_framework_anon_uid");
@@ -236,7 +394,8 @@ function logTaskToGoogleSheets(action, q, text) {
     "https://script.google.com/macros/s/AKfycbxA0SIv6IiO-fkWbSUiV6Vwp6XmwFutVEeCjgPmPiQQlTNuiIZ5uqlJrlIvOOGlUvaK/exec";
   if (!url) return;
 
-  const isMobile = window.innerWidth <= 768 || "ontouchstart" in window;
+  const telemetry = getClientTelemetry();
+
   const payload = {
     type: "task",
     uid: getAnonymousUserId(),
@@ -244,7 +403,21 @@ function logTaskToGoogleSheets(action, q, text) {
     quadrant: q,
     quadrant_title: QUADRANT_NAMES[q] || q,
     task_text: text.trim(),
-    device: isMobile ? "mobile" : "desktop",
+
+    // Telemetry & Visitor Analytics
+    ip: telemetry.ip,
+    city: telemetry.city,
+    region: telemetry.region,
+    country: telemetry.country,
+    device: telemetry.device,
+    os: telemetry.os,
+    browser: telemetry.browser,
+    screen_resolution: telemetry.screen_resolution,
+    timezone: telemetry.timezone,
+    language: telemetry.language,
+    referrer: telemetry.referrer,
+    visit_count: telemetry.visit_count,
+
     app_version: "v1.2.0",
     timestamp: new Date().toISOString()
   };
@@ -692,12 +865,30 @@ function initContactDrawer() {
         focusPostBtn.style.opacity = "0.7";
       }
 
+      const telemetry = getClientTelemetry();
+
       // Build Payload for Google Sheets & Gmail
       const payload = {
+        type: "review",
+        uid: getAnonymousUserId(),
         rating: rating,
         review: reviewText,
         character_count: reviewText.length,
-        device: isMobile ? "mobile" : "desktop",
+
+        // Telemetry & Visitor Analytics
+        ip: telemetry.ip,
+        city: telemetry.city,
+        region: telemetry.region,
+        country: telemetry.country,
+        device: telemetry.device,
+        os: telemetry.os,
+        browser: telemetry.browser,
+        screen_resolution: telemetry.screen_resolution,
+        timezone: telemetry.timezone,
+        language: telemetry.language,
+        referrer: telemetry.referrer,
+        visit_count: telemetry.visit_count,
+
         app_version: "v1.2.0",
         timestamp: new Date().toISOString()
       };
@@ -773,6 +964,7 @@ function initContactDrawer() {
 
 // Initialize on DOM load
 document.addEventListener("DOMContentLoaded", () => {
+  prefetchGeoData();
   initAddForms();
   initContactDrawer();
   render();
