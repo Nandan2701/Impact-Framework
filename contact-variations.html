@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rate This App — 5 User Journey Variations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f5f4ef;
+      --surface: #ffffff;
+      --text-primary: #202124;
+      --text-secondary: #5f6368;
+      --text-muted: #80868b;
+      --border: #dadce0;
+      --border-focus: #1a73e8;
+      --star-gold: #fbbc04;
+      --star-empty: #5f6368;
+      --link-blue: #1a73e8;
+      --link-blue-hover: #1557b0;
+      --btn-bg: #1a73e8;
+      --btn-hover: #1557b0;
+      --btn-disabled: #e8eaed;
+      --success: #137333;
+      --success-bg: #e6f4ea;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 60px;
+    }
+
+    /* Top Control Bar */
+    .top-header {
+      background: #ffffff;
+      border-bottom: 1px solid #e0dfd5;
+      padding: 18px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    .header-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1280px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .header-title-block h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #111;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-title-block p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .header-links {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .header-link-btn {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--link-blue);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #dadce0;
+      background: #fff;
+      transition: all 0.15s;
+    }
+
+    .header-link-btn:hover {
+      background: #f8f9fa;
+      border-color: #c0c4c9;
+    }
+
+    /* Variations Switcher Tabs */
+    .var-tabs-wrapper {
+      max-width: 1280px;
+      margin: 14px auto 0;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .var-tab-btn {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid #dadce0;
+      background: #ffffff;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.18s ease;
+    }
+
+    .var-tab-btn:hover {
+      background: #f8f9fa;
+      color: var(--text-primary);
+    }
+
+    .var-tab-btn.active {
+      background: #1a73e8;
+      color: #ffffff;
+      border-color: #1a73e8;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(26,115,232,0.3);
+    }
+
+    /* Main Workspace Layout */
+    .main-workspace {
+      max-width: 1280px;
+      width: 100%;
+      margin: 28px auto 0;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .main-workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Interactive Drawer Mockup */
+    .drawer-stage {
+      background: #ffffff;
+      border: 1px solid #e0dfd5;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .drawer-top-banner {
+      background: #fafaf8;
+      padding: 12px 18px;
+      border-bottom: 1px solid #ebe9e1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .drawer-content-body {
+      padding: 24px 22px;
+      min-height: 480px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Fixed Contact Header inside Drawer */
+    .drawer-contact-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .drawer-contact-head h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #111;
+    }
+
+    .close-icon-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: var(--text-muted);
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+    }
+
+    /* Drawer Info Sections */
+    .mock-info-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .mock-icon {
+      width: 18px;
+      height: 18px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .mock-info-text {
+      flex: 1;
+    }
+
+    .mock-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 3px;
+      font-weight: 600;
+    }
+
+    .mock-value {
+      font-size: 13.5px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mock-copy-btn {
+      font-size: 11.5px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      border: 1px solid #dadce0;
+      background: #fafaf8;
+      cursor: pointer;
+    }
+
+    .drawer-divider {
+      border: none;
+      border-top: 1px solid #ebe9e1;
+      margin: 16px 0;
+    }
+
+    /* =========================================================================
+       Section 3: Rate this app (Base Structure)
+       ========================================================================= */
+    .rate-app-block {
+      margin-top: 4px;
+      position: relative;
+    }
+
+    .rate-app-title {
+      font-size: 15.5px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+      letter-spacing: -0.01em;
+    }
+
+    .rate-app-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+    }
+
+    /* Stars Row */
+    .stars-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 250px;
+      margin-bottom: 14px;
+    }
+
+    .star-btn {
+      background: transparent;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      outline: none;
+      transition: transform 0.16s ease;
+    }
+
+    .star-btn:hover {
+      transform: scale(1.22);
+    }
+
+    .star-svg {
+      width: 28px;
+      height: 28px;
+      fill: none;
+      stroke: var(--star-empty);
+      stroke-width: 1.8px;
+      stroke-linejoin: round;
+      transition: fill 0.15s ease, stroke 0.15s ease;
+    }
+
+    .star-btn.active .star-svg,
+    .star-btn.hovered .star-svg {
+      fill: var(--star-gold);
+      stroke: var(--star-gold);
+    }
+
+    /* Link */
+    .write-review-trigger {
+      display: inline-block;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--link-blue);
+      text-decoration: none;
+      cursor: pointer;
+      width: fit-content;
+      transition: color 0.15s;
+    }
+
+    .write-review-trigger:hover {
+      color: var(--link-blue-hover);
+      text-decoration: underline;
+    }
+
+    /* =========================================================================
+       Text Box UI Component (Exact User Specs)
+       ========================================================================= */
+    .review-input-card {
+      background: #ffffff;
+      border: 1px solid #747775;
+      border-radius: 8px;
+      padding: 12px 14px 8px;
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .review-input-card:focus-within {
+      border-color: var(--border-focus);
+      border-width: 2px;
+      padding: 11px 13px 7px; /* compensate for 2px border */
+      box-shadow: 0 0 0 1px rgba(26,115,232,0.15);
+    }
+
+    .review-textarea {
+      width: 100%;
+      min-height: 80px;
+      border: none;
+      outline: none;
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.45;
+      color: var(--text-primary);
+      resize: vertical;
+      background: transparent;
+    }
+
+    .review-textarea::placeholder {
+      color: #747775;
+      font-size: 14px;
+    }
+
+    .review-card-footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .char-counter {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+
+    .char-counter.limit-near {
+      color: #d93025;
+      font-weight: 600;
+    }
+
+    /* Actions Bar */
+    .review-actions-bar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .btn-text-cancel {
+      background: none;
+      border: none;
+      color: var(--link-blue);
+      font-size: 13.5px;
+      font-weight: 500;
+      padding: 7px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-text-cancel:hover {
+      background: rgba(26,115,232,0.06);
+    }
+
+    .btn-primary-post {
+      background: var(--btn-bg);
+      color: #ffffff;
+      border: none;
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 8px 22px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.18s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+
+    .btn-primary-post:hover {
+      background: var(--btn-hover);
+      box-shadow: 0 2px 6px rgba(26,115,232,0.3);
+    }
+
+    .btn-primary-post:disabled {
+      background: var(--btn-disabled);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* =========================================================================
+       SPECIFIC VARIATION MECHANISMS
+       ========================================================================= */
+
+    /* --- Variation 1: Smooth Inline Accordion --- */
+    .v1-expand-container {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transform: translateY(-8px);
+      transition: max-height 0.35s cubic-bezier(0.2, 0, 0, 1),
+                  opacity 0.25s ease,
+                  transform 0.35s cubic-bezier(0.2, 0, 0, 1),
+                  margin-top 0.35s ease;
+    }
+
+    .v1-expand-container.is-open {
+      max-height: 300px;
+      opacity: 1;
+      transform: translateY(0);
+      margin-top: 14px;
+    }
+
+    /* --- Variation 2: Two-Step Slide Push View --- */
+    .v2-view-slider {
+      display: flex;
+      width: 200%;
+      transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .v2-slide-step {
+      width: 50%;
+      flex-shrink: 0;
+    }
+
+    .v2-view-slider.show-review-step {
+      transform: translateX(-50%);
+    }
+
+    .v2-sub-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .v2-back-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      padding: 4px 8px;
+      border-radius: 50%;
+      transition: background 0.15s;
+    }
+
+    .v2-back-btn:hover {
+      background: #f1f3f4;
+    }
+
+    /* --- Variation 3: Floating Focus Card --- */
+    .v3-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(32,33,36,0.35);
+      backdrop-filter: blur(2px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .v3-backdrop.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .v3-floating-modal {
+      background: #ffffff;
+      width: 100%;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.18);
+      transform: scale(0.92) translateY(10px);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .v3-backdrop.is-open .v3-floating-modal {
+      transform: scale(1) translateY(0);
+    }
+
+    /* --- Variation 4: Morphing Pill with Sentiment Chips --- */
+    .v4-chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .v4-chip {
+      background: #f1f3f4;
+      border: 1px solid #dadce0;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .v4-chip:hover {
+      background: #e8f0fe;
+      border-color: #aecbfa;
+    }
+
+    .v4-chip.selected {
+      background: #e8f0fe;
+      color: #1a73e8;
+      border-color: #1a73e8;
+      font-weight: 500;
+    }
+
+    .v4-rating-summary-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fef7e0;
+      border: 1px solid #fce8b2;
+      color: #b06000;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+
+    /* --- Variation 5: Mobile-Native Bottom Sheet --- */
+    .v5-sheet {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #ffffff;
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.12);
+      border-top: 1px solid #dadce0;
+      padding: 16px 20px 22px;
+      transform: translateY(100%);
+      transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 30;
+    }
+
+    .v5-sheet.is-open {
+      transform: translateY(0);
+    }
+
+    .v5-handle-bar {
+      width: 36px;
+      height: 4px;
+      background: #dadce0;
+      border-radius: 2px;
+      margin: 0 auto 14px;
+    }
+
+    /* Post Success Animation Card */
+    .success-alert {
+      background: var(--success-bg);
+      border: 1px solid #b7e1cd;
+      color: var(--success);
+      padding: 14px 16px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13.5px;
+      font-weight: 500;
+      margin-top: 14px;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Right Column: Database Inspector & Journey Details */
+    .inspector-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .panel-card {
+      background: #ffffff;
+      border: 1px solid #e0dfd5;
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+    }
+
+    .panel-card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-card p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+      margin-bottom: 14px;
+    }
+
+    /* DB Payload JSON Preview */
+    .code-box {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      font-family: Consolas, 'SF Mono', Monaco, monospace;
+      font-size: 12.5px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      line-height: 1.5;
+    }
+
+    .code-box .key { color: #9cdcfe; }
+    .code-box .str { color: #ce9178; }
+    .code-box .num { color: #b5cea8; }
+    .code-box .bool { color: #569cd6; }
+
+    /* Schema Table */
+    .schema-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      margin-top: 10px;
+    }
+
+    .schema-table th, .schema-table td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid #f0eee6;
+    }
+
+    .schema-table th {
+      background: #f8f7f2;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .schema-table td code {
+      font-family: monospace;
+      background: #f1f3f4;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      color: #d93025;
+    }
+
+    .reset-btn {
+      background: #f1f3f4;
+      border: 1px solid #dadce0;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-primary);
+      transition: background 0.15s;
+    }
+
+    .reset-btn:hover {
+      background: #e8eaed;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header & Variation Switcher -->
+  <header class="top-header">
+    <div class="header-top-row">
+      <div class="header-title-block">
+        <h1>⭐ 5 Interactive User Journey Variations</h1>
+        <p>Choose and test how the "Rate this app" review text box & post workflow should behave</p>
+      </div>
+      <div class="header-links">
+        <button class="reset-btn" onclick="resetAllDemos()">↺ Reset Demos</button>
+        <a href="review-journey-demo.html" class="header-link-btn" target="_blank">📖 View Architecture & Flowcharts ↗</a>
+      </div>
+    </div>
+
+    <div class="var-tabs-wrapper" id="varTabs">
+      <button class="var-tab-btn active" data-var="v1" onclick="switchVariation('v1')">
+        <span>① Inline Accordion</span> (Clean Expansion)
+      </button>
+      <button class="var-tab-btn" data-var="v2" onclick="switchVariation('v2')">
+        <span>② Two-Step Push View</span> (App Store Slide)
+      </button>
+      <button class="var-tab-btn" data-var="v3" onclick="switchVariation('v3')">
+        <span>③ Floating Focus Card</span> (Modal Elevation)
+      </button>
+      <button class="var-tab-btn" data-var="v4" onclick="switchVariation('v4')">
+        <span>④ Morphing Pill + Chips</span> (Dynamic Feedback)
+      </button>
+      <button class="var-tab-btn" data-var="v5" onclick="switchVariation('v5')">
+        <span>⑤ Bottom Sheet</span> (Mobile Native Peek)
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Showcase Workspace -->
+  <main class="main-workspace">
+
+    <!-- LEFT COLUMN: Interactive Simulated Drawer -->
+    <div class="drawer-stage">
+      <div class="drawer-top-banner">
+        <span id="activeVarLabel">Active: Variation 1 (Inline Accordion)</span>
+        <span>Simulated Contact Panel</span>
+      </div>
+
+      <div class="drawer-content-body" id="drawerBody">
+
+        <!-- VARIATION 1: Inline Accordion Container -->
+        <div id="variation1Container" class="variation-view">
+          <div class="drawer-contact-head">
+            <h2>Contact & Info</h2>
+            <button class="close-icon-btn">×</button>
+          </div>
+
+          <div class="mock-info-item">
+            <svg class="mock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            <div class="mock-info-text">
+              <div class="mock-label">Direct Contact</div>
+              <div class="mock-value">
+                <span>nandanbhole72@gmail.com</span>
+                <span class="mock-copy-btn">Copy</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mock-info-item">
+            <svg class="mock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <div class="mock-info-text">
+              <div class="mock-label">Version</div>
+              <div class="mock-value">v1.2.0</div>
+            </div>
+          </div>
+
+          <hr class="drawer-divider">
+
+          <!-- Section 3: Rate This App -->
+          <div class="rate-app-block">
+            <h3 class="rate-app-title">Rate this app</h3>
+            <p class="rate-app-subtitle">Tell others what you think</p>
+
+            <div class="stars-row" id="starsRowV1">
+              <!-- 5 Stars generated dynamically -->
+            </div>
+
+            <a class="write-review-trigger" id="writeReviewLinkV1" onclick="openReviewV1()">Write a review</a>
+
+            <!-- Expandable Review Box -->
+            <div class="v1-expand-container" id="expandBoxV1">
+              <div class="review-input-card">
+                <textarea class="review-textarea" id="textareaV1" placeholder="Describe your experience (optional)" maxlength="500" oninput="handleInput('v1')"></textarea>
+                <div class="review-card-footer">
+                  <span class="char-counter" id="counterV1">0/500</span>
+                </div>
+              </div>
+
+              <div class="review-actions-bar">
+                <button class="btn-text-cancel" onclick="closeReviewV1()">Cancel</button>
+                <button class="btn-primary-post" onclick="submitReview('v1')">Post</button>
+              </div>
+            </div>
+
+            <div id="successV1"></div>
+          </div>
+        </div>
+
+        <!-- VARIATION 2: Two-Step Push View -->
+        <div id="variation2Container" class="variation-view" style="display: none; width: 100%;">
+          <div class="v2-view-slider" id="v2Slider">
+
+            <!-- Step 1: Main Drawer -->
+            <div class="v2-slide-step">
+              <div class="drawer-contact-head">
+                <h2>Contact & Info</h2>
+                <button class="close-icon-btn">×</button>
+              </div>
+
+              <div class="mock-info-item">
+                <svg class="mock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                <div class="mock-info-text">
+                  <div class="mock-label">Direct Contact</div>
+                  <div class="mock-value">nandanbhole72@gmail.com</div>
+                </div>
+              </div>
+
+              <hr class="drawer-divider">
+
+              <div class="rate-app-block">
+                <h3 class="rate-app-title">Rate this app</h3>
+                <p class="rate-app-subtitle">Tell others what you think</p>
+                <div class="stars-row" id="starsRowV2"></div>
+                <a class="write-review-trigger" onclick="openReviewV2()">Write a review →</a>
+              </div>
+            </div>
+
+            <!-- Step 2: Dedicated Review Screen -->
+            <div class="v2-slide-step" style="padding-left: 20px;">
+              <div class="v2-sub-header">
+                <button class="v2-back-btn" onclick="closeReviewV2()">←</button>
+                <h2 style="font-size: 16px; font-weight: 700;">Rate Impact Framework</h2>
+              </div>
+
+              <div style="display: flex; justify-content: center; margin: 10px 0 20px;">
+                <div class="stars-row" id="starsRowV2Sub" style="max-width: 220px;"></div>
+              </div>
+
+              <div class="review-input-card">
+                <textarea class="review-textarea" id="textareaV2" placeholder="Describe your experience (optional)" maxlength="500" style="min-height: 120px;" oninput="handleInput('v2')"></textarea>
+                <div class="review-card-footer">
+                  <span class="char-counter" id="counterV2">0/500</span>
+                </div>
+              </div>
+
+              <div class="review-actions-bar">
+                <button class="btn-text-cancel" onclick="closeReviewV2()">Cancel</button>
+                <button class="btn-primary-post" onclick="submitReview('v2')">Post</button>
+              </div>
+
+              <div id="successV2"></div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- VARIATION 3: Floating Focus Card -->
+        <div id="variation3Container" class="variation-view" style="display: none;">
+          <div class="drawer-contact-head">
+            <h2>Contact & Info</h2>
+            <button class="close-icon-btn">×</button>
+          </div>
+
+          <div class="mock-info-item">
+            <svg class="mock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            <div class="mock-info-text">
+              <div class="mock-label">Direct Contact</div>
+              <div class="mock-value">nandanbhole72@gmail.com</div>
+            </div>
+          </div>
+
+          <hr class="drawer-divider">
+
+          <div class="rate-app-block">
+            <h3 class="rate-app-title">Rate this app</h3>
+            <p class="rate-app-subtitle">Tell others what you think</p>
+            <div class="stars-row" id="starsRowV3"></div>
+            <a class="write-review-trigger" onclick="openReviewV3()">Write a review</a>
+            <div id="successV3"></div>
+          </div>
+
+          <!-- Elevated Card Modal -->
+          <div class="v3-backdrop" id="backdropV3" onclick="handleBackdropClick(event, 'v3')">
+            <div class="v3-floating-modal" onclick="event.stopPropagation()">
+              <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 12px;">Share your experience</h4>
+              <div class="stars-row" id="starsRowV3Modal" style="margin-bottom: 16px;"></div>
+
+              <div class="review-input-card">
+                <textarea class="review-textarea" id="textareaV3" placeholder="Describe your experience (optional)" maxlength="500" oninput="handleInput('v3')"></textarea>
+                <div class="review-card-footer">
+                  <span class="char-counter" id="counterV3">0/500</span>
+                </div>
+              </div>
+
+              <div class="review-actions-bar">
+                <button class="btn-text-cancel" onclick="closeReviewV3()">Cancel</button>
+                <button class="btn-primary-post" onclick="submitReview('v3')">Post</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VARIATION 4: Morphing Pill with Sentiment Chips -->
+        <div id="variation4Container" class="variation-view" style="display: none;">
+          <div class="drawer-contact-head">
+            <h2>Contact & Info</h2>
+            <button class="close-icon-btn">×</button>
+          </div>
+
+          <div class="mock-info-item">
+            <svg class="mock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            <div class="mock-info-text">
+              <div class="mock-label">Direct Contact</div>
+              <div class="mock-value">nandanbhole72@gmail.com</div>
+            </div>
+          </div>
+
+          <hr class="drawer-divider">
+
+          <div class="rate-app-block">
+            <h3 class="rate-app-title">Rate this app</h3>
+            <p class="rate-app-subtitle">Tell others what you think</p>
+            <div class="stars-row" id="starsRowV4"></div>
+            <a class="write-review-trigger" id="triggerV4" onclick="openReviewV4()">Write a review</a>
+
+            <div class="v1-expand-container" id="expandBoxV4">
+              <div class="v4-rating-summary-pill" id="v4SummaryPill">★ 5 Stars Selected</div>
+
+              <!-- Quick sentiment pills for effortless reviews -->
+              <div class="v4-chips-row">
+                <button class="v4-chip" type="button" onclick="addChipText('⚡ Fast & distraction-free', 'v4')">⚡ Fast & distraction-free</button>
+                <button class="v4-chip" type="button" onclick="addChipText('🎯 Great 2x2 priority matrix', 'v4')">🎯 Great 2x2 priority matrix</button>
+                <button class="v4-chip" type="button" onclick="addChipText('✍️ Smooth Docs Silk typing', 'v4')">✍️ Smooth Docs Silk typing</button>
+              </div>
+
+              <div class="review-input-card">
+                <textarea class="review-textarea" id="textareaV4" placeholder="Describe your experience (optional)" maxlength="500" oninput="handleInput('v4')"></textarea>
+                <div class="review-card-footer">
+                  <span class="char-counter" id="counterV4">0/500</span>
+                </div>
+              </div>
+
+              <div class="review-actions-bar">
+                <button class="btn-text-cancel" onclick="closeReviewV4()">Cancel</button>
+                <button class="btn-primary-post" onclick="submitReview('v4')">Post</button>
+              </div>
+            </div>
+
+            <div id="successV4"></div>
+          </div>
+        </div>
+
+        <!-- VARIATION 5: Mobile-Native Bottom Sheet -->
+        <div id="variation5Container" class="variation-view" style="display: none;">
+          <div class="drawer-contact-head">
+            <h2>Contact & Info</h2>
+            <button class="close-icon-btn">×</button>
+          </div>
+
+          <div class="mock-info-item">
+            <svg class="mock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            <div class="mock-info-text">
+              <div class="mock-label">Direct Contact</div>
+              <div class="mock-value">nandanbhole72@gmail.com</div>
+            </div>
+          </div>
+
+          <hr class="drawer-divider">
+
+          <div class="rate-app-block">
+            <h3 class="rate-app-title">Rate this app</h3>
+            <p class="rate-app-subtitle">Tell others what you think</p>
+            <div class="stars-row" id="starsRowV5"></div>
+            <a class="write-review-trigger" onclick="openReviewV5()">Write a review</a>
+            <div id="successV5"></div>
+          </div>
+
+          <!-- Bottom Sheet Peek Panel -->
+          <div class="v5-sheet" id="sheetV5">
+            <div class="v5-handle-bar"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h4 style="font-size: 15px; font-weight: 700;">Rate your experience</h4>
+              <button class="close-icon-btn" onclick="closeReviewV5()">×</button>
+            </div>
+            <div class="stars-row" id="starsRowV5Sheet" style="margin-bottom: 14px;"></div>
+
+            <div class="review-input-card">
+              <textarea class="review-textarea" id="textareaV5" placeholder="Describe your experience (optional)" maxlength="500" oninput="handleInput('v5')"></textarea>
+              <div class="review-card-footer">
+                <span class="char-counter" id="counterV5">0/500</span>
+              </div>
+            </div>
+
+            <div class="review-actions-bar">
+              <button class="btn-text-cancel" onclick="closeReviewV5()">Cancel</button>
+              <button class="btn-primary-post" onclick="submitReview('v5')">Post</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Real-Time Database Inspector & Journey Details -->
+    <div class="inspector-panel">
+
+      <!-- Real-time Database Record Viewer -->
+      <div class="panel-card">
+        <h3>🗄️ Database Record Inspector</h3>
+        <p>This shows the exact JSON payload and table columns that will be sent and saved to the database upon clicking <strong>"Post"</strong>:</p>
+
+        <div class="code-box" id="dbJsonPreview">
+{
+  <span class="key">"id"</span>: <span class="str">"rev_9f82b1"</span>,
+  <span class="key">"rating"</span>: <span class="num" id="prevRating">5</span>,
+  <span class="key">"review_text"</span>: <span class="str" id="prevReview">"Super clean matrix layout and fast typing!"</span>,
+  <span class="key">"character_count"</span>: <span class="num" id="prevChars">44</span>,
+  <span class="key">"app_version"</span>: <span class="str">"v1.2.0"</span>,
+  <span class="key">"device_type"</span>: <span class="str">"desktop"</span>,
+  <span class="key">"created_at"</span>: <span class="str" id="prevTimestamp">"2026-09-06T18:28:45.102Z"</span>,
+  <span class="key">"status"</span>: <span class="str">"verified"</span>
+}
+        </div>
+      </div>
+
+      <!-- Defined Database Schema Columns -->
+      <div class="panel-card">
+        <h3>📋 Recommended Database Schema (`app_reviews`)</h3>
+        <p>Defined columns for our backend table (Supabase, Firebase Firestore, Neon Postgres, or Google Sheets API):</p>
+
+        <table class="schema-table">
+          <thead>
+            <tr>
+              <th>Column Name</th>
+              <th>Data Type</th>
+              <th>Null?</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>id</code></td>
+              <td>UUID / TEXT</td>
+              <td>No (PK)</td>
+              <td>Unique record ID</td>
+            </tr>
+            <tr>
+              <td><code>rating</code></td>
+              <td>INT (1-5)</td>
+              <td>No</td>
+              <td>Number of stars selected</td>
+            </tr>
+            <tr>
+              <td><code>review_text</code></td>
+              <td>TEXT (0-500)</td>
+              <td>Yes</td>
+              <td>User's experience review</td>
+            </tr>
+            <tr>
+              <td><code>created_at</code></td>
+              <td>TIMESTAMP</td>
+              <td>No</td>
+              <td>Submission time (UTC)</td>
+            </tr>
+            <tr>
+              <td><code>device_type</code></td>
+              <td>VARCHAR(20)</td>
+              <td>Yes</td>
+              <td>'desktop' | 'mobile'</td>
+            </tr>
+            <tr>
+              <td><code>app_version</code></td>
+              <td>VARCHAR(10)</td>
+              <td>No</td>
+              <td>'v1.2.0'</td>
+            </tr>
+            <tr>
+              <td><code>status</code></td>
+              <td>VARCHAR(20)</td>
+              <td>No</td>
+              <td>'published' / 'pending'</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- User Journey Breakdown -->
+      <div class="panel-card">
+        <h3>🚀 The Complete User Journey</h3>
+        <p>How the user experiences the entire review flow:</p>
+        <ol style="margin-left: 18px; font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+          <li><strong>Intent Trigger:</strong> User clicks any star or "Write a review" in Section 3.</li>
+          <li><strong>Instant Reveal:</strong> Stars highlight in golden yellow (`#fbbc04`), and the review box smoothly reveals according to the selected variation.</li>
+          <li><strong>Typing & Live Counter:</strong> The box displays <code>Describe your experience (optional)</code> with real-time <code>0/500</code> tracking.</li>
+          <li><strong>One-Click Post:</strong> User taps "Post" -> payload is validated and submitted to the database asynchronously.</li>
+          <li><strong>Optimistic Confirmation:</strong> User receives immediate visual confirmation (<code>✓ Thank you for your review!</code>) without page reload.</li>
+        </ol>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Interactive JavaScript -->
+  <script>
+    const STAR_SVG = `<svg viewBox="0 0 24 24" class="star-svg"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
+
+    // State
+    const state = {
+      activeVariation: 'v1',
+      rating: 5,
+      reviewText: "Super clean matrix layout and fast typing!",
+      ratings: { v1: 5, v2: 5, v3: 5, v4: 5, v5: 5 }
+    };
+
+    // Initialize all star bars
+    function initStars() {
+      const starContainers = [
+        { id: 'starsRowV1', varKey: 'v1', onSelect: () => openReviewV1() },
+        { id: 'starsRowV2', varKey: 'v2', onSelect: () => openReviewV2() },
+        { id: 'starsRowV2Sub', varKey: 'v2', onSelect: null },
+        { id: 'starsRowV3', varKey: 'v3', onSelect: () => openReviewV3() },
+        { id: 'starsRowV3Modal', varKey: 'v3', onSelect: null },
+        { id: 'starsRowV4', varKey: 'v4', onSelect: () => openReviewV4() },
+        { id: 'starsRowV5', varKey: 'v5', onSelect: () => openReviewV5() },
+        { id: 'starsRowV5Sheet', varKey: 'v5', onSelect: null }
+      ];
+
+      starContainers.forEach(({ id, varKey, onSelect }) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerHTML = '';
+        for (let i = 1; i <= 5; i++) {
+          const btn = document.createElement('button');
+          btn.className = 'star-btn';
+          btn.type = 'button';
+          btn.dataset.rating = i;
+          btn.innerHTML = STAR_SVG;
+
+          btn.addEventListener('pointerenter', () => {
+            highlightContainerStars(el, i);
+          });
+
+          btn.addEventListener('click', () => {
+            state.rating = i;
+            state.ratings[varKey] = i;
+            highlightAllForVariation(varKey, i);
+            updateDbInspector();
+            if (onSelect) onSelect();
+          });
+
+          el.appendChild(btn);
+        }
+
+        highlightContainerStars(el, state.ratings[varKey]);
+        el.addEventListener('pointerleave', () => {
+          highlightContainerStars(el, state.ratings[varKey]);
+        });
+      });
+    }
+
+    function highlightContainerStars(container, val) {
+      container.querySelectorAll('.star-btn').forEach(btn => {
+        const r = parseInt(btn.dataset.rating, 10);
+        btn.classList.toggle('active', r <= val);
+      });
+    }
+
+    function highlightAllForVariation(varKey, val) {
+      if (varKey === 'v1') {
+        highlightContainerStars(document.getElementById('starsRowV1'), val);
+      } else if (varKey === 'v2') {
+        highlightContainerStars(document.getElementById('starsRowV2'), val);
+        highlightContainerStars(document.getElementById('starsRowV2Sub'), val);
+      } else if (varKey === 'v3') {
+        highlightContainerStars(document.getElementById('starsRowV3'), val);
+        highlightContainerStars(document.getElementById('starsRowV3Modal'), val);
+      } else if (varKey === 'v4') {
+        highlightContainerStars(document.getElementById('starsRowV4'), val);
+        const pill = document.getElementById('v4SummaryPill');
+        if (pill) pill.textContent = `★ ${val} Star${val > 1 ? 's' : ''} Selected`;
+      } else if (varKey === 'v5') {
+        highlightContainerStars(document.getElementById('starsRowV5'), val);
+        highlightContainerStars(document.getElementById('starsRowV5Sheet'), val);
+      }
+    }
+
+    // Switch between the 5 variations
+    function switchVariation(varKey) {
+      state.activeVariation = varKey;
+      document.querySelectorAll('.var-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.var === varKey);
+      });
+
+      const labels = {
+        v1: 'Variation 1: Inline Accordion (Clean Expansion)',
+        v2: 'Variation 2: Two-Step Push View (Dedicated Screen)',
+        v3: 'Variation 3: Floating Focus Card (Modal Elevation)',
+        v4: 'Variation 4: Morphing Pill + Sentiment Chips',
+        v5: 'Variation 5: Mobile-Native Bottom Sheet'
+      };
+      document.getElementById('activeVarLabel').textContent = labels[varKey];
+
+      for (let i = 1; i <= 5; i++) {
+        const view = document.getElementById(`variation${i}Container`);
+        if (view) view.style.display = (varKey === `v${i}`) ? 'block' : 'none';
+      }
+    }
+
+    // Variation 1 Handlers
+    function openReviewV1() {
+      document.getElementById('expandBoxV1').classList.add('is-open');
+      document.getElementById('writeReviewLinkV1').style.display = 'none';
+      setTimeout(() => document.getElementById('textareaV1').focus(), 150);
+    }
+    function closeReviewV1() {
+      document.getElementById('expandBoxV1').classList.remove('is-open');
+      document.getElementById('writeReviewLinkV1').style.display = 'inline-block';
+    }
+
+    // Variation 2 Handlers
+    function openReviewV2() {
+      document.getElementById('v2Slider').classList.add('show-review-step');
+      setTimeout(() => document.getElementById('textareaV2').focus(), 250);
+    }
+    function closeReviewV2() {
+      document.getElementById('v2Slider').classList.remove('show-review-step');
+    }
+
+    // Variation 3 Handlers
+    function openReviewV3() {
+      document.getElementById('backdropV3').classList.add('is-open');
+      setTimeout(() => document.getElementById('textareaV3').focus(), 150);
+    }
+    function closeReviewV3() {
+      document.getElementById('backdropV3').classList.remove('is-open');
+    }
+    function handleBackdropClick(e, v) {
+      if (e.target.id === 'backdropV3') closeReviewV3();
+    }
+
+    // Variation 4 Handlers
+    function openReviewV4() {
+      document.getElementById('expandBoxV4').classList.add('is-open');
+      document.getElementById('triggerV4').style.display = 'none';
+    }
+    function closeReviewV4() {
+      document.getElementById('expandBoxV4').classList.remove('is-open');
+      document.getElementById('triggerV4').style.display = 'inline-block';
+    }
+    function addChipText(text, varKey) {
+      const ta = document.getElementById(`textarea${varKey.toUpperCase()}`);
+      if (!ta) return;
+      if (ta.value) {
+        ta.value = `${ta.value.trim()} • ${text}`;
+      } else {
+        ta.value = text;
+      }
+      handleInput(varKey);
+    }
+
+    // Variation 5 Handlers
+    function openReviewV5() {
+      document.getElementById('sheetV5').classList.add('is-open');
+      setTimeout(() => document.getElementById('textareaV5').focus(), 200);
+    }
+    function closeReviewV5() {
+      document.getElementById('sheetV5').classList.remove('is-open');
+    }
+
+    // Live Textarea & Counter Handler
+    function handleInput(varKey) {
+      const ta = document.getElementById(`textarea${varKey.toUpperCase()}`);
+      const counter = document.getElementById(`counter${varKey.toUpperCase()}`);
+      if (!ta || !counter) return;
+
+      const len = ta.value.length;
+      counter.textContent = `${len}/500`;
+      counter.classList.toggle('limit-near', len > 450);
+
+      state.reviewText = ta.value;
+      updateDbInspector();
+    }
+
+    // Simulate Post Submission
+    function submitReview(varKey) {
+      const ta = document.getElementById(`textarea${varKey.toUpperCase()}`);
+      const reviewText = ta ? ta.value : '';
+      const rating = state.ratings[varKey] || 5;
+
+      const successHtml = `
+        <div class="success-alert">
+          <span>✓</span>
+          <span>Thank you! Your ${rating}-star review was posted and stored in the database.</span>
+        </div>
+      `;
+
+      const target = document.getElementById(`success${varKey.toUpperCase()}`);
+      if (target) {
+        target.innerHTML = successHtml;
+      }
+
+      // Close open modals/sheets
+      if (varKey === 'v1') closeReviewV1();
+      if (varKey === 'v2') closeReviewV2();
+      if (varKey === 'v3') closeReviewV3();
+      if (varKey === 'v4') closeReviewV4();
+      if (varKey === 'v5') closeReviewV5();
+
+      updateDbInspector(true);
+    }
+
+    // Update the live Database Inspector on the right
+    function updateDbInspector(isPosted = false) {
+      const id = isPosted ? 'rev_' + Math.random().toString(36).substr(2, 6) : 'rev_9f82b1';
+      const rating = state.rating || 5;
+      const text = state.reviewText || "Super clean matrix layout and fast typing!";
+      const chars = text.length;
+      const timestamp = new Date().toISOString();
+
+      const elRating = document.getElementById('prevRating');
+      const elReview = document.getElementById('prevReview');
+      const elChars = document.getElementById('prevChars');
+      const elTime = document.getElementById('prevTimestamp');
+
+      if (elRating) elRating.textContent = rating;
+      if (elReview) elReview.textContent = `"${text.replace(/"/g, '\\"')}"`;
+      if (elChars) elChars.textContent = chars;
+      if (elTime) elTime.textContent = `"${timestamp}"`;
+    }
+
+    // Reset All Demos
+    function resetAllDemos() {
+      for (let i = 1; i <= 5; i++) {
+        const ta = document.getElementById(`textareaV${i}`);
+        if (ta) ta.value = '';
+        const counter = document.getElementById(`counterV${i}`);
+        if (counter) counter.textContent = '0/500';
+        const succ = document.getElementById(`successV${i}`);
+        if (succ) succ.innerHTML = '';
+      }
+      closeReviewV1();
+      closeReviewV2();
+      closeReviewV3();
+      closeReviewV4();
+      closeReviewV5();
+      state.rating = 5;
+      state.reviewText = "";
+      initStars();
+      updateDbInspector();
+    }
+
+    // Run on load
+    window.addEventListener('DOMContentLoaded', () => {
+      initStars();
+      updateDbInspector();
+    });
+  </script>
+</body>
+</html>
