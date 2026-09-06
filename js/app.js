@@ -1019,6 +1019,7 @@ function initContactDrawer() {
       }
     }
   }
+}
 
   /* ==========================================================================
      Link Device Controller (Zero-Login 6-Digit Code Cross-Device Sync)
@@ -1372,7 +1373,6 @@ function initContactDrawer() {
       }, 2000);
     }
   }
-}
 
 // Initialize on DOM load
 document.addEventListener("DOMContentLoaded", () => {
