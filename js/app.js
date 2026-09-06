@@ -660,19 +660,35 @@ function initContactDrawer() {
       const url = GOOGLE_WEBHOOK_URL;
       if (!url) return;
 
-      try {
-        fetch(url, {
-          method: "POST",
-          mode: "no-cors",
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8"
-          },
-          body: JSON.stringify(payload)
-        }).catch((err) => {
-          console.warn("Background review sync warning:", err);
-        });
-      } catch (err) {
-        console.warn("Fetch error:", err);
+      const jsonPayload = JSON.stringify(payload);
+      let sentViaBeacon = false;
+
+      // Primary: navigator.sendBeacon (ideal for mobile, immune to navigation/lifecycle drops)
+      if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+        try {
+          const blob = new Blob([jsonPayload], { type: "text/plain;charset=utf-8" });
+          sentViaBeacon = navigator.sendBeacon(url, blob);
+        } catch (e) {
+          sentViaBeacon = false;
+        }
+      }
+
+      // Secondary: fetch with no-cors & text/plain
+      if (!sentViaBeacon) {
+        try {
+          fetch(url, {
+            method: "POST",
+            mode: "no-cors",
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8"
+            },
+            body: jsonPayload
+          }).catch((err) => {
+            console.warn("Background review sync warning:", err);
+          });
+        } catch (err) {
+          console.warn("Fetch error:", err);
+        }
       }
     }
   }
