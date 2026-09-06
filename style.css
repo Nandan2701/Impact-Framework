@@ -1,0 +1,445 @@
+/* ==========================================================================
+   Impact Framework — Full-Screen 4-Block Minimalist Matrix
+   Integrated with Docs Silk Smooth Typing Engine
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Clean Minimalist Paper Palette */
+  --bg-color: #fdfdfc;
+  --line-color: #22262b;
+  --line-width: 2px;
+  
+  --text-main: #181b1e;
+  --text-muted: #737069;
+  --text-faint: #a6a39b;
+  
+  --task-hover: #f4f3ee;
+  --task-done-color: #9c9991;
+  --input-underline: #d8d6cf;
+
+  --accent-q1: #c54242;
+  --accent-q2: #2b7757;
+  --accent-q3: #b07c1b;
+  --accent-q4: #6b665f;
+}
+
+html, body {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================================
+   Full Screen App Layout (Zero Outside Whitespace)
+   ========================================================================== */
+.app-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+}
+
+/* ==========================================================================
+   Header Bar
+   ========================================================================== */
+.app-header {
+  height: 48px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: var(--line-width) solid var(--line-color);
+  background: var(--bg-color);
+  user-select: none;
+}
+
+.app-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ==========================================================================
+   Full-Screen 4-Quadrant Matrix (Divided by 2 intersecting lines)
+   ========================================================================== */
+.matrix-canvas {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  width: 100vw;
+  height: calc(100vh - 48px);
+  overflow: hidden;
+  background: var(--bg-color);
+}
+
+/* Vertical Center Line (Dividing Left & Right) */
+.quadrant[data-quadrant="q1"],
+.quadrant[data-quadrant="q3"] {
+  border-right: var(--line-width) solid var(--line-color);
+}
+
+/* Horizontal Center Line (Dividing Top & Bottom) */
+.quadrant[data-quadrant="q1"],
+.quadrant[data-quadrant="q2"] {
+  border-bottom: var(--line-width) solid var(--line-color);
+}
+
+/* ==========================================================================
+   Quadrant Area
+   ========================================================================== */
+.quadrant {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px 14px;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.quadrant-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.quadrant-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-main);
+}
+
+.quadrant-tag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid currentColor;
+}
+
+.quadrant[data-quadrant="q1"] .quadrant-tag { color: var(--accent-q1); }
+.quadrant[data-quadrant="q2"] .quadrant-tag { color: var(--accent-q2); }
+.quadrant[data-quadrant="q3"] .quadrant-tag { color: var(--accent-q3); }
+.quadrant[data-quadrant="q4"] .quadrant-tag { color: var(--accent-q4); }
+
+/* ==========================================================================
+   Task List
+   ========================================================================== */
+.task-list {
+  list-style: none;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-right: 4px;
+  min-height: 0;
+  position: relative;
+}
+
+.task-list::-webkit-scrollbar {
+  width: 4px;
+}
+.task-list::-webkit-scrollbar-thumb {
+  background: var(--input-underline);
+  border-radius: 2px;
+}
+
+/* ==========================================================================
+   Task Item — Pure Direct Drag, ZERO Animation, ZERO Shadow
+   ========================================================================== */
+.task {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 4px;
+  font-size: 13.5px;
+  color: var(--text-main);
+  cursor: grab;
+  cursor: -webkit-grab;
+  user-select: none;
+  touch-action: none;
+  position: relative;
+  background: transparent;
+  box-shadow: none !important;
+  transition: none !important;
+}
+
+.task:hover {
+  background: var(--task-hover);
+  box-shadow: none !important;
+}
+
+.task:active {
+  cursor: grabbing;
+  cursor: -webkit-grabbing;
+}
+
+/* When picked up: completely lifted out (no shadow or ghost left behind) */
+.task.being-dragged {
+  display: none !important;
+}
+
+/* Floating Physical Card Following Cursor */
+.dragged-task-floating {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 1 !important;
+  box-shadow: none !important;
+  background: #ffffff !important;
+  border: 1.5px solid var(--line-color) !important;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px;
+  font-size: 13.5px;
+  color: var(--text-main);
+  box-sizing: border-box;
+  cursor: grabbing;
+  transition: none !important;
+}
+
+/* Simple Crisp Drop Indicator Line */
+.drop-indicator-line {
+  height: 2px;
+  background: var(--line-color);
+  margin: 2px 0;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+/* Task Content Text */
+.task-text {
+  flex: 1;
+  word-break: break-word;
+  outline: none;
+  cursor: inherit;
+  line-height: 1.4;
+}
+
+.task.done .task-text {
+  text-decoration: line-through;
+  color: var(--task-done-color);
+}
+
+/* Inline Edit Input (Triggered only by double-click) */
+.edit-input {
+  flex: 1;
+  font-size: 13.5px;
+  font-family: inherit;
+  border: none;
+  border-bottom: 1.5px solid var(--line-color);
+  background: transparent;
+  color: var(--text-main);
+  padding: 2px 0;
+  outline: none;
+}
+
+/* Action buttons: delete button next to square checkbox */
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.btn-delete {
+  background: transparent;
+  border: none;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: none;
+}
+
+.task:hover .btn-delete,
+.task:focus-within .btn-delete {
+  opacity: 1;
+}
+
+.btn-delete:hover {
+  color: #c54242;
+  background: rgba(197, 66, 66, 0.1);
+}
+
+/* ==========================================================================
+   Square Checkbox at the FAR RIGHT END
+   ========================================================================== */
+.task-done-square {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid #8e8b82;
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: none !important;
+  transition: none;
+}
+
+.task-done-square:hover {
+  border-color: var(--line-color);
+}
+
+.task.done .task-done-square {
+  background: var(--line-color);
+  border-color: var(--line-color);
+}
+
+.task.done .task-done-square::after {
+  content: "";
+  width: 4px;
+  height: 8px;
+  border: solid #ffffff;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg) translate(-0.5px, -1px);
+}
+
+/* ==========================================================================
+   Add Task Form (Minimalist underline with Smooth Input Wrap)
+   ========================================================================== */
+.add-form {
+  margin-top: auto;
+  padding-top: 10px;
+  flex-shrink: 0;
+}
+
+.smooth-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.add-form input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px dashed var(--input-underline);
+  background: transparent;
+  padding: 6px 2px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-main);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.add-form input:focus {
+  border-bottom: 1.5px solid var(--line-color);
+}
+
+.add-form input::placeholder {
+  color: var(--text-faint);
+}
+
+/* ==========================================================================
+   DOCS SILK SMOOTH TYPING ENGINE (Permanent Default)
+   ========================================================================== */
+
+/* Hide harsh native cursor in all inputs */
+.smooth-input-wrap input:focus {
+  caret-color: transparent !important;
+}
+
+/* Custom Gliding Caret */
+.smooth-caret {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 16px;
+  background: var(--line-color);
+  pointer-events: none;
+  opacity: 0;
+  left: 2px;
+  z-index: 10;
+  border-radius: 1px;
+  transition: left 0.075s cubic-bezier(0.2, 0, 0, 1), transform 0.06s ease;
+  will-change: left, opacity;
+}
+
+.smooth-caret.visible {
+  opacity: 1;
+}
+
+.smooth-caret.blinking {
+  animation: smoothCaretPulse 1.05s ease-in-out infinite;
+}
+
+.smooth-caret.typing {
+  animation: none !important;
+  opacity: 1 !important;
+}
+
+@keyframes smoothCaretPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ==========================================================================
+   Mobile Optimization
+   ========================================================================== */
+@media (max-width: 640px) {
+  .app-header {
+    height: 42px;
+  }
+  .app-title {
+    font-size: 15px;
+  }
+  .matrix-canvas {
+    height: calc(100vh - 42px);
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(4, 1fr);
+  }
+  .quadrant[data-quadrant="q1"],
+  .quadrant[data-quadrant="q3"] {
+    border-right: none;
+  }
+  .quadrant[data-quadrant="q1"],
+  .quadrant[data-quadrant="q2"],
+  .quadrant[data-quadrant="q3"] {
+    border-bottom: var(--line-width) solid var(--line-color);
+  }
+  .quadrant {
+    padding: 10px 14px 8px;
+  }
+  .btn-delete {
+    opacity: 0.6;
+  }
+}

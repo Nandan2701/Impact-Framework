@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Impact Framework</title>
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="no-referrer">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <h1 class="app-title">Impact Framework</h1>
+    </header>
+
+    <!-- Full-screen 4-block matrix canvas -->
+    <main class="matrix-canvas" id="matrix">
+      <!-- Quadrant 1: Top-Left -->
+      <section class="quadrant" data-quadrant="q1" id="q1">
+        <div class="quadrant-header">
+          <h2 class="quadrant-title" spellcheck="false">High Impact, Easy to Do</h2>
+          <span class="quadrant-tag">Do First</span>
+        </div>
+        <ul class="task-list" data-quadrant="q1" aria-label="High Impact, Easy to Do tasks"></ul>
+        <form class="add-form" data-quadrant="q1">
+          <div class="smooth-input-wrap">
+            <input type="text" placeholder="+ Add task..." autocomplete="off" aria-label="Add task to Q1">
+            <span class="smooth-caret"></span>
+          </div>
+        </form>
+      </section>
+
+      <!-- Quadrant 2: Top-Right -->
+      <section class="quadrant" data-quadrant="q2" id="q2">
+        <div class="quadrant-header">
+          <h2 class="quadrant-title" spellcheck="false">High Impact, Hard to Do</h2>
+          <span class="quadrant-tag">Schedule</span>
+        </div>
+        <ul class="task-list" data-quadrant="q2" aria-label="High Impact, Hard to Do tasks"></ul>
+        <form class="add-form" data-quadrant="q2">
+          <div class="smooth-input-wrap">
+            <input type="text" placeholder="+ Add task..." autocomplete="off" aria-label="Add task to Q2">
+            <span class="smooth-caret"></span>
+          </div>
+        </form>
+      </section>
+
+      <!-- Bottom-Left: Q3 -->
+      <section class="quadrant" data-quadrant="q3" id="q3">
+        <div class="quadrant-header">
+          <h2 class="quadrant-title" spellcheck="false">Low Impact, Easy to Do</h2>
+          <span class="quadrant-tag">Delegate</span>
+        </div>
+        <ul class="task-list" data-quadrant="q3" aria-label="Low Impact, Easy to Do tasks"></ul>
+        <form class="add-form" data-quadrant="q3">
+          <div class="smooth-input-wrap">
+            <input type="text" placeholder="+ Add task..." autocomplete="off" aria-label="Add task to Q3">
+            <span class="smooth-caret"></span>
+          </div>
+        </form>
+      </section>
+
+      <!-- Bottom-Right: Q4 -->
+      <section class="quadrant" data-quadrant="q4" id="q4">
+        <div class="quadrant-header">
+          <h2 class="quadrant-title" spellcheck="false">Low Impact, Hard to Do</h2>
+          <span class="quadrant-tag">Eliminate</span>
+        </div>
+        <ul class="task-list" data-quadrant="q4" aria-label="Low Impact, Hard to Do tasks"></ul>
+        <form class="add-form" data-quadrant="q4">
+          <div class="smooth-input-wrap">
+            <input type="text" placeholder="+ Add task..." autocomplete="off" aria-label="Add task to Q4">
+            <span class="smooth-caret"></span>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
