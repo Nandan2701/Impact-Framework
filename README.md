@@ -19,13 +19,13 @@ A distractionless, high-focus 4-quadrant task prioritization matrix designed wit
 ## Local Development
 
 ```bash
-# Run with Node
-node server.js
+# Using npx
+npx serve .
 
-# Or run with Python
+# Or using Python
 python -m http.server 3000
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open the provided local URL in your browser.
 
 ## Deployment
 

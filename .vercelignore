@@ -1,0 +1,6 @@
+# Ignore local scripts and dev files
+server.js
+local-dev-server.*
+*.log
+.DS_Store
+Thumbs.db
