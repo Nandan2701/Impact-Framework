@@ -1208,6 +1208,26 @@ body.drawer-open .app-container {
   flex-shrink: 0;
 }
 
+.link-active-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #137333;
+  font-weight: 600;
+  margin-left: 16px;
+  margin-top: -3px;
+}
+
+.pulse-ring {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #1e8e3e;
+  animation: pulseLinked 1.8s infinite ease-in-out;
+}
+
 .link-active-actions {
   display: flex;
   align-items: center;

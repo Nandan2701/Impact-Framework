@@ -268,8 +268,14 @@ A comprehensive, point-by-point chronological record of every feature, design de
 
 * **Client Sync Engine (`js/app.js`):**
   * Auto-generates and persists 6-digit device pairing code.
-  * Debounced cloud sync on any task change (`save()` -> `triggerCloudSyncDebounced()` -> `sync_tasks`).
-  * On app load: If previously linked, automatically checks cloud and pulls any tasks created on the paired device.
+  * Debounced cloud sync on any task change (`save()` -> `triggerCloudSyncDebounced()` -> `sync_tasks`) within 400ms.
+  * **Continuous Real-Time Auto-Sync (3s Background Polling):**
+    * Runs every 3 seconds while tab is active to pull changes automatically.
+    * Hands-free: No clicking "Sync Now" required. Edits made on mobile show up on laptop automatically and vice-versa.
+    * Pauses polling when the tab or phone screen is inactive to conserve battery and bandwidth; immediately checks on tab focus (`visibilitychange`).
+    * **Typing Conflict Protection:** If a remote update arrives while the user is actively typing or editing a task, the update is safely queued until blur/commit, never interrupting the user mid-keystroke.
+  * **Two-Way Auto-Pairing Discovery:**
+    * When one device enters the code, the other device automatically detects the connection via `lastUid !== myUid` and marks itself as `Linked with [Mobile/Desktop]` with the green pulsing dot.
 
 ---
 

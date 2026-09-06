@@ -141,11 +141,18 @@ function doPost(e) {
         }
       }
 
+      var payloadObj = {
+        tasks: data.tasks || {},
+        updatedAt: Number(data.updatedAt) || now.getTime(),
+        device: data.device || "Desktop",
+        uid: data.uid || "anon"
+      };
+
       var rowData = [
         rawCode,
         now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
         taskCount,
-        JSON.stringify(data.tasks || {}),
+        JSON.stringify(payloadObj),
         data.device || "Desktop",
         data.uid || "anon"
       ];
@@ -166,7 +173,14 @@ function doPost(e) {
       }
 
       return ContentService
-        .createTextOutput(JSON.stringify({ status: "success", type: "sync_tasks", code: rawCode, taskCount: taskCount, savedAt: now.toISOString() }))
+        .createTextOutput(JSON.stringify({
+          status: "success",
+          type: "sync_tasks",
+          code: rawCode,
+          updatedAt: payloadObj.updatedAt,
+          taskCount: taskCount,
+          savedAt: now.toISOString()
+        }))
         .setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -181,12 +195,24 @@ function doPost(e) {
         var allRows = sheetSync.getDataRange().getValues();
         for (var j = 1; j < allRows.length; j++) {
           if (String(allRows[j][0]).replace(/[^0-9A-Za-z]/g, "") === searchCode) {
+            var rawContent = allRows[j][3] || "{}";
+            var parsedPayload = {};
+            try {
+              parsedPayload = JSON.parse(rawContent);
+            } catch(errJson) { parsedPayload = {}; }
+
+            var returnTasks = parsedPayload.tasks !== undefined ? parsedPayload.tasks : parsedPayload;
+            var returnUpdatedAt = parsedPayload.updatedAt || 0;
+
             return ContentService
               .createTextOutput(JSON.stringify({
                 status: "success",
                 type: "get_tasks",
                 code: searchCode,
-                tasks: JSON.parse(allRows[j][3] || "{}"),
+                tasks: returnTasks,
+                updatedAt: returnUpdatedAt,
+                lastDevice: allRows[j][4] || parsedPayload.device || "Desktop",
+                lastUid: allRows[j][5] || parsedPayload.uid || "anon",
                 lastUpdated: allRows[j][1],
                 taskCount: allRows[j][2]
               }))
@@ -401,11 +427,23 @@ function doGet(e) {
         var values = syncSheet.getDataRange().getValues();
         for (var i = 1; i < values.length; i++) {
           if (String(values[i][0]).replace(/[^0-9A-Za-z]/g, "") === cleanCode) {
+            var rawVal = values[i][3] || "{}";
+            var parsed = {};
+            try {
+              parsed = JSON.parse(rawVal);
+            } catch(errJson) { parsed = {}; }
+
+            var tasks = parsed.tasks !== undefined ? parsed.tasks : parsed;
+            var updatedAt = parsed.updatedAt || 0;
+
             return ContentService
               .createTextOutput(JSON.stringify({
                 status: "success",
                 code: cleanCode,
-                tasks: JSON.parse(values[i][3] || "{}"),
+                tasks: tasks,
+                updatedAt: updatedAt,
+                lastDevice: values[i][4] || parsed.device || "Desktop",
+                lastUid: values[i][5] || parsed.uid || "anon",
                 lastUpdated: values[i][1],
                 taskCount: values[i][2]
               }))

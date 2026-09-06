@@ -1019,10 +1019,8 @@ function initContactDrawer() {
       }
     }
   }
-}
-
-  /* ==========================================================================
-     Link Device Controller (Zero-Login 6-Digit Code Cross-Device Sync)
+}  /* ==========================================================================
+     Link Device Controller (Zero-Login 6-Digit Real-Time Cross-Device Sync)
      ========================================================================== */
   function getDevicePairingCode() {
     let code = localStorage.getItem("impact_device_pairing_code");
@@ -1043,15 +1041,32 @@ function initContactDrawer() {
     return clean.slice(0, 3) + "-" + clean.slice(3, 6);
   }
 
+  function getMyDeviceType() {
+    return /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      ? "Mobile"
+      : "Desktop";
+  }
+
   let isCloudPulling = false;
   let cloudSyncTimeout = null;
+  let autoSyncInterval = null;
+  let isCheckingRemote = false;
+
+  // Track latest board timestamp
+  let localBoardUpdatedAt = Number(localStorage.getItem("impact_board_updated_at")) || Date.now();
+
+  function markLocalBoardUpdated() {
+    localBoardUpdatedAt = Date.now();
+    localStorage.setItem("impact_board_updated_at", String(localBoardUpdatedAt));
+  }
 
   function triggerCloudSyncDebounced() {
     if (isCloudPulling) return;
+    markLocalBoardUpdated();
     if (cloudSyncTimeout) clearTimeout(cloudSyncTimeout);
     cloudSyncTimeout = setTimeout(() => {
       syncBoardToCloud();
-    }, 1200);
+    }, 400); // Fast 400ms background push
   }
 
   function syncBoardToCloud(customCode) {
@@ -1062,12 +1077,12 @@ function initContactDrawer() {
     const url = GOOGLE_WEBHOOK_URL;
     if (!url) return;
 
-    const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const payload = {
       type: "sync_tasks",
       code: cleanCode,
       tasks: state,
-      device: isMobile ? "Mobile" : "Desktop",
+      updatedAt: localBoardUpdatedAt,
+      device: getMyDeviceType(),
       uid: getDevicePairingCode()
     };
 
@@ -1085,7 +1100,7 @@ function initContactDrawer() {
     }
   }
 
-  async function fetchTasksFromCloud(code) {
+  async function fetchTasksFromCloud(code, isBackgroundCheck = false) {
     const cleanCode = String(code || "").replace(/\D/g, "");
     if (!cleanCode || cleanCode.length !== 6) return { success: false, message: "Invalid code format." };
 
@@ -1099,51 +1114,130 @@ function initContactDrawer() {
       }
       const data = await res.json();
       if (data.status === "success" && data.tasks && typeof data.tasks === "object") {
-        isCloudPulling = true;
-        try {
-          const out = {};
-          for (const q of QUADRANTS) {
-            out[q] = Array.isArray(data.tasks[q])
-              ? data.tasks[q].filter((t) => t && typeof t.text === "string")
-              : [];
+        const remoteUpdatedAt = Number(data.updatedAt) || 0;
+        const myUid = getDevicePairingCode();
+        const peerDevice = data.lastDevice || (getMyDeviceType() === "Mobile" ? "Desktop" : "Mobile");
+
+        // 1. Two-way Peer Connection Detection:
+        // If data was touched by another device, auto-pair this device as well!
+        if (data.lastUid && data.lastUid !== myUid) {
+          const wasLinked = localStorage.getItem("impact_is_linked") === "true";
+          localStorage.setItem("impact_linked_code", cleanCode);
+          localStorage.setItem("impact_is_linked", "true");
+          localStorage.setItem("impact_linked_peer_device", peerDevice);
+          if (!wasLinked) {
+            updateLinkDeviceUI();
           }
-          state = out;
-          save();
-          render();
-        } finally {
-          isCloudPulling = false;
         }
-        return { success: true, tasks: data.tasks, lastUpdated: data.lastUpdated };
+
+        // 2. State synchronization: only apply if remote state is newer
+        // (or if explicit action like initial load or clicking Sync Now)
+        const shouldApply = !isBackgroundCheck || (remoteUpdatedAt > localBoardUpdatedAt);
+
+        if (shouldApply) {
+          const active = document.activeElement;
+          const isTyping = editingId !== null || (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA"));
+
+          if (isTyping && isBackgroundCheck) {
+            // User is actively typing, don't interrupt! Store until blur
+            window.__pendingCloudUpdate = data;
+          } else {
+            isCloudPulling = true;
+            try {
+              const out = {};
+              for (const q of QUADRANTS) {
+                out[q] = Array.isArray(data.tasks[q])
+                  ? data.tasks[q].filter((t) => t && typeof t.text === "string")
+                  : [];
+              }
+              state = out;
+              localBoardUpdatedAt = remoteUpdatedAt > 0 ? remoteUpdatedAt : Date.now();
+              localStorage.setItem("impact_board_updated_at", String(localBoardUpdatedAt));
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+              render();
+            } finally {
+              isCloudPulling = false;
+            }
+          }
+        }
+        return { success: true, tasks: data.tasks, lastUpdated: data.lastUpdated, lastDevice: data.lastDevice };
       } else if (data.status === "not_found") {
         return { success: false, notFound: true, message: "No tasks found for code " + formatPairingCode(cleanCode) };
       } else {
         return { success: false, message: data.message || "Unable to retrieve tasks." };
       }
     } catch (err) {
-      console.warn("Fetch cloud tasks error:", err);
+      if (!isBackgroundCheck) console.warn("Fetch cloud tasks error:", err);
       return { success: false, message: "Connection issue. Check your internet." };
     }
+  }
+
+  function applyPendingCloudUpdate() {
+    if (!window.__pendingCloudUpdate) return;
+    const data = window.__pendingCloudUpdate;
+    window.__pendingCloudUpdate = null;
+    isCloudPulling = true;
+    try {
+      const out = {};
+      for (const q of QUADRANTS) {
+        out[q] = Array.isArray(data.tasks[q])
+          ? data.tasks[q].filter((t) => t && typeof t.text === "string")
+          : [];
+      }
+      state = out;
+      localBoardUpdatedAt = Number(data.updatedAt) || Date.now();
+      localStorage.setItem("impact_board_updated_at", String(localBoardUpdatedAt));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      render();
+    } finally {
+      isCloudPulling = false;
+    }
+  }
+
+  // Automatic Background Polling Engine (Every 3 seconds)
+  async function checkForRemoteUpdates() {
+    if (isCheckingRemote || isCloudPulling) return;
+    if (document.hidden) return; // Pause polling when tab is inactive/screen locked
+    isCheckingRemote = true;
+    try {
+      const activeCode = getActiveSyncCode();
+      if (activeCode && activeCode.length === 6) {
+        await fetchTasksFromCloud(activeCode, true);
+      }
+    } finally {
+      isCheckingRemote = false;
+    }
+  }
+
+  function startAutoSyncPolling() {
+    if (autoSyncInterval) clearInterval(autoSyncInterval);
+    autoSyncInterval = setInterval(checkForRemoteUpdates, 3000);
   }
 
   function updateLinkDeviceUI() {
     const linkDeviceBtn = document.getElementById("linkDeviceBtn");
     const linkActiveBanner = document.getElementById("linkActiveBanner");
+    const linkActiveTitle = document.getElementById("linkActiveTitle");
     const currentPairingCodeDisplay = document.getElementById("currentPairingCodeDisplay");
     const myPairingCode = document.getElementById("myPairingCode");
 
     const myCode = getDevicePairingCode();
-    const linkedCode = localStorage.getItem("impact_linked_code");
+    const linkedCode = localStorage.getItem("impact_linked_code") || myCode;
     const isLinked = localStorage.getItem("impact_is_linked") === "true";
+    const peerDevice = localStorage.getItem("impact_linked_peer_device") || (getMyDeviceType() === "Mobile" ? "Desktop" : "Mobile");
 
     if (myPairingCode) {
       myPairingCode.textContent = formatPairingCode(myCode);
     }
 
-    if (isLinked && linkedCode) {
+    if (isLinked) {
       if (linkActiveBanner) linkActiveBanner.style.display = "flex";
+      if (linkActiveTitle) linkActiveTitle.textContent = `Linked with ${peerDevice}: `;
       if (currentPairingCodeDisplay) currentPairingCodeDisplay.textContent = formatPairingCode(linkedCode);
       if (linkDeviceBtn) {
         linkDeviceBtn.classList.add("is-linked");
+        const span = linkDeviceBtn.querySelector("span:not(.nav-linked-dot)");
+        if (span) span.textContent = "Linked";
         if (!linkDeviceBtn.querySelector(".nav-linked-dot")) {
           const dot = document.createElement("span");
           dot.className = "nav-linked-dot";
@@ -1154,6 +1248,8 @@ function initContactDrawer() {
       if (linkActiveBanner) linkActiveBanner.style.display = "none";
       if (linkDeviceBtn) {
         linkDeviceBtn.classList.remove("is-linked");
+        const span = linkDeviceBtn.querySelector("span:not(.nav-linked-dot)");
+        if (span) span.textContent = "Link Device";
         const dot = linkDeviceBtn.querySelector(".nav-linked-dot");
         if (dot) dot.remove();
       }
@@ -1302,13 +1398,16 @@ function initContactDrawer() {
           linkSubmitBtn.textContent = "Connect";
         }
 
+        const peerType = (getMyDeviceType() === "Mobile") ? "Desktop" : "Mobile";
+
         if (result.success) {
           localStorage.setItem("impact_linked_code", clean);
           localStorage.setItem("impact_is_linked", "true");
+          localStorage.setItem("impact_linked_peer_device", peerType);
           updateLinkDeviceUI();
           if (pairCodeInput) pairCodeInput.value = "";
           if (linkFeedback) {
-            linkFeedback.textContent = "✓ Linked successfully! Board synced.";
+            linkFeedback.textContent = `✓ Linked with ${peerType}! Auto-sync active.`;
             linkFeedback.className = "link-feedback success";
           }
           setTimeout(closeModal, 1600);
@@ -1316,11 +1415,12 @@ function initContactDrawer() {
           // If code doesn't have tasks yet in cloud, link with it and push our current board!
           localStorage.setItem("impact_linked_code", clean);
           localStorage.setItem("impact_is_linked", "true");
+          localStorage.setItem("impact_linked_peer_device", peerType);
           syncBoardToCloud(clean);
           updateLinkDeviceUI();
           if (pairCodeInput) pairCodeInput.value = "";
           if (linkFeedback) {
-            linkFeedback.textContent = "✓ Linked with code! Current board uploaded.";
+            linkFeedback.textContent = `✓ Linked with ${peerType}! Current board synced.`;
             linkFeedback.className = "link-feedback success";
           }
           setTimeout(closeModal, 1600);
@@ -1351,6 +1451,7 @@ function initContactDrawer() {
     if (linkUnlinkBtn) {
       linkUnlinkBtn.addEventListener("click", () => {
         localStorage.removeItem("impact_linked_code");
+        localStorage.removeItem("impact_linked_peer_device");
         localStorage.setItem("impact_is_linked", "false");
         updateLinkDeviceUI();
         if (linkFeedback) {
@@ -1360,18 +1461,13 @@ function initContactDrawer() {
       });
     }
 
-    // Auto-sync on startup if linked
-    if (localStorage.getItem("impact_is_linked") === "true") {
-      const linkedCode = localStorage.getItem("impact_linked_code");
-      if (linkedCode && linkedCode.length === 6) {
-        fetchTasksFromCloud(linkedCode);
-      }
-    } else {
-      // Also push our own initial board to cloud once so peer can discover it immediately
-      setTimeout(() => {
-        syncBoardToCloud(getDevicePairingCode());
-      }, 2000);
-    }
+    // Seed our own board to cloud once so peer can discover it immediately
+    setTimeout(() => {
+      syncBoardToCloud(getDevicePairingCode());
+    }, 1500);
+
+    // Start background auto-sync polling loop (Every 3 seconds)
+    startAutoSyncPolling();
   }
 
 // Initialize on DOM load
@@ -1395,7 +1491,17 @@ document.addEventListener("DOMContentLoaded", () => {
       if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) {
         active.blur();
         document.body.classList.remove("shift-bottom-active");
+        if (typeof applyPendingCloudUpdate === "function") {
+          applyPendingCloudUpdate();
+        }
       }
+    }
+  });
+
+  // When tab/browser window becomes visible again, immediately poll for remote updates
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && typeof checkForRemoteUpdates === "function") {
+      checkForRemoteUpdates();
     }
   });
 });
