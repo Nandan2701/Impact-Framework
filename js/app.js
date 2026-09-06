@@ -611,6 +611,22 @@ function initContactDrawer() {
     if (focusPostBtn) {
       focusPostBtn.addEventListener("click", () => {
         const rating = activeModalRating || 5;
+        const reviewText = focusTextarea ? focusTextarea.value.trim() : "";
+        const isMobile = window.innerWidth <= 768;
+
+        // Build Payload for Google Sheets & Gmail
+        const payload = {
+          rating: rating,
+          review: reviewText,
+          character_count: reviewText.length,
+          device: isMobile ? "mobile" : "desktop",
+          app_version: "v1.2.0",
+          timestamp: new Date().toISOString()
+        };
+
+        // Fire-and-forget sync to Google Sheets & Gmail
+        sendReviewToGoogleSheetsAndGmail(payload);
+
         localStorage.setItem(RATING_KEY, rating.toString());
         highlightStars(rating);
 
@@ -622,6 +638,34 @@ function initContactDrawer() {
         if (focusCharCounter) focusCharCounter.textContent = "0/500";
 
         closeFocusModal();
+      });
+    }
+
+    // Helper: Async sync to Google Sheets & Instant Gmail
+    function sendReviewToGoogleSheetsAndGmail(payload) {
+      // 1. Safe local persistent backup
+      try {
+        const existing = JSON.parse(localStorage.getItem("impact-framework-reviews-backup") || "[]");
+        existing.push(payload);
+        localStorage.setItem("impact-framework-reviews-backup", JSON.stringify(existing));
+      } catch (e) {}
+
+      // 2. Dispatch to Google Apps Script Webhook if configured
+      const url = (window.IMPACT_CONFIG && window.IMPACT_CONFIG.googleWebhookUrl) || "";
+      if (!url) {
+        console.log("Review safely recorded locally. Configure googleWebhookUrl in js/config.js to sync directly to Google Sheets & Gmail.");
+        return;
+      }
+
+      fetch(url, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      }).catch((err) => {
+        console.warn("Background review sync warning:", err);
       });
     }
   }
