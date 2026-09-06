@@ -30,6 +30,9 @@ const DEFAULT_TASKS = {
 let state = loadState();
 let editingId = null;
 
+const GOOGLE_WEBHOOK_URL = (typeof window !== "undefined" && window.IMPACT_CONFIG && window.IMPACT_CONFIG.googleWebhookUrl) || 
+  "https://script.google.com/macros/s/AKfycbxA0SIv6IiO-fkWbSUiV6Vwp6XmwFutVEeCjgPmPiQQlTNuiIZ5uqlJrlIvOOGlUvaK/exec";
+
 // Offscreen canvas for microsecond-precise character width measurements
 const measureCanvas = document.createElement("canvas");
 const measureCtx = measureCanvas.getContext("2d");
@@ -62,6 +65,9 @@ function loadState() {
 
 function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (typeof triggerCloudSyncDebounced === "function") {
+    triggerCloudSyncDebounced();
+  }
 }
 
 function render() {
@@ -766,9 +772,6 @@ function initContactDrawer() {
     });
   }
 
-  const GOOGLE_WEBHOOK_URL = (window.IMPACT_CONFIG && window.IMPACT_CONFIG.googleWebhookUrl) || 
-    "https://script.google.com/macros/s/AKfycbxA0SIv6IiO-fkWbSUiV6Vwp6XmwFutVEeCjgPmPiQQlTNuiIZ5uqlJrlIvOOGlUvaK/exec";
-
   // Floating Focus Card Modal Elements
   const focusModalBackdrop = document.getElementById("focusReviewBackdrop");
   const focusCloseBtn = document.getElementById("focusReviewCloseBtn");
@@ -1016,6 +1019,359 @@ function initContactDrawer() {
       }
     }
   }
+
+  /* ==========================================================================
+     Link Device Controller (Zero-Login 6-Digit Code Cross-Device Sync)
+     ========================================================================== */
+  function getDevicePairingCode() {
+    let code = localStorage.getItem("impact_device_pairing_code");
+    if (!code || !/^\d{6}$/.test(code)) {
+      code = String(Math.floor(100000 + Math.random() * 900000));
+      localStorage.setItem("impact_device_pairing_code", code);
+    }
+    return code;
+  }
+
+  function getActiveSyncCode() {
+    return localStorage.getItem("impact_linked_code") || getDevicePairingCode();
+  }
+
+  function formatPairingCode(code) {
+    const clean = String(code || "").replace(/\D/g, "");
+    if (clean.length <= 3) return clean;
+    return clean.slice(0, 3) + "-" + clean.slice(3, 6);
+  }
+
+  let isCloudPulling = false;
+  let cloudSyncTimeout = null;
+
+  function triggerCloudSyncDebounced() {
+    if (isCloudPulling) return;
+    if (cloudSyncTimeout) clearTimeout(cloudSyncTimeout);
+    cloudSyncTimeout = setTimeout(() => {
+      syncBoardToCloud();
+    }, 1200);
+  }
+
+  function syncBoardToCloud(customCode) {
+    const code = customCode || getActiveSyncCode();
+    const cleanCode = String(code).replace(/\D/g, "");
+    if (!cleanCode || cleanCode.length !== 6) return;
+
+    const url = GOOGLE_WEBHOOK_URL;
+    if (!url) return;
+
+    const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const payload = {
+      type: "sync_tasks",
+      code: cleanCode,
+      tasks: state,
+      device: isMobile ? "Mobile" : "Desktop",
+      uid: getDevicePairingCode()
+    };
+
+    try {
+      fetch(url, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      }).catch((err) => {
+        console.warn("Cloud sync warning:", err);
+      });
+    } catch (err) {
+      console.warn("Cloud sync error:", err);
+    }
+  }
+
+  async function fetchTasksFromCloud(code) {
+    const cleanCode = String(code || "").replace(/\D/g, "");
+    if (!cleanCode || cleanCode.length !== 6) return { success: false, message: "Invalid code format." };
+
+    const url = GOOGLE_WEBHOOK_URL;
+    if (!url) return { success: false, message: "Webhook URL not configured." };
+
+    try {
+      const res = await fetch(`${url}?action=get_tasks&code=${encodeURIComponent(cleanCode)}`);
+      if (!res.ok) {
+        return { success: false, message: "Network error connecting to cloud." };
+      }
+      const data = await res.json();
+      if (data.status === "success" && data.tasks && typeof data.tasks === "object") {
+        isCloudPulling = true;
+        try {
+          const out = {};
+          for (const q of QUADRANTS) {
+            out[q] = Array.isArray(data.tasks[q])
+              ? data.tasks[q].filter((t) => t && typeof t.text === "string")
+              : [];
+          }
+          state = out;
+          save();
+          render();
+        } finally {
+          isCloudPulling = false;
+        }
+        return { success: true, tasks: data.tasks, lastUpdated: data.lastUpdated };
+      } else if (data.status === "not_found") {
+        return { success: false, notFound: true, message: "No tasks found for code " + formatPairingCode(cleanCode) };
+      } else {
+        return { success: false, message: data.message || "Unable to retrieve tasks." };
+      }
+    } catch (err) {
+      console.warn("Fetch cloud tasks error:", err);
+      return { success: false, message: "Connection issue. Check your internet." };
+    }
+  }
+
+  function updateLinkDeviceUI() {
+    const linkDeviceBtn = document.getElementById("linkDeviceBtn");
+    const linkActiveBanner = document.getElementById("linkActiveBanner");
+    const currentPairingCodeDisplay = document.getElementById("currentPairingCodeDisplay");
+    const myPairingCode = document.getElementById("myPairingCode");
+
+    const myCode = getDevicePairingCode();
+    const linkedCode = localStorage.getItem("impact_linked_code");
+    const isLinked = localStorage.getItem("impact_is_linked") === "true";
+
+    if (myPairingCode) {
+      myPairingCode.textContent = formatPairingCode(myCode);
+    }
+
+    if (isLinked && linkedCode) {
+      if (linkActiveBanner) linkActiveBanner.style.display = "flex";
+      if (currentPairingCodeDisplay) currentPairingCodeDisplay.textContent = formatPairingCode(linkedCode);
+      if (linkDeviceBtn) {
+        linkDeviceBtn.classList.add("is-linked");
+        if (!linkDeviceBtn.querySelector(".nav-linked-dot")) {
+          const dot = document.createElement("span");
+          dot.className = "nav-linked-dot";
+          linkDeviceBtn.prepend(dot);
+        }
+      }
+    } else {
+      if (linkActiveBanner) linkActiveBanner.style.display = "none";
+      if (linkDeviceBtn) {
+        linkDeviceBtn.classList.remove("is-linked");
+        const dot = linkDeviceBtn.querySelector(".nav-linked-dot");
+        if (dot) dot.remove();
+      }
+    }
+  }
+
+  function initLinkDevice() {
+    const linkDeviceBtn = document.getElementById("linkDeviceBtn");
+    const backdrop = document.getElementById("linkDeviceBackdrop");
+    const closeBtn = document.getElementById("linkDeviceCloseBtn");
+    const copyBtn = document.getElementById("copyPairingCodeBtn");
+    const pairCodeInput = document.getElementById("pairCodeInput");
+    const linkCodeForm = document.getElementById("linkCodeForm");
+    const linkSubmitBtn = document.getElementById("linkSubmitBtn");
+    const linkFeedback = document.getElementById("linkFeedback");
+    const linkSyncNowBtn = document.getElementById("linkSyncNowBtn");
+    const linkUnlinkBtn = document.getElementById("linkUnlinkBtn");
+
+    updateLinkDeviceUI();
+
+    // Modal open
+    if (linkDeviceBtn) {
+      linkDeviceBtn.addEventListener("click", () => {
+        updateLinkDeviceUI();
+        if (backdrop) {
+          backdrop.classList.add("is-open");
+          backdrop.setAttribute("aria-hidden", "false");
+        }
+        if (linkFeedback) {
+          linkFeedback.textContent = "";
+          linkFeedback.className = "link-feedback";
+        }
+        setTimeout(() => {
+          if (pairCodeInput) pairCodeInput.focus();
+        }, 150);
+      });
+    }
+
+    // Modal close
+    function closeModal() {
+      if (backdrop) {
+        backdrop.classList.remove("is-open");
+        backdrop.setAttribute("aria-hidden", "true");
+      }
+    }
+
+    if (closeBtn) closeBtn.addEventListener("click", closeModal);
+    if (backdrop) {
+      backdrop.addEventListener("click", (e) => {
+        if (e.target === backdrop) closeModal();
+      });
+    }
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && backdrop && backdrop.classList.contains("is-open")) {
+        closeModal();
+      }
+    });
+
+    // Copy own code
+    if (copyBtn) {
+      copyBtn.addEventListener("click", () => {
+        const codeText = formatPairingCode(getDevicePairingCode());
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(codeText).then(() => {
+            const orig = copyBtn.innerHTML;
+            copyBtn.textContent = "Copied! ✓";
+            copyBtn.classList.add("copied");
+            setTimeout(() => {
+              copyBtn.innerHTML = orig;
+              copyBtn.classList.remove("copied");
+            }, 1800);
+          }).catch(() => fallbackCopy(codeText));
+        } else {
+          fallbackCopy(codeText);
+        }
+
+        function fallbackCopy(text) {
+          const temp = document.createElement("input");
+          temp.value = text;
+          document.body.appendChild(temp);
+          temp.select();
+          document.execCommand("copy");
+          document.body.removeChild(temp);
+          copyBtn.textContent = "Copied! ✓";
+          copyBtn.classList.add("copied");
+          setTimeout(() => {
+            copyBtn.textContent = "Copy";
+            copyBtn.classList.remove("copied");
+          }, 1800);
+        }
+      });
+    }
+
+    // Input formatting (Auto-hyphenate XXX-XXX)
+    if (pairCodeInput) {
+      pairCodeInput.addEventListener("input", (e) => {
+        const clean = e.target.value.replace(/\D/g, "").slice(0, 6);
+        if (clean.length > 3) {
+          e.target.value = clean.slice(0, 3) + "-" + clean.slice(3, 6);
+        } else {
+          e.target.value = clean;
+        }
+        if (linkFeedback) {
+          linkFeedback.textContent = "";
+          linkFeedback.className = "link-feedback";
+        }
+      });
+    }
+
+    // Form submit (Connect device)
+    if (linkCodeForm) {
+      linkCodeForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const raw = pairCodeInput ? pairCodeInput.value : "";
+        const clean = raw.replace(/\D/g, "");
+
+        if (clean.length !== 6) {
+          if (linkFeedback) {
+            linkFeedback.textContent = "Please enter a valid 6-digit code (e.g. 482-915).";
+            linkFeedback.className = "link-feedback error";
+          }
+          return;
+        }
+
+        if (clean === getDevicePairingCode()) {
+          if (linkFeedback) {
+            linkFeedback.textContent = "This is your own code! Enter it on your other device.";
+            linkFeedback.className = "link-feedback error";
+          }
+          return;
+        }
+
+        if (linkSubmitBtn) {
+          linkSubmitBtn.disabled = true;
+          linkSubmitBtn.textContent = "Connecting...";
+        }
+        if (linkFeedback) {
+          linkFeedback.textContent = "Connecting to device...";
+          linkFeedback.className = "link-feedback info";
+        }
+
+        const result = await fetchTasksFromCloud(clean);
+
+        if (linkSubmitBtn) {
+          linkSubmitBtn.disabled = false;
+          linkSubmitBtn.textContent = "Connect";
+        }
+
+        if (result.success) {
+          localStorage.setItem("impact_linked_code", clean);
+          localStorage.setItem("impact_is_linked", "true");
+          updateLinkDeviceUI();
+          if (pairCodeInput) pairCodeInput.value = "";
+          if (linkFeedback) {
+            linkFeedback.textContent = "✓ Linked successfully! Board synced.";
+            linkFeedback.className = "link-feedback success";
+          }
+          setTimeout(closeModal, 1600);
+        } else if (result.notFound) {
+          // If code doesn't have tasks yet in cloud, link with it and push our current board!
+          localStorage.setItem("impact_linked_code", clean);
+          localStorage.setItem("impact_is_linked", "true");
+          syncBoardToCloud(clean);
+          updateLinkDeviceUI();
+          if (pairCodeInput) pairCodeInput.value = "";
+          if (linkFeedback) {
+            linkFeedback.textContent = "✓ Linked with code! Current board uploaded.";
+            linkFeedback.className = "link-feedback success";
+          }
+          setTimeout(closeModal, 1600);
+        } else {
+          if (linkFeedback) {
+            linkFeedback.textContent = result.message || "Failed to link device.";
+            linkFeedback.className = "link-feedback error";
+          }
+        }
+      });
+    }
+
+    // Force Sync Now Button
+    if (linkSyncNowBtn) {
+      linkSyncNowBtn.addEventListener("click", async () => {
+        const activeCode = getActiveSyncCode();
+        linkSyncNowBtn.textContent = "Syncing...";
+        await fetchTasksFromCloud(activeCode);
+        syncBoardToCloud(activeCode);
+        linkSyncNowBtn.textContent = "Synced! ✓";
+        setTimeout(() => {
+          linkSyncNowBtn.textContent = "Sync Now";
+        }, 1500);
+      });
+    }
+
+    // Unlink Button
+    if (linkUnlinkBtn) {
+      linkUnlinkBtn.addEventListener("click", () => {
+        localStorage.removeItem("impact_linked_code");
+        localStorage.setItem("impact_is_linked", "false");
+        updateLinkDeviceUI();
+        if (linkFeedback) {
+          linkFeedback.textContent = "Device unlinked. Local tasks kept.";
+          linkFeedback.className = "link-feedback info";
+        }
+      });
+    }
+
+    // Auto-sync on startup if linked
+    if (localStorage.getItem("impact_is_linked") === "true") {
+      const linkedCode = localStorage.getItem("impact_linked_code");
+      if (linkedCode && linkedCode.length === 6) {
+        fetchTasksFromCloud(linkedCode);
+      }
+    } else {
+      // Also push our own initial board to cloud once so peer can discover it immediately
+      setTimeout(() => {
+        syncBoardToCloud(getDevicePairingCode());
+      }, 2000);
+    }
+  }
 }
 
 // Initialize on DOM load
@@ -1023,11 +1379,17 @@ document.addEventListener("DOMContentLoaded", () => {
   prefetchGeoData();
   initAddForms();
   initContactDrawer();
+  initLinkDevice();
   render();
 
   // Dismiss active input and keypad when tapping outside on mobile
   document.addEventListener("pointerdown", (e) => {
-    if (e.target.closest("#contactDrawer") || e.target.closest("#contactBtn")) return;
+    if (
+      e.target.closest("#contactDrawer") ||
+      e.target.closest("#contactBtn") ||
+      e.target.closest("#linkDeviceBackdrop") ||
+      e.target.closest("#linkDeviceBtn")
+    ) return;
     if (!e.target.closest(".add-form") && !e.target.closest(".smooth-input-wrap")) {
       const active = document.activeElement;
       if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) {

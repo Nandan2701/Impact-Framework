@@ -238,6 +238,41 @@ A comprehensive, point-by-point chronological record of every feature, design de
 
 ---
 
+## 📌 Phase 12: Zero-Login Cross-Device Task Sync ("Link Device")
+
+* **The Requirement:**
+  * Sync tasks across laptop, phone, and tablet seamlessly.
+  * **Strict constraints:**
+    * Zero logins, zero email entry, zero passwords.
+    * No QR code scanning — use a sleek **6-digit pairing code** (e.g. `482-915`).
+    * Zero server cost (built on existing Google Apps Script + Google Sheets webhook).
+    * Retain instant 0ms local response via `localStorage` with silent background cloud persistence.
+    * Zero emails sent on sync (preserving the 100/day email quota).
+
+* **Header Navigation Addition:**
+  * Added **"Link Device"** button with link icon to the top-right header actions bar (`#linkDeviceBtn`).
+  * Styled with active state indicator: displays an animated green pulsing dot (`.nav-linked-dot`) when actively paired with another device.
+  * Fully responsive: adapts neatly on mobile screens alongside the Contact button.
+
+* **Modal Elevation (`#linkDeviceBackdrop`):**
+  * Centered floating modal elevation with frosted glass backdrop (`backdrop-filter: blur(4px)`).
+  * **Two-way pairing workflow:**
+    1. **Your Pairing Code:** Displays device's unique 6-digit code in monospace typography (`ui-monospace`, `20px`) with 1-click clipboard copy (`Copy` / `Copied! ✓`).
+    2. **Connect with Another Code:** Clean input field with auto-hyphenation (`000-000`, `inputmode="numeric"`), enter code from other device and click `Connect`.
+    3. **Active Connection Banner:** Shows current linked code with 1-click `Sync Now` and `Unlink` buttons.
+
+* **Backend Support (`google-apps-script.js`):**
+  * Added `Device Sync` dedicated tab with headers: `["Pairing Code", "Last Updated (IST)", "Task Count", "Tasks Data (JSON)", "Last Device", "User ID"]`.
+  * `doPost(e)` handles `type: "sync_tasks"`: Upserts task board JSON under the pairing code.
+  * `doGet(e)` & `doPost(e)` handle `action: "get_tasks"`: Retrieves board state by pairing code.
+
+* **Client Sync Engine (`js/app.js`):**
+  * Auto-generates and persists 6-digit device pairing code.
+  * Debounced cloud sync on any task change (`save()` -> `triggerCloudSyncDebounced()` -> `sync_tasks`).
+  * On app load: If previously linked, automatically checks cloud and pulls any tasks created on the paired device.
+
+---
+
 ## 🏁 Current Project Architecture Overview
 
 ```

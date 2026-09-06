@@ -16,6 +16,17 @@ This guide explains how **Impact Framework** records user reviews, star ratings,
   - A row is appended with the task content, quadrant, action, anonymous User ID, and complete visitor telemetry.
   - **Silent Sync:** Tasks do **NOT** send email notifications so your 100/day email quota is never consumed!
 
+### 3. Device Sync (Tab: `Device Sync`)
+- Supports **Link Device**: 6-digit zero-login sync between phone and laptop (e.g., `482-915`).
+- Rows are automatically upserted per pairing code with:
+  - `Pairing Code`
+  - `Last Updated (IST)`
+  - `Task Count`
+  - `Tasks Data (JSON)`
+  - `Last Device` (Mobile / Desktop)
+  - `User ID`
+- **Silent Sync:** Cloud sync does **NOT** send emails. Instant local storage is preserved.
+
 ---
 
 ## 📊 Complete 24 Columns Captured in Both Sheets

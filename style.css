@@ -93,14 +93,21 @@ body.drawer-open .app-container {
   text-align: center;
 }
 
-/* Contact Trigger Button at Top-Right */
+/* Header Action Buttons at Top-Right */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-trigger,
 .contact-trigger {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   background: transparent;
   border: 1.5px solid var(--line-color);
-  padding: 5px 12px;
+  padding: 5px 11px;
   border-radius: 4px;
   font-size: 12px;
   font-weight: 600;
@@ -109,17 +116,52 @@ body.drawer-open .app-container {
   transition: all 0.15s ease;
   outline: none;
   font-family: inherit;
+  white-space: nowrap;
 }
 
+.nav-trigger:hover,
 .contact-trigger:hover {
   background: var(--line-color);
   color: #ffffff;
+}
+
+.nav-trigger svg {
+  width: 13px;
+  height: 13px;
+  stroke: currentColor;
 }
 
 .contact-trigger svg {
   width: 14px;
   height: 14px;
   fill: currentColor;
+}
+
+/* Active linked indicator badge */
+.nav-trigger.is-linked {
+  border-color: #1e8e3e;
+  color: #137333;
+}
+
+.nav-trigger.is-linked:hover {
+  background: #1e8e3e;
+  color: #ffffff;
+}
+
+.nav-linked-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1e8e3e;
+  box-shadow: 0 0 0 2px rgba(30, 142, 62, 0.2);
+  margin-right: -2px;
+  animation: pulseLinked 2.2s infinite ease-in-out;
+}
+
+@keyframes pulseLinked {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.75; }
 }
 
 /* ==========================================================================
@@ -565,16 +607,29 @@ body.drawer-open .app-container {
     transform: translateY(calc(-50% + 20px));
   }
   .header-spacer {
-    width: 60px;
+    display: none;
   }
-  .contact-trigger {
-    padding: 3px 8px;
-    font-size: 11px;
+  .app-header {
+    padding: 0 10px;
+  }
+  .app-title {
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    text-align: left;
+  }
+  .header-actions {
     gap: 4px;
   }
+  .nav-trigger,
+  .contact-trigger {
+    padding: 3px 7px;
+    font-size: 10.5px;
+    gap: 4px;
+  }
+  .nav-trigger svg,
   .contact-trigger svg {
-    width: 12px;
-    height: 12px;
+    width: 11px;
+    height: 11px;
   }
   .drawer-panel {
     max-width: 85vw;
@@ -1049,4 +1104,324 @@ body.drawer-open .app-container {
 .focus-btn-post:hover {
   background: #1557b0;
   box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
+}
+
+/* ==========================================================================
+   Link Device Modal Elevation (Zero Login Cross-Device Sync)
+   ========================================================================== */
+.link-device-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(24, 27, 30, 0.52);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.link-device-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.link-device-modal-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 360px;
+  max-height: 90dvh;
+  overflow-y: auto;
+  border-radius: 14px;
+  border: 1px solid #dadce0;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.25), 0 3px 12px rgba(0, 0, 0, 0.08);
+  padding: 20px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.92) translateY(10px);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.link-device-backdrop.is-open .link-device-modal-card {
+  transform: scale(1) translateY(0);
+}
+
+.link-modal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.link-modal-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #f1f3f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #202124;
+  flex-shrink: 0;
+}
+
+.link-modal-desc {
+  font-size: 12.5px;
+  color: #5f6368;
+  line-height: 1.45;
+  margin: 0 0 16px 0;
+}
+
+/* Active Link Banner */
+.link-active-banner {
+  background: #e6f4ea;
+  border: 1px solid #ceead6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.link-active-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #137333;
+  font-weight: 500;
+}
+
+.link-active-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1e8e3e;
+  box-shadow: 0 0 0 2px rgba(30, 142, 62, 0.25);
+  flex-shrink: 0;
+}
+
+.link-active-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.link-btn-sync-now {
+  background: #137333;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.link-btn-sync-now:hover {
+  background: #0d5c28;
+}
+
+.link-btn-unlink {
+  background: transparent;
+  color: #c5221f;
+  border: 1px solid #fad2cf;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.link-btn-unlink:hover {
+  background: #fce8e6;
+}
+
+/* Device Section */
+.device-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.device-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #5f6368;
+}
+
+.device-code-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8f9fa;
+  border: 1.5px solid #dadce0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  transition: border-color 0.15s ease;
+}
+
+.device-code-card:hover {
+  border-color: #bdc1c6;
+}
+
+.device-code-number {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #1a73e8;
+  user-select: all;
+}
+
+.device-code-copy-btn {
+  background: #ffffff;
+  border: 1px solid #dadce0;
+  border-radius: 5px;
+  color: #202124;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.device-code-copy-btn:hover {
+  background: #f1f3f4;
+  border-color: #bdc1c6;
+}
+
+.device-code-copy-btn.copied {
+  background: #1e8e3e;
+  border-color: #1e8e3e;
+  color: #ffffff;
+}
+
+.device-section-help {
+  font-size: 11px;
+  color: #80868b;
+  line-height: 1.35;
+}
+
+/* Modal Divider with 'OR' */
+.link-modal-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 14px 0;
+  color: #80868b;
+}
+
+.link-modal-divider::before,
+.link-modal-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid #e8eaed;
+}
+
+.link-modal-divider span {
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* Code Input Form */
+.link-code-form {
+  margin-top: 2px;
+}
+
+.link-code-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.link-code-input {
+  flex: 1;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-align: center;
+  padding: 9px 10px;
+  border: 1.5px solid #dadce0;
+  border-radius: 8px;
+  color: #202124;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.link-code-input:focus {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+}
+
+.link-code-input::placeholder {
+  color: #bdc1c6;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+}
+
+.link-btn-submit {
+  background: #1a73e8;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.link-btn-submit:hover:not(:disabled) {
+  background: #1557b0;
+  box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
+}
+
+.link-btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.link-feedback {
+  font-size: 12px;
+  min-height: 16px;
+  margin-top: 6px;
+  line-height: 1.35;
+  transition: opacity 0.2s ease;
+}
+
+.link-feedback.success {
+  color: #137333;
+  font-weight: 600;
+}
+
+.link-feedback.error {
+  color: #d93025;
+  font-weight: 500;
+}
+
+.link-feedback.info {
+  color: #1a73e8;
+  font-weight: 500;
 }
