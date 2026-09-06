@@ -214,6 +214,49 @@ function removeTask(q, id) {
 // CLIENT TELEMETRY & ANALYTICS HELPER
 // ==============================================================================
 
+<<<<<<< HEAD
+=======
+// Track page load time for session duration calculation
+window._impactSessionStart = window._impactSessionStart || Date.now();
+
+// Helper: Formatted Session Duration (e.g., 42s, 3m 15s)
+function getSessionDuration() {
+  const diffSec = Math.max(0, Math.floor((Date.now() - (window._impactSessionStart || Date.now())) / 1000));
+  if (diffSec < 60) return `${diffSec}s`;
+  const mins = Math.floor(diffSec / 60);
+  const secs = diffSec % 60;
+  return `${mins}m ${secs}s`;
+}
+
+// Helper: Screen Orientation (Portrait / Landscape)
+function getScreenOrientation() {
+  try {
+    if (window.screen && window.screen.orientation && window.screen.orientation.type) {
+      const type = window.screen.orientation.type;
+      if (type.includes("portrait")) return "Portrait";
+      if (type.includes("landscape")) return "Landscape";
+      return type;
+    }
+  } catch (e) {}
+  return window.innerWidth >= window.innerHeight ? "Landscape" : "Portrait";
+}
+
+// Helper: Network Speed & Connection Info
+function getNetworkSpeed() {
+  try {
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (conn) {
+      const parts = [];
+      if (conn.effectiveType) parts.push(conn.effectiveType.toUpperCase());
+      if (conn.downlink) parts.push(`${conn.downlink} Mbps`);
+      if (conn.rtt) parts.push(`${conn.rtt}ms RTT`);
+      if (parts.length > 0) return parts.join(" • ");
+    }
+  } catch (e) {}
+  return navigator.onLine ? "Online" : "Offline";
+}
+
+>>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
 // Helper: Parse Operating System accurately
 function getClientOS() {
   const ua = navigator.userAgent || "";
@@ -316,6 +359,10 @@ function prefetchGeoData() {
               region: data.region || "",
               country: data.country || "",
               country_code: data.country_code || "",
+<<<<<<< HEAD
+=======
+              isp: (data.connection && (data.connection.isp || data.connection.org)) || "",
+>>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
               timezone: (data.timezone && data.timezone.id) || ""
             })
           );
@@ -357,6 +404,12 @@ function getClientTelemetry() {
     browser: getClientBrowser(),
     device: getDeviceType(),
     screen_resolution: screenRes,
+<<<<<<< HEAD
+=======
+    screen_orientation: getScreenOrientation(),
+    network_speed: getNetworkSpeed(),
+    session_duration: getSessionDuration(),
+>>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
     timezone: timezone || "Asia/Kolkata",
     language: navigator.language || (navigator.languages && navigator.languages[0]) || "en",
     referrer: referrer,
@@ -364,7 +417,13 @@ function getClientTelemetry() {
     ip: geo.ip || "",
     city: geo.city || "",
     region: geo.region || "",
+<<<<<<< HEAD
     country: geo.country || ""
+=======
+    country: geo.country || "",
+    country_code: geo.country_code || "",
+    isp: geo.isp || ""
+>>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
   };
 }
 
@@ -405,14 +464,29 @@ function logTaskToGoogleSheets(action, q, text) {
     task_text: text.trim(),
 
     // Telemetry & Visitor Analytics
+<<<<<<< HEAD
     ip: telemetry.ip,
     city: telemetry.city,
     region: telemetry.region,
     country: telemetry.country,
+=======
+    city: telemetry.city,
+    region: telemetry.region,
+    country: telemetry.country,
+    country_code: telemetry.country_code,
+    isp: telemetry.isp,
+    ip: telemetry.ip,
+>>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
     device: telemetry.device,
     os: telemetry.os,
     browser: telemetry.browser,
     screen_resolution: telemetry.screen_resolution,
+<<<<<<< HEAD
+=======
+    screen_orientation: telemetry.screen_orientation,
+    network_speed: telemetry.network_speed,
+    session_duration: telemetry.session_duration,
+>>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
     timezone: telemetry.timezone,
     language: telemetry.language,
     referrer: telemetry.referrer,
@@ -876,14 +950,29 @@ function initContactDrawer() {
         character_count: reviewText.length,
 
         // Telemetry & Visitor Analytics
+<<<<<<< HEAD
         ip: telemetry.ip,
         city: telemetry.city,
         region: telemetry.region,
         country: telemetry.country,
+=======
+        city: telemetry.city,
+        region: telemetry.region,
+        country: telemetry.country,
+        country_code: telemetry.country_code,
+        isp: telemetry.isp,
+        ip: telemetry.ip,
+>>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
         device: telemetry.device,
         os: telemetry.os,
         browser: telemetry.browser,
         screen_resolution: telemetry.screen_resolution,
+<<<<<<< HEAD
+=======
+        screen_orientation: telemetry.screen_orientation,
+        network_speed: telemetry.network_speed,
+        session_duration: telemetry.session_duration,
+>>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
         timezone: telemetry.timezone,
         language: telemetry.language,
         referrer: telemetry.referrer,
