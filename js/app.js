@@ -1047,26 +1047,134 @@ function initContactDrawer() {
       : "Desktop";
   }
 
-  let isCloudPulling = false;
-  let cloudSyncTimeout = null;
-  let autoSyncInterval = null;
-  let isCheckingRemote = false;
+  const REALTIME_TOPIC_PREFIX = "impact_matrix_sync_";
+  let activeEventSource = null;
 
-  // Track latest board timestamp
-  let localBoardUpdatedAt = Number(localStorage.getItem("impact_board_updated_at")) || Date.now();
+  function getRealtimeTopic(code) {
+    const clean = String(code || "").replace(/\D/g, "");
+    return REALTIME_TOPIC_PREFIX + clean;
+  }
 
-  function markLocalBoardUpdated() {
-    localBoardUpdatedAt = Date.now();
-    localStorage.setItem("impact_board_updated_at", String(localBoardUpdatedAt));
+  function connectRealtimeStream(code) {
+    const cleanCode = String(code || "").replace(/\D/g, "");
+    if (!cleanCode || cleanCode.length !== 6) return;
+
+    if (activeEventSource) {
+      try { activeEventSource.close(); } catch (e) {}
+      activeEventSource = null;
+    }
+
+    if (typeof EventSource === "undefined") return;
+
+    try {
+      const topic = getRealtimeTopic(cleanCode);
+      const url = `https://ntfy.sh/${topic}/sse`;
+      const es = new EventSource(url);
+      activeEventSource = es;
+
+      es.onmessage = (event) => {
+        try {
+          if (!event.data) return;
+          const msgData = JSON.parse(event.data);
+          const rawPayload = msgData.message || event.data;
+          const payload = typeof rawPayload === "string" ? JSON.parse(rawPayload) : rawPayload;
+
+          if (payload && payload.type === "sync_tasks" && payload.tasks) {
+            handleIncomingRealtimeSync(payload, cleanCode);
+          }
+        } catch (err) {}
+      };
+
+      es.onerror = () => {
+        // Handled automatically by browser reconnection
+      };
+    } catch (err) {
+      console.warn("Realtime stream connect error:", err);
+    }
+  }
+
+  function broadcastRealtimeUpdate(code) {
+    const cleanCode = String(code || "").replace(/\D/g, "");
+    if (!cleanCode || cleanCode.length !== 6) return;
+    const topic = getRealtimeTopic(cleanCode);
+    const payload = {
+      type: "sync_tasks",
+      code: cleanCode,
+      tasks: state,
+      updatedAt: localBoardUpdatedAt,
+      device: getMyDeviceType(),
+      uid: getDevicePairingCode()
+    };
+
+    try {
+      fetch(`https://ntfy.sh/${topic}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }).catch(() => {});
+    } catch (e) {}
+  }
+
+  function handleIncomingRealtimeSync(data, code) {
+    const remoteUpdatedAt = Number(data.updatedAt) || 0;
+    const myUid = getDevicePairingCode();
+    const peerDevice = data.device || (getMyDeviceType() === "Mobile" ? "Desktop" : "Mobile");
+
+    // Ignore self-broadcasts
+    if (data.uid && data.uid === myUid) return;
+
+    // 1. Two-way Peer Connection Auto-Detection
+    const wasLinked = localStorage.getItem("impact_is_linked") === "true";
+    localStorage.setItem("impact_linked_code", code);
+    localStorage.setItem("impact_is_linked", "true");
+    localStorage.setItem("impact_linked_peer_device", peerDevice);
+    if (!wasLinked) {
+      updateLinkDeviceUI();
+    }
+
+    // 2. Apply remote update if newer
+    if (remoteUpdatedAt > localBoardUpdatedAt) {
+      const active = document.activeElement;
+      const isTyping = editingId !== null || (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA"));
+
+      if (isTyping) {
+        window.__pendingCloudUpdate = data;
+      } else {
+        isCloudPulling = true;
+        try {
+          const out = {};
+          for (const q of QUADRANTS) {
+            out[q] = Array.isArray(data.tasks[q])
+              ? data.tasks[q].filter((t) => t && typeof t.text === "string")
+              : [];
+          }
+          state = out;
+          localBoardUpdatedAt = remoteUpdatedAt;
+          localStorage.setItem("impact_board_updated_at", String(localBoardUpdatedAt));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          render();
+        } finally {
+          isCloudPulling = false;
+        }
+      }
+    }
   }
 
   function triggerCloudSyncDebounced() {
     if (isCloudPulling) return;
     markLocalBoardUpdated();
+
+    // 1. Instant Real-Time Broadcast (0ms sub-second delivery to peer)
+    const activeCode = getActiveSyncCode();
+    if (activeCode) {
+      broadcastRealtimeUpdate(activeCode);
+    }
+
+    // 2. Permanent Google Sheets backup (debounced 1000ms)
     if (cloudSyncTimeout) clearTimeout(cloudSyncTimeout);
     cloudSyncTimeout = setTimeout(() => {
       syncBoardToCloud();
-    }, 400); // Fast 400ms background push
+    }, 1000);
   }
 
   function syncBoardToCloud(customCode) {
@@ -1400,27 +1508,17 @@ function initContactDrawer() {
 
         const peerType = (getMyDeviceType() === "Mobile") ? "Desktop" : "Mobile";
 
-        if (result.success) {
+        if (result.success || result.notFound) {
           localStorage.setItem("impact_linked_code", clean);
           localStorage.setItem("impact_is_linked", "true");
           localStorage.setItem("impact_linked_peer_device", peerType);
-          updateLinkDeviceUI();
-          if (pairCodeInput) pairCodeInput.value = "";
-          if (linkFeedback) {
-            linkFeedback.textContent = `✓ Linked with ${peerType}! Auto-sync active.`;
-            linkFeedback.className = "link-feedback success";
-          }
-          setTimeout(closeModal, 1600);
-        } else if (result.notFound) {
-          // If code doesn't have tasks yet in cloud, link with it and push our current board!
-          localStorage.setItem("impact_linked_code", clean);
-          localStorage.setItem("impact_is_linked", "true");
-          localStorage.setItem("impact_linked_peer_device", peerType);
+          connectRealtimeStream(clean);
+          broadcastRealtimeUpdate(clean);
           syncBoardToCloud(clean);
           updateLinkDeviceUI();
           if (pairCodeInput) pairCodeInput.value = "";
           if (linkFeedback) {
-            linkFeedback.textContent = `✓ Linked with ${peerType}! Current board synced.`;
+            linkFeedback.textContent = `✓ Linked with ${peerType}! Live sync active.`;
             linkFeedback.className = "link-feedback success";
           }
           setTimeout(closeModal, 1600);
@@ -1439,6 +1537,7 @@ function initContactDrawer() {
         const activeCode = getActiveSyncCode();
         linkSyncNowBtn.textContent = "Syncing...";
         await fetchTasksFromCloud(activeCode);
+        broadcastRealtimeUpdate(activeCode);
         syncBoardToCloud(activeCode);
         linkSyncNowBtn.textContent = "Synced! ✓";
         setTimeout(() => {
@@ -1453,6 +1552,7 @@ function initContactDrawer() {
         localStorage.removeItem("impact_linked_code");
         localStorage.removeItem("impact_linked_peer_device");
         localStorage.setItem("impact_is_linked", "false");
+        connectRealtimeStream(getDevicePairingCode());
         updateLinkDeviceUI();
         if (linkFeedback) {
           linkFeedback.textContent = "Device unlinked. Local tasks kept.";
@@ -1461,12 +1561,15 @@ function initContactDrawer() {
       });
     }
 
+    // Connect to live real-time stream
+    connectRealtimeStream(getActiveSyncCode());
+
     // Seed our own board to cloud once so peer can discover it immediately
     setTimeout(() => {
       syncBoardToCloud(getDevicePairingCode());
     }, 1500);
 
-    // Start background auto-sync polling loop (Every 3 seconds)
+    // Start background auto-sync polling loop (Every 4 seconds fallback)
     startAutoSyncPolling();
   }
 
