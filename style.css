@@ -413,33 +413,105 @@ html, body {
 }
 
 /* ==========================================================================
-   Mobile Optimization
+   Mobile Optimization — Preserving 2x2 Desktop Matrix Layout
    ========================================================================== */
 @media (max-width: 640px) {
   .app-header {
-    height: 42px;
+    height: 38px;
+    padding: 0 10px;
   }
   .app-title {
-    font-size: 15px;
+    font-size: 12px;
+    letter-spacing: 0.08em;
   }
   .matrix-canvas {
-    height: calc(100vh - 42px);
-    grid-template-columns: 1fr;
-    grid-template-rows: repeat(4, 1fr);
+    width: 100vw;
+    height: calc(100vh - 38px);
+    height: calc(100dvh - 38px);
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    overflow: hidden;
   }
+  /* Retain exact 2 intersecting lines */
   .quadrant[data-quadrant="q1"],
   .quadrant[data-quadrant="q3"] {
-    border-right: none;
+    border-right: var(--line-width) solid var(--line-color);
   }
   .quadrant[data-quadrant="q1"],
-  .quadrant[data-quadrant="q2"],
-  .quadrant[data-quadrant="q3"] {
+  .quadrant[data-quadrant="q2"] {
     border-bottom: var(--line-width) solid var(--line-color);
   }
+  .quadrant[data-quadrant="q3"],
+  .quadrant[data-quadrant="q4"] {
+    border-bottom: none;
+  }
+  .quadrant[data-quadrant="q2"],
+  .quadrant[data-quadrant="q4"] {
+    border-right: none;
+  }
+
   .quadrant {
-    padding: 10px 14px 8px;
+    padding: 8px 8px 6px;
+  }
+  .quadrant-header {
+    margin-bottom: 6px;
+    gap: 4px;
+  }
+  .quadrant-title {
+    font-size: 11px;
+    line-height: 1.25;
+    white-space: normal;
+  }
+  .quadrant-tag {
+    font-size: 8.5px;
+    padding: 1px 3px;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+  }
+  .task-list {
+    gap: 1px;
+    padding-right: 2px;
+  }
+  .task {
+    padding: 3px 4px;
+    gap: 6px;
+    font-size: 11px;
+    border-radius: 3px;
+  }
+  .task-text {
+    line-height: 1.25;
+  }
+  .task-done-square {
+    width: 13px;
+    height: 13px;
+  }
+  .task.done .task-done-square::after {
+    width: 3px;
+    height: 6px;
+    border-width: 0 1.2px 1.2px 0;
+    transform: rotate(45deg) translate(-0.5px, -0.5px);
   }
   .btn-delete {
-    opacity: 0.6;
+    font-size: 13px;
+    padding: 1px 2px;
+    opacity: 0;
+  }
+  .task:active .btn-delete,
+  .task:hover .btn-delete {
+    opacity: 0.7;
+  }
+  .add-form {
+    padding-top: 4px;
+  }
+  .add-form input {
+    font-size: 11px;
+    padding: 3px 0;
+  }
+  .smooth-caret {
+    height: 12px;
+  }
+  .edit-input {
+    font-size: 11px;
   }
 }
+
