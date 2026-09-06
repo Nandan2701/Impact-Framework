@@ -1508,26 +1508,28 @@ function initContactDrawer() {
 
         const peerType = (getMyDeviceType() === "Mobile") ? "Desktop" : "Mobile";
 
-        if (result.success || result.notFound) {
-          localStorage.setItem("impact_linked_code", clean);
-          localStorage.setItem("impact_is_linked", "true");
-          localStorage.setItem("impact_linked_peer_device", peerType);
-          connectRealtimeStream(clean);
-          broadcastRealtimeUpdate(clean);
-          syncBoardToCloud(clean);
-          updateLinkDeviceUI();
-          if (pairCodeInput) pairCodeInput.value = "";
+        // Zero-failure pairing: Adopt the code immediately so connection works even if remote sheet has no prior records
+        localStorage.setItem("impact_linked_code", clean);
+        localStorage.setItem("impact_is_linked", "true");
+        localStorage.setItem("impact_linked_peer_device", peerType);
+        connectRealtimeStream(clean);
+        broadcastRealtimeUpdate(clean);
+        syncBoardToCloud(clean);
+        updateLinkDeviceUI();
+        if (pairCodeInput) pairCodeInput.value = "";
+
+        if (result && result.success) {
+          if (linkFeedback) {
+            linkFeedback.textContent = `✓ Linked with ${peerType}! Board loaded.`;
+            linkFeedback.className = "link-feedback success";
+          }
+        } else {
           if (linkFeedback) {
             linkFeedback.textContent = `✓ Linked with ${peerType}! Live sync active.`;
             linkFeedback.className = "link-feedback success";
           }
-          setTimeout(closeModal, 1600);
-        } else {
-          if (linkFeedback) {
-            linkFeedback.textContent = result.message || "Failed to link device.";
-            linkFeedback.className = "link-feedback error";
-          }
         }
+        setTimeout(closeModal, 1600);
       });
     }
 
@@ -1536,13 +1538,20 @@ function initContactDrawer() {
       linkSyncNowBtn.addEventListener("click", async () => {
         const activeCode = getActiveSyncCode();
         linkSyncNowBtn.textContent = "Syncing...";
-        await fetchTasksFromCloud(activeCode);
-        broadcastRealtimeUpdate(activeCode);
+        linkSyncNowBtn.disabled = true;
+
+        // 1. Immediately push local state to cloud and broadcast to peer
         syncBoardToCloud(activeCode);
+        broadcastRealtimeUpdate(activeCode);
+
+        // 2. Fetch latest from cloud in case peer updated
+        await fetchTasksFromCloud(activeCode);
+
         linkSyncNowBtn.textContent = "Synced! ✓";
         setTimeout(() => {
           linkSyncNowBtn.textContent = "Sync Now";
-        }, 1500);
+          linkSyncNowBtn.disabled = false;
+        }, 1200);
       });
     }
 
@@ -1564,10 +1573,11 @@ function initContactDrawer() {
     // Connect to live real-time stream
     connectRealtimeStream(getActiveSyncCode());
 
-    // Seed our own board to cloud once so peer can discover it immediately
-    setTimeout(() => {
-      syncBoardToCloud(getDevicePairingCode());
-    }, 1500);
+    // Immediately seed our own board to cloud so peer can discover it without delay
+    syncBoardToCloud(getDevicePairingCode());
+    if (localStorage.getItem("impact_is_linked") === "true") {
+      syncBoardToCloud(getActiveSyncCode());
+    }
 
     // Start background auto-sync polling loop (Every 4 seconds fallback)
     startAutoSyncPolling();

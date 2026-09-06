@@ -422,7 +422,11 @@ function doGet(e) {
     if (p.action === "get_tasks" && p.code) {
       var ss = SpreadsheetApp.getActiveSpreadsheet();
       var syncSheet = ss.getSheetByName("Device Sync");
-      if (syncSheet && syncSheet.getLastRow() > 1) {
+      if (!syncSheet) {
+        syncSheet = ss.insertSheet("Device Sync");
+        ensureHeaders(syncSheet, SYNC_HEADERS, "#e6f4ea", "#137333");
+      }
+      if (syncSheet.getLastRow() > 1) {
         var cleanCode = String(p.code).replace(/[^0-9A-Za-z]/g, "").trim();
         var values = syncSheet.getDataRange().getValues();
         for (var i = 1; i < values.length; i++) {
