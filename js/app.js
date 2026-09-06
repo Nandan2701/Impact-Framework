@@ -214,8 +214,6 @@ function removeTask(q, id) {
 // CLIENT TELEMETRY & ANALYTICS HELPER
 // ==============================================================================
 
-<<<<<<< HEAD
-=======
 // Track page load time for session duration calculation
 window._impactSessionStart = window._impactSessionStart || Date.now();
 
@@ -256,7 +254,6 @@ function getNetworkSpeed() {
   return navigator.onLine ? "Online" : "Offline";
 }
 
->>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
 // Helper: Parse Operating System accurately
 function getClientOS() {
   const ua = navigator.userAgent || "";
@@ -359,10 +356,7 @@ function prefetchGeoData() {
               region: data.region || "",
               country: data.country || "",
               country_code: data.country_code || "",
-<<<<<<< HEAD
-=======
               isp: (data.connection && (data.connection.isp || data.connection.org)) || "",
->>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
               timezone: (data.timezone && data.timezone.id) || ""
             })
           );
@@ -404,12 +398,9 @@ function getClientTelemetry() {
     browser: getClientBrowser(),
     device: getDeviceType(),
     screen_resolution: screenRes,
-<<<<<<< HEAD
-=======
     screen_orientation: getScreenOrientation(),
     network_speed: getNetworkSpeed(),
     session_duration: getSessionDuration(),
->>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
     timezone: timezone || "Asia/Kolkata",
     language: navigator.language || (navigator.languages && navigator.languages[0]) || "en",
     referrer: referrer,
@@ -417,13 +408,9 @@ function getClientTelemetry() {
     ip: geo.ip || "",
     city: geo.city || "",
     region: geo.region || "",
-<<<<<<< HEAD
-    country: geo.country || ""
-=======
     country: geo.country || "",
     country_code: geo.country_code || "",
     isp: geo.isp || ""
->>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
   };
 }
 
@@ -464,29 +451,19 @@ function logTaskToGoogleSheets(action, q, text) {
     task_text: text.trim(),
 
     // Telemetry & Visitor Analytics
-<<<<<<< HEAD
-    ip: telemetry.ip,
-    city: telemetry.city,
-    region: telemetry.region,
-    country: telemetry.country,
-=======
     city: telemetry.city,
     region: telemetry.region,
     country: telemetry.country,
     country_code: telemetry.country_code,
     isp: telemetry.isp,
     ip: telemetry.ip,
->>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
     device: telemetry.device,
     os: telemetry.os,
     browser: telemetry.browser,
     screen_resolution: telemetry.screen_resolution,
-<<<<<<< HEAD
-=======
     screen_orientation: telemetry.screen_orientation,
     network_speed: telemetry.network_speed,
     session_duration: telemetry.session_duration,
->>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
     timezone: telemetry.timezone,
     language: telemetry.language,
     referrer: telemetry.referrer,
@@ -950,29 +927,19 @@ function initContactDrawer() {
         character_count: reviewText.length,
 
         // Telemetry & Visitor Analytics
-<<<<<<< HEAD
-        ip: telemetry.ip,
-        city: telemetry.city,
-        region: telemetry.region,
-        country: telemetry.country,
-=======
         city: telemetry.city,
         region: telemetry.region,
         country: telemetry.country,
         country_code: telemetry.country_code,
         isp: telemetry.isp,
         ip: telemetry.ip,
->>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
         device: telemetry.device,
         os: telemetry.os,
         browser: telemetry.browser,
         screen_resolution: telemetry.screen_resolution,
-<<<<<<< HEAD
-=======
         screen_orientation: telemetry.screen_orientation,
         network_speed: telemetry.network_speed,
         session_duration: telemetry.session_duration,
->>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
         timezone: telemetry.timezone,
         language: telemetry.language,
         referrer: telemetry.referrer,

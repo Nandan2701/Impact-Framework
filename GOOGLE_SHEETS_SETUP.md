@@ -8,13 +8,8 @@ This guide explains how **Impact Framework** records user reviews, star ratings,
 
 ### 1. User Reviews & Stars (Tab: `Reviews` or `Sheet1`)
 - When a user submits a review or gives stars:
-<<<<<<< HEAD
-  - The review, star rating, anonymous User ID, and full visitor telemetry are appended to the sheet.
-  - An **instant HTML email notification** is sent directly to `nandanbhole72@gmail.com` with review details and visitor analytics.
-=======
   - The review, star rating, anonymous User ID, and complete visitor telemetry are appended to the sheet.
   - An **instant HTML email notification** is sent directly to `nandanbhole72@gmail.com` with review details, visitor analytics, network speed, and ISP.
->>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
 
 ### 2. User Tasks (Tab: `User Tasks`)
 - Whenever a user adds a task (`Added`), checks it off (`Completed`), or deletes it (`Deleted`):
@@ -23,32 +18,6 @@ This guide explains how **Impact Framework** records user reviews, star ratings,
 
 ---
 
-<<<<<<< HEAD
-## 📊 Complete Columns Captured in Both Sheets
-
-Both sheets automatically track 18 detailed data points:
-
-| # | Column Header | Description | Example |
-|---|---|---|---|
-| 1 | **Date & Time** | IST Timestamp | `9/7/2026, 2:45:00 AM` |
-| 2 | **User ID** | Persistent anonymous user ID | `usr_9k3f2_0ab` |
-| 3 | **Rating / Quadrant** | Star rating (Reviews) or Eisenhower quadrant (Tasks) | `5` or `High Impact, Easy (Do First)` |
-| 4 | **Stars / Action** | `★★★★★` (Reviews) or `Added` / `Completed` / `Deleted` (Tasks) | `★★★★★` or `Completed` |
-| 5 | **Review Description / Task Content** | User's feedback text or task title | `"Great productivity tool!"` |
-| 6 | **Length** *(Reviews)* | Character count of the review | `26` |
-| 7 | **City & State** | City and region from IP geolocation | `Nagpur, Maharashtra` |
-| 8 | **Country** | Visitor country | `India` |
-| 9 | **IP Address** | Public IP address | `117.205.13.254` |
-| 10 | **Device** | Device form factor | `Mobile` / `Desktop` / `Tablet` |
-| 11 | **Operating System** | OS name & version | `Windows 10/11`, `iOS 17.5`, `Android 14` |
-| 12 | **Browser** | Browser name and major version | `Chrome 128`, `Safari 17`, `Firefox 130` |
-| 13 | **Screen Resolution** | Display size and pixel ratio | `1920x1080 @1.25x`, `390x844 @3x` |
-| 14 | **Timezone** | User's local timezone | `Asia/Kolkata` |
-| 15 | **Language** | Browser primary language | `en-US`, `en-IN` |
-| 16 | **Referrer** | Traffic source | `Direct`, `google.com`, `linkedin.com` |
-| 17 | **Visit Count** | How many visits this user has made | `Visit #3` |
-| 18 | **App Version** | Application release tag | `v1.2.0` |
-=======
 ## 📊 Complete 24 Columns Captured in Both Sheets
 
 Both sheets automatically track 24 detailed data points:
@@ -79,17 +48,12 @@ Both sheets automatically track 24 detailed data points:
 | **22** | `Referral Source` | Inbound traffic source | `Direct`, `google.com`, `linkedin.com` |
 | **23** | `Visit Count` | How many visits this user has had | `Visit #1`, `Visit #3` |
 | **24** | `App Version` | Application release tag | `v1.2.0` |
->>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
 
 ---
 
 ## ⏱️ Updating Your Google Apps Script Deployment
 
-<<<<<<< HEAD
-If you have already created your Web App, follow these steps to deploy the new version:
-=======
 To have your Google Sheet record all 24 columns:
->>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
 
 1. Open your Google Sheet.
 2. Click **Extensions** → **Apps Script**.
@@ -101,8 +65,4 @@ To have your Google Sheet record all 24 columns:
 8. Click **Deploy**.
 
 > [!NOTE]
-<<<<<<< HEAD
-> When you update to a **New version**, your Web App URL remains the exact same! No change is required in `js/config.js`.
-=======
 > When you update to a **New version**, your Web App URL remains the exact same! No change is needed in `js/config.js`.
->>>>>>> 5789269 (Add session duration, referral source, orientation, network speed, ISP, and country code columns)
