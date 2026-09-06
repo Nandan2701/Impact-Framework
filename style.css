@@ -688,11 +688,11 @@ body.drawer-open .app-container {
 }
 
 .info-icon-img {
-  width: 22px;
-  height: 22px;
+  width: 21px;
+  height: 16px;
   object-fit: contain;
-  mix-blend-mode: multiply;
-  margin-top: 1px;
+  margin-top: 3px;
+  display: block;
 }
 
 .info-content {
