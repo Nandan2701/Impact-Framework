@@ -424,13 +424,102 @@ function setupPointerDrag(li, fromQuadrant, task) {
   });
 }
 
+/* ==========================================================================
+   Contact Drawer Controller (Depth Parallax Entry & Distractionless Rating)
+   ========================================================================== */
+function initContactDrawer() {
+  const contactBtn = document.getElementById("contactBtn");
+  const drawer = document.getElementById("contactDrawer");
+  const overlay = document.getElementById("drawerOverlay");
+  const closeBtn = document.getElementById("drawerCloseBtn");
+  const copyBtn = document.getElementById("copyEmailBtn");
+  const starsBar = document.getElementById("starsBar");
+  const ratingFeedback = document.getElementById("ratingFeedback");
+
+  if (!contactBtn || !drawer || !overlay) return;
+
+  const GMAIL = "vinay25sapkal@gmail.com";
+  const RATING_KEY = "impact-framework-user-rating";
+
+  function openDrawer() {
+    overlay.classList.add("open");
+    drawer.classList.add("open");
+    document.body.classList.add("drawer-open");
+  }
+
+  function closeDrawer() {
+    overlay.classList.remove("open");
+    drawer.classList.remove("open");
+    document.body.classList.remove("drawer-open");
+  }
+
+  contactBtn.addEventListener("click", openDrawer);
+  if (closeBtn) closeBtn.addEventListener("click", closeDrawer);
+  overlay.addEventListener("click", closeDrawer);
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeDrawer();
+  });
+
+  // 1-Click Email Copy
+  if (copyBtn) {
+    copyBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(GMAIL).then(() => {
+        const originalHtml = copyBtn.innerHTML;
+        copyBtn.innerHTML = "<span>Copied! ✓</span>";
+        copyBtn.style.background = "#27ae60";
+        copyBtn.style.color = "#ffffff";
+        copyBtn.style.borderColor = "#27ae60";
+        setTimeout(() => {
+          copyBtn.innerHTML = originalHtml;
+          copyBtn.style.background = "";
+          copyBtn.style.color = "";
+          copyBtn.style.borderColor = "";
+        }, 1800);
+      });
+    });
+  }
+
+  // Distractionless Star Rating
+  if (starsBar) {
+    const savedRating = parseInt(localStorage.getItem(RATING_KEY), 10) || 0;
+    if (savedRating > 0) {
+      highlightStars(savedRating);
+      if (ratingFeedback) {
+        ratingFeedback.textContent = `Your rating: ${savedRating}/5 stars ⭐`;
+      }
+    }
+
+    starsBar.querySelectorAll(".star-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const rating = parseInt(btn.dataset.rating, 10);
+        if (!rating) return;
+        localStorage.setItem(RATING_KEY, rating.toString());
+        highlightStars(rating);
+        if (ratingFeedback) {
+          ratingFeedback.textContent = `Thank you for rating ${rating}/5 stars! ⭐`;
+        }
+      });
+    });
+
+    function highlightStars(val) {
+      starsBar.querySelectorAll(".star-btn").forEach((s) => {
+        const r = parseInt(s.dataset.rating, 10);
+        s.classList.toggle("active", r <= val);
+      });
+    }
+  }
+}
+
 // Initialize on DOM load
 document.addEventListener("DOMContentLoaded", () => {
   initAddForms();
+  initContactDrawer();
   render();
 
   // Dismiss active input and keypad when tapping outside on mobile
   document.addEventListener("pointerdown", (e) => {
+    if (e.target.closest("#contactDrawer") || e.target.closest("#contactBtn")) return;
     if (!e.target.closest(".add-form") && !e.target.closest(".smooth-input-wrap")) {
       const active = document.activeElement;
       if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) {

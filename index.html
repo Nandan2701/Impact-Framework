@@ -12,9 +12,16 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app-container">
+  <div class="app-container" id="appContainer">
     <header class="app-header">
+      <div class="header-spacer"></div>
       <h1 class="app-title">Impact Framework</h1>
+      <button class="contact-trigger" id="contactBtn" type="button" title="Contact info & App rating" aria-label="Open contact and info">
+        <svg viewBox="0 0 24 24">
+          <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+        </svg>
+        <span>Contact</span>
+      </button>
     </header>
 
     <!-- Full-screen 4-block matrix canvas -->
@@ -80,6 +87,67 @@
       </section>
     </main>
   </div>
+
+  <!-- Slide-Over Scrim Backdrop -->
+  <div class="drawer-overlay" id="drawerOverlay" aria-hidden="true"></div>
+
+  <!-- Slide-Over Right Panel (Depth Parallax Entry) -->
+  <aside class="drawer-panel" id="contactDrawer" aria-label="Contact information and rating">
+    <div class="drawer-header">
+      <h2 class="drawer-title">Contact info</h2>
+      <button class="drawer-close" id="drawerCloseBtn" type="button" title="Close" aria-label="Close panel">&times;</button>
+    </div>
+
+    <div class="drawer-body">
+      <!-- Item 1: Email Address with Copy Pill -->
+      <div class="info-item">
+        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+        <div class="info-content">
+          <div class="info-label">Email</div>
+          <div class="info-value">vinay25sapkal@gmail.com</div>
+          <button class="copy-pill" id="copyEmailBtn" type="button">
+            <span>📋 Copy</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Item 2: Version -->
+      <div class="info-item">
+        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <div class="info-content">
+          <div class="info-label">Latest Version</div>
+          <div class="info-value">v1.2.0</div>
+        </div>
+      </div>
+
+      <hr class="drawer-divider">
+
+      <!-- Item 3: Distractionless Rating -->
+      <div class="info-item">
+        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+        <div class="info-content">
+          <div class="info-label">Rate Impact Framework</div>
+          <div class="stars-bar" id="starsBar">
+            <button class="star-btn" data-rating="1" type="button" aria-label="1 star">★</button>
+            <button class="star-btn" data-rating="2" type="button" aria-label="2 stars">★</button>
+            <button class="star-btn" data-rating="3" type="button" aria-label="3 stars">★</button>
+            <button class="star-btn" data-rating="4" type="button" aria-label="4 stars">★</button>
+            <button class="star-btn" data-rating="5" type="button" aria-label="5 stars">★</button>
+          </div>
+          <div class="rating-feedback" id="ratingFeedback">Tap a star to rate</div>
+        </div>
+      </div>
+    </div>
+  </aside>
 
   <script src="js/app.js"></script>
 </body>

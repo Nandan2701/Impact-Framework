@@ -54,8 +54,15 @@ html, body {
   padding: 0;
   overflow: hidden;
   position: relative;
-  transition: transform 0.28s cubic-bezier(0.2, 0, 0.1, 1);
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), filter 0.38s ease;
+  transform-origin: right center;
   will-change: transform;
+}
+
+/* Depth Parallax Canvas Pushback */
+body.drawer-open .app-container {
+  transform: scale(0.975) translateX(-8px);
+  filter: blur(0.5px);
 }
 
 /* ==========================================================================
@@ -66,10 +73,15 @@ html, body {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  padding: 0 16px;
   border-bottom: var(--line-width) solid var(--line-color);
   background: var(--bg-color);
   user-select: none;
+}
+
+.header-spacer {
+  width: 80px;
 }
 
 .app-title {
@@ -78,6 +90,36 @@ html, body {
   color: var(--text-main);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  text-align: center;
+}
+
+/* Contact Trigger Button at Top-Right */
+.contact-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1.5px solid var(--line-color);
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+  font-family: inherit;
+}
+
+.contact-trigger:hover {
+  background: var(--line-color);
+  color: #ffffff;
+}
+
+.contact-trigger svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
 }
 
 /* ==========================================================================
@@ -522,6 +564,205 @@ html, body {
   body.shift-bottom-active .app-container {
     transform: translateY(calc(-50% + 20px));
   }
+  .header-spacer {
+    width: 60px;
+  }
+  .contact-trigger {
+    padding: 3px 8px;
+    font-size: 11px;
+    gap: 4px;
+  }
+  .contact-trigger svg {
+    width: 12px;
+    height: 12px;
+  }
+  .drawer-panel {
+    max-width: 85vw;
+  }
+  body.drawer-open .app-container {
+    transform: scale(0.96) translateX(-10px);
+  }
 }
+
+/* ==========================================================================
+   Slide-Over Drawer & Depth Parallax Entry
+   ========================================================================== */
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(2px);
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.drawer-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 100%;
+  max-width: 370px;
+  background: #ffffff;
+  border-left: 1.5px solid var(--line-subtle);
+  box-shadow: -16px 0 45px rgba(0, 0, 0, 0.14);
+  z-index: 2001;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.drawer-panel.open {
+  transform: translateX(0);
+}
+
+.drawer-header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line-subtle);
+}
+
+.drawer-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-main);
+}
+
+.drawer-close {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.drawer-close:hover {
+  background: #f2efe9;
+  color: var(--text-main);
+}
+
+.drawer-body {
+  padding: 24px 20px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.info-icon {
+  width: 20px;
+  height: 20px;
+  color: #383632;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.info-content {
+  flex: 1;
+}
+
+.info-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.info-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-main);
+  word-break: break-all;
+}
+
+.copy-pill {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f4f2ee;
+  border: 1px solid #dcd7cf;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.copy-pill:hover {
+  background: #e8e4dc;
+  border-color: #c4bfb6;
+}
+
+.drawer-divider {
+  border: none;
+  border-top: 1px solid var(--line-subtle);
+}
+
+.stars-bar {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.star-btn {
+  background: transparent;
+  border: none;
+  font-size: 26px;
+  cursor: pointer;
+  color: #d8d4cd;
+  line-height: 1;
+  transition: color 0.15s, transform 0.15s;
+}
+
+.star-btn:hover,
+.star-btn.active {
+  color: #e5a524;
+  transform: scale(1.15);
+}
+
+.rating-feedback {
+  font-size: 12px;
+  color: #27ae60;
+  margin-top: 6px;
+  font-weight: 500;
+  min-height: 18px;
+}
+
 
 
