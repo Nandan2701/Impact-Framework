@@ -172,7 +172,7 @@ function createTaskElement(q, task) {
     task.done = !task.done;
     render();
     if (task.done) {
-      logTaskToGoogleSheets("COMPLETED", q, task.text);
+      logTaskToGoogleSheets("Completed", q, task.text);
     }
   });
 
@@ -201,8 +201,13 @@ function commitEdit(q, id, value) {
 }
 
 function removeTask(q, id) {
+  const task = state[q].find((t) => t.id === id);
+  const taskText = task ? task.text : "";
   state[q] = state[q].filter((t) => t.id !== id);
   render();
+  if (taskText) {
+    logTaskToGoogleSheets("Deleted", q, taskText);
+  }
 }
 
 // Persistent Anonymous User ID
@@ -235,7 +240,7 @@ function logTaskToGoogleSheets(action, q, text) {
   const payload = {
     type: "task",
     uid: getAnonymousUserId(),
-    action: action || "ADDED",
+    action: action || "Added", // "Added" | "Completed" | "Deleted"
     quadrant: q,
     quadrant_title: QUADRANT_NAMES[q] || q,
     task_text: text.trim(),
