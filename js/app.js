@@ -480,21 +480,34 @@ function initContactDrawer() {
     });
   }
 
-  // Distractionless Star Rating (Rate this app)
+  // Floating Focus Card Modal Elements
+  const focusModalBackdrop = document.getElementById("focusReviewBackdrop");
+  const focusCloseBtn = document.getElementById("focusReviewCloseBtn");
+  const focusCancelBtn = document.getElementById("focusReviewCancelBtn");
+  const focusPostBtn = document.getElementById("focusReviewPostBtn");
+  const focusTextarea = document.getElementById("focusReviewText");
+  const focusCharCounter = document.getElementById("focusCharCounter");
+  const focusStarsRow = document.getElementById("focusStarsRow");
+  const focusStarBtns = focusStarsRow ? focusStarsRow.querySelectorAll(".focus-star-btn") : [];
+  const writeReviewLink = document.getElementById("writeReviewLink");
+
+  let activeModalRating = 5;
+
+  // Distractionless Star Rating & Modal Trigger
   if (starsBar) {
     const starBtns = starsBar.querySelectorAll(".rate-star-btn, .star-btn");
     const savedRating = parseInt(localStorage.getItem(RATING_KEY), 10) || 0;
     if (savedRating > 0) {
       highlightStars(savedRating);
       if (ratingFeedback) {
-        ratingFeedback.textContent = `Your rating: ${savedRating}/5 stars ⭐`;
+        ratingFeedback.textContent = `Thank you. Your ${savedRating}-star review was posted.`;
       }
     }
 
     starBtns.forEach((btn) => {
       const rating = parseInt(btn.dataset.rating, 10);
 
-      // Hover feedback for tactile feel
+      // Hover feedback on Section 3 stars
       btn.addEventListener("pointerenter", () => {
         starBtns.forEach((s) => {
           const r = parseInt(s.dataset.rating, 10);
@@ -502,13 +515,9 @@ function initContactDrawer() {
         });
       });
 
+      // Tapping any star opens the Floating Focus Card modal
       btn.addEventListener("click", () => {
-        if (!rating) return;
-        localStorage.setItem(RATING_KEY, rating.toString());
-        highlightStars(rating);
-        if (ratingFeedback) {
-          ratingFeedback.textContent = `Thank you for rating ${rating}/5 stars! ⭐`;
-        }
+        openFocusModal(rating || 5);
       });
     });
 
@@ -522,6 +531,97 @@ function initContactDrawer() {
         const r = parseInt(s.dataset.rating, 10);
         s.classList.toggle("active", r <= val);
         s.classList.remove("hovered");
+      });
+    }
+
+    // "Write a review" link also opens the modal
+    if (writeReviewLink) {
+      writeReviewLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        const current = parseInt(localStorage.getItem(RATING_KEY), 10) || 5;
+        openFocusModal(current);
+      });
+    }
+
+    // Modal Star Handlers
+    focusStarBtns.forEach((btn) => {
+      const r = parseInt(btn.dataset.rating, 10);
+
+      btn.addEventListener("pointerenter", () => {
+        highlightModalStars(r);
+      });
+
+      btn.addEventListener("click", () => {
+        activeModalRating = r;
+        highlightModalStars(r);
+      });
+    });
+
+    if (focusStarsRow) {
+      focusStarsRow.addEventListener("pointerleave", () => {
+        highlightModalStars(activeModalRating);
+      });
+    }
+
+    function highlightModalStars(val) {
+      focusStarBtns.forEach((btn) => {
+        const r = parseInt(btn.dataset.rating, 10);
+        btn.classList.toggle("active", r <= val);
+      });
+    }
+
+    // Modal Character Counter
+    if (focusTextarea && focusCharCounter) {
+      focusTextarea.addEventListener("input", () => {
+        const len = focusTextarea.value.length;
+        focusCharCounter.textContent = `${len}/500`;
+        focusCharCounter.classList.toggle("limit-near", len > 450);
+      });
+    }
+
+    // Modal Open & Close Functions
+    function openFocusModal(rating) {
+      activeModalRating = rating || 5;
+      highlightModalStars(activeModalRating);
+      if (focusModalBackdrop) {
+        focusModalBackdrop.classList.add("is-open");
+        focusModalBackdrop.setAttribute("aria-hidden", "false");
+      }
+      setTimeout(() => {
+        if (focusTextarea) focusTextarea.focus();
+      }, 150);
+    }
+
+    function closeFocusModal() {
+      if (focusModalBackdrop) {
+        focusModalBackdrop.classList.remove("is-open");
+        focusModalBackdrop.setAttribute("aria-hidden", "true");
+      }
+    }
+
+    if (focusCloseBtn) focusCloseBtn.addEventListener("click", closeFocusModal);
+    if (focusCancelBtn) focusCancelBtn.addEventListener("click", closeFocusModal);
+    if (focusModalBackdrop) {
+      focusModalBackdrop.addEventListener("click", (e) => {
+        if (e.target === focusModalBackdrop) closeFocusModal();
+      });
+    }
+
+    // Post Review Handler
+    if (focusPostBtn) {
+      focusPostBtn.addEventListener("click", () => {
+        const rating = activeModalRating || 5;
+        localStorage.setItem(RATING_KEY, rating.toString());
+        highlightStars(rating);
+
+        if (ratingFeedback) {
+          ratingFeedback.textContent = `Thank you. Your ${rating}-star review was posted.`;
+        }
+
+        if (focusTextarea) focusTextarea.value = "";
+        if (focusCharCounter) focusCharCounter.textContent = "0/500";
+
+        closeFocusModal();
       });
     }
   }

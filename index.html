@@ -162,8 +162,48 @@
           </button>
         </div>
 
-        <a class="write-review-link" id="writeReviewLink" href="mailto:nandanbhole72@gmail.com?subject=Review%20for%20Impact%20Framework&body=Hi%20Nandan%2C%0A%0AHere%20is%20my%20review%20for%20Impact%20Framework%3A%0A%0A" target="_blank" rel="noopener">Write a review</a>
+        <a class="write-review-link" id="writeReviewLink" href="javascript:void(0)" role="button">Write a review</a>
         <div class="rating-feedback" id="ratingFeedback"></div>
+      </div>
+    </div>
+
+    <!-- Floating Focus Card Modal Overlay (Variation 3: Modal Elevation) -->
+    <div class="focus-review-backdrop" id="focusReviewBackdrop" aria-hidden="true">
+      <div class="focus-review-card" role="dialog" aria-modal="true" aria-labelledby="focusReviewTitle">
+        <div class="focus-review-header">
+          <h4 class="focus-review-title" id="focusReviewTitle">Share your experience</h4>
+          <button class="focus-review-close" id="focusReviewCloseBtn" type="button" aria-label="Close modal">&times;</button>
+        </div>
+
+        <div class="focus-stars-row" id="focusStarsRow">
+          <button class="focus-star-btn" data-rating="1" type="button" aria-label="1 star">
+            <svg viewBox="0 0 24 24" class="star-svg"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+          <button class="focus-star-btn" data-rating="2" type="button" aria-label="2 stars">
+            <svg viewBox="0 0 24 24" class="star-svg"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+          <button class="focus-star-btn" data-rating="3" type="button" aria-label="3 stars">
+            <svg viewBox="0 0 24 24" class="star-svg"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+          <button class="focus-star-btn" data-rating="4" type="button" aria-label="4 stars">
+            <svg viewBox="0 0 24 24" class="star-svg"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+          <button class="focus-star-btn" data-rating="5" type="button" aria-label="5 stars">
+            <svg viewBox="0 0 24 24" class="star-svg"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+        </div>
+
+        <div class="focus-input-box">
+          <textarea class="focus-textarea" id="focusReviewText" placeholder="Describe your experience (optional)" maxlength="500"></textarea>
+          <div class="focus-card-footer">
+            <span class="focus-char-counter" id="focusCharCounter">0/500</span>
+          </div>
+        </div>
+
+        <div class="focus-actions">
+          <button class="focus-btn-cancel" id="focusReviewCancelBtn" type="button">Cancel</button>
+          <button class="focus-btn-post" id="focusReviewPostBtn" type="button">Post</button>
+        </div>
       </div>
     </div>
   </aside>
