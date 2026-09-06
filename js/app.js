@@ -5,6 +5,8 @@
 
 "use strict";
 
+if (typeof window !== "undefined" && typeof document !== "undefined") {
+
 const QUADRANTS = ["q1", "q2", "q3", "q4"];
 const STORAGE_KEY = "impact-framework-tasks.v1";
 
@@ -396,3 +398,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initAddForms();
   render();
 });
+
+}
+
