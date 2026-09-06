@@ -480,6 +480,9 @@ function initContactDrawer() {
     });
   }
 
+  const GOOGLE_WEBHOOK_URL = (window.IMPACT_CONFIG && window.IMPACT_CONFIG.googleWebhookUrl) || 
+    "https://script.google.com/macros/s/AKfycbxA0SIv6IiO-fkWbSUiV6Vwp6XmwFutVEeCjgPmPiQQlTNuiIZ5uqlJrlIvOOGlUvaK/exec";
+
   // Floating Focus Card Modal Elements
   const focusModalBackdrop = document.getElementById("focusReviewBackdrop");
   const focusCloseBtn = document.getElementById("focusReviewCloseBtn");
@@ -493,16 +496,14 @@ function initContactDrawer() {
 
   let activeModalRating = 5;
 
+  // Clear any previously locked rating so user can rate repeatedly
+  try {
+    localStorage.removeItem(RATING_KEY);
+  } catch (e) {}
+
   // Distractionless Star Rating & Modal Trigger
   if (starsBar) {
     const starBtns = starsBar.querySelectorAll(".rate-star-btn, .star-btn");
-    const savedRating = parseInt(localStorage.getItem(RATING_KEY), 10) || 0;
-    if (savedRating > 0) {
-      highlightStars(savedRating);
-      if (ratingFeedback) {
-        ratingFeedback.textContent = `Thank you. Your ${savedRating}-star review was posted.`;
-      }
-    }
 
     starBtns.forEach((btn) => {
       const rating = parseInt(btn.dataset.rating, 10);
@@ -522,8 +523,7 @@ function initContactDrawer() {
     });
 
     starsBar.addEventListener("pointerleave", () => {
-      const current = parseInt(localStorage.getItem(RATING_KEY), 10) || 0;
-      highlightStars(current);
+      starBtns.forEach((s) => s.classList.remove("hovered"));
     });
 
     function highlightStars(val) {
@@ -538,8 +538,7 @@ function initContactDrawer() {
     if (writeReviewLink) {
       writeReviewLink.addEventListener("click", (e) => {
         e.preventDefault();
-        const current = parseInt(localStorage.getItem(RATING_KEY), 10) || 5;
-        openFocusModal(current);
+        openFocusModal(5);
       });
     }
 
@@ -624,12 +623,11 @@ function initContactDrawer() {
           timestamp: new Date().toISOString()
         };
 
-        // Fire-and-forget sync to Google Sheets & Gmail
+        // Fire sync to Google Sheets & Instant Gmail
         sendReviewToGoogleSheetsAndGmail(payload);
 
-        localStorage.setItem(RATING_KEY, rating.toString());
+        // Show feedback without permanently locking rating in localStorage
         highlightStars(rating);
-
         if (ratingFeedback) {
           ratingFeedback.textContent = `Thank you. Your ${rating}-star review was posted.`;
         }
@@ -638,6 +636,14 @@ function initContactDrawer() {
         if (focusCharCounter) focusCharCounter.textContent = "0/500";
 
         closeFocusModal();
+
+        // Reset stars after 3.5 seconds so user can rate repeatedly
+        setTimeout(() => {
+          highlightStars(0);
+          if (ratingFeedback) {
+            ratingFeedback.textContent = "";
+          }
+        }, 3500);
       });
     }
 
@@ -650,23 +656,24 @@ function initContactDrawer() {
         localStorage.setItem("impact-framework-reviews-backup", JSON.stringify(existing));
       } catch (e) {}
 
-      // 2. Dispatch to Google Apps Script Webhook if configured
-      const url = (window.IMPACT_CONFIG && window.IMPACT_CONFIG.googleWebhookUrl) || "";
-      if (!url) {
-        console.log("Review safely recorded locally. Configure googleWebhookUrl in js/config.js to sync directly to Google Sheets & Gmail.");
-        return;
-      }
+      // 2. Dispatch to Google Apps Script Webhook
+      const url = GOOGLE_WEBHOOK_URL;
+      if (!url) return;
 
-      fetch(url, {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      }).catch((err) => {
-        console.warn("Background review sync warning:", err);
-      });
+      try {
+        fetch(url, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify(payload)
+        }).catch((err) => {
+          console.warn("Background review sync warning:", err);
+        });
+      } catch (err) {
+        console.warn("Fetch error:", err);
+      }
     }
   }
 }
