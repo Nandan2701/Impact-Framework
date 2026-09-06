@@ -606,45 +606,73 @@ function initContactDrawer() {
       });
     }
 
-    // Post Review Handler
-    if (focusPostBtn) {
-      focusPostBtn.addEventListener("click", () => {
-        const rating = activeModalRating || 5;
-        const reviewText = focusTextarea ? focusTextarea.value.trim() : "";
-        const isMobile = window.innerWidth <= 768;
+    // Post Review Handler (Optimized for both mobile touch and desktop click)
+    let isSubmitting = false;
 
-        // Build Payload for Google Sheets & Gmail
-        const payload = {
-          rating: rating,
-          review: reviewText,
-          character_count: reviewText.length,
-          device: isMobile ? "mobile" : "desktop",
-          app_version: "v1.2.0",
-          timestamp: new Date().toISOString()
-        };
+    function handlePostReview(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (isSubmitting) return;
+      isSubmitting = true;
 
-        // Fire sync to Google Sheets & Instant Gmail
-        sendReviewToGoogleSheetsAndGmail(payload);
+      const rating = activeModalRating || 5;
+      const reviewText = focusTextarea ? focusTextarea.value.trim() : "";
+      const isMobile = window.innerWidth <= 768;
 
-        // Show feedback without permanently locking rating in localStorage
-        highlightStars(rating);
-        if (ratingFeedback) {
-          ratingFeedback.textContent = `Thank you. Your ${rating}-star review was posted.`;
-        }
+      // Blur textarea immediately so mobile keypad dismisses
+      if (focusTextarea) focusTextarea.blur();
 
-        if (focusTextarea) focusTextarea.value = "";
-        if (focusCharCounter) focusCharCounter.textContent = "0/500";
+      // Visual feedback on the button
+      if (focusPostBtn) {
+        focusPostBtn.textContent = "Posting...";
+        focusPostBtn.style.opacity = "0.7";
+      }
 
+      // Build Payload for Google Sheets & Gmail
+      const payload = {
+        rating: rating,
+        review: reviewText,
+        character_count: reviewText.length,
+        device: isMobile ? "mobile" : "desktop",
+        app_version: "v1.2.0",
+        timestamp: new Date().toISOString()
+      };
+
+      // Fire sync to Google Sheets & Instant Gmail
+      sendReviewToGoogleSheetsAndGmail(payload);
+
+      // Show feedback without permanently locking rating in localStorage
+      highlightStars(rating);
+      if (ratingFeedback) {
+        ratingFeedback.textContent = `Thank you. Your ${rating}-star review was posted.`;
+      }
+
+      if (focusTextarea) focusTextarea.value = "";
+      if (focusCharCounter) focusCharCounter.textContent = "0/500";
+
+      setTimeout(() => {
         closeFocusModal();
+        if (focusPostBtn) {
+          focusPostBtn.textContent = "Post";
+          focusPostBtn.style.opacity = "1";
+        }
+        isSubmitting = false;
+      }, 300);
 
-        // Reset stars after 3.5 seconds so user can rate repeatedly
-        setTimeout(() => {
-          highlightStars(0);
-          if (ratingFeedback) {
-            ratingFeedback.textContent = "";
-          }
-        }, 3500);
-      });
+      // Reset stars after 3.5 seconds so user can rate repeatedly
+      setTimeout(() => {
+        highlightStars(0);
+        if (ratingFeedback) {
+          ratingFeedback.textContent = "";
+        }
+      }, 3500);
+    }
+
+    if (focusPostBtn) {
+      focusPostBtn.addEventListener("pointerdown", handlePostReview);
+      focusPostBtn.addEventListener("click", handlePostReview);
     }
 
     // Helper: Async sync to Google Sheets & Instant Gmail
@@ -661,34 +689,21 @@ function initContactDrawer() {
       if (!url) return;
 
       const jsonPayload = JSON.stringify(payload);
-      let sentViaBeacon = false;
 
-      // Primary: navigator.sendBeacon (ideal for mobile, immune to navigation/lifecycle drops)
-      if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
-        try {
-          const blob = new Blob([jsonPayload], { type: "text/plain;charset=utf-8" });
-          sentViaBeacon = navigator.sendBeacon(url, blob);
-        } catch (e) {
-          sentViaBeacon = false;
-        }
-      }
-
-      // Secondary: fetch with no-cors & text/plain
-      if (!sentViaBeacon) {
-        try {
-          fetch(url, {
-            method: "POST",
-            mode: "no-cors",
-            headers: {
-              "Content-Type": "text/plain;charset=utf-8"
-            },
-            body: jsonPayload
-          }).catch((err) => {
-            console.warn("Background review sync warning:", err);
-          });
-        } catch (err) {
-          console.warn("Fetch error:", err);
-        }
+      // Direct POST fetch with text/plain (Bypasses sendBeacon 302 drops on mobile)
+      try {
+        fetch(url, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: jsonPayload
+        }).catch((err) => {
+          console.warn("Background review sync warning:", err);
+        });
+      } catch (err) {
+        console.warn("Fetch error:", err);
       }
     }
   }
