@@ -103,6 +103,7 @@ function createTaskElement(q, task) {
         commitEdit(q, task.id, input.value);
       } else if (e.key === "Escape") {
         editingId = null;
+        document.body.classList.remove("shift-bottom-active");
         render();
       }
     });
@@ -111,6 +112,9 @@ function createTaskElement(q, task) {
     li.appendChild(wrap);
 
     requestAnimationFrame(() => {
+      if (q === "q3" || q === "q4") {
+        document.body.classList.add("shift-bottom-active");
+      }
       input.focus();
       input.select();
       bindSmoothCaret(input, caret);
@@ -181,6 +185,7 @@ function createTaskElement(q, task) {
 function commitEdit(q, id, value) {
   if (editingId !== id) return;
   editingId = null;
+  document.body.classList.remove("shift-bottom-active");
   const text = value.trim();
   const task = state[q].find((t) => t.id === id);
   if (task && text) {
@@ -207,6 +212,25 @@ function initAddForms() {
       bindSmoothCaret(input, caret);
     }
 
+    // On mobile: when focusing Q3 or Q4 (bottom row), shift UI up so input sits clearly above keypad
+    input.addEventListener("focus", () => {
+      if (q === "q3" || q === "q4") {
+        document.body.classList.add("shift-bottom-active");
+      } else {
+        document.body.classList.remove("shift-bottom-active");
+      }
+    });
+
+    input.addEventListener("blur", () => {
+      setTimeout(() => {
+        const active = document.activeElement;
+        const activeQuadrant = active?.closest("[data-quadrant]")?.dataset?.quadrant;
+        if (activeQuadrant !== "q3" && activeQuadrant !== "q4") {
+          document.body.classList.remove("shift-bottom-active");
+        }
+      }, 60);
+    });
+
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const text = input.value.trim();
@@ -214,7 +238,14 @@ function initAddForms() {
       state[q].push({ id: uid(), text, done: false });
       input.value = "";
       render();
-      input.focus();
+
+      // On mobile view: dismiss keypad and slide UI back down smoothly
+      if (window.innerWidth <= 640 || "ontouchstart" in window) {
+        input.blur();
+        document.body.classList.remove("shift-bottom-active");
+      } else {
+        input.focus();
+      }
     });
   });
 }
@@ -397,6 +428,17 @@ function setupPointerDrag(li, fromQuadrant, task) {
 document.addEventListener("DOMContentLoaded", () => {
   initAddForms();
   render();
+
+  // Dismiss active input and keypad when tapping outside on mobile
+  document.addEventListener("pointerdown", (e) => {
+    if (!e.target.closest(".add-form") && !e.target.closest(".smooth-input-wrap")) {
+      const active = document.activeElement;
+      if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) {
+        active.blur();
+        document.body.classList.remove("shift-bottom-active");
+      }
+    }
+  });
 });
 
 }

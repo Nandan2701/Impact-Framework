@@ -47,10 +47,15 @@ html, body {
 .app-container {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.28s cubic-bezier(0.2, 0, 0.1, 1);
+  will-change: transform;
 }
 
 /* ==========================================================================
@@ -513,5 +518,10 @@ html, body {
   .edit-input {
     font-size: 11px;
   }
+  /* Smooth upward slide when typing in bottom quadrants (Q3 Delegate / Q4 Eliminate) */
+  body.shift-bottom-active .app-container {
+    transform: translateY(calc(-50% + 20px));
+  }
 }
+
 
