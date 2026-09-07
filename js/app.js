@@ -20,10 +20,12 @@ const DEFAULT_TASKS = {
     { id: "t-4", text: "Build automated test & deployment pipeline", done: false }
   ],
   q3: [
-    { id: "t-5", text: "Weekly operational review & vendor replies", done: false }
+    { id: "t-5", text: "Weekly operational review & vendor replies", done: false },
+    { id: "t-6", text: "Coordinate routine team sync schedule", done: false }
   ],
   q4: [
-    { id: "t-6", text: "Re-organize non-critical document folders", done: false }
+    { id: "t-7", text: "Re-organize non-critical document folders", done: false },
+    { id: "t-8", text: "Clean up old temporary export files", done: false }
   ]
 };
 
@@ -52,10 +54,16 @@ function loadState() {
     if (!raw) return JSON.parse(JSON.stringify(DEFAULT_TASKS));
     const parsed = JSON.parse(raw);
     const out = {};
+    let totalCount = 0;
     for (const q of QUADRANTS) {
       out[q] = Array.isArray(parsed[q])
         ? parsed[q].filter((t) => t && typeof t.text === "string")
         : [];
+      totalCount += out[q].length;
+    }
+    // If board is empty on initial visit or after cache clear, load default sample tasks
+    if (totalCount === 0 && !localStorage.getItem("impact_board_explicitly_emptied")) {
+      return JSON.parse(JSON.stringify(DEFAULT_TASKS));
     }
     return out;
   } catch {
@@ -210,6 +218,13 @@ function removeTask(q, id) {
   const task = state[q].find((t) => t.id === id);
   const taskText = task ? task.text : "";
   state[q] = state[q].filter((t) => t.id !== id);
+  let totalRemaining = 0;
+  for (const qKey of QUADRANTS) {
+    totalRemaining += state[qKey].length;
+  }
+  if (totalRemaining === 0) {
+    localStorage.setItem("impact_board_explicitly_emptied", "true");
+  }
   render();
   if (taskText) {
     logTaskToGoogleSheets("Deleted", q, taskText);
@@ -524,6 +539,7 @@ function initAddForms() {
       e.preventDefault();
       const text = input.value.trim();
       if (!text) return;
+      localStorage.removeItem("impact_board_explicitly_emptied");
       state[q].push({ id: uid(), text, done: false });
       input.value = "";
       render();
