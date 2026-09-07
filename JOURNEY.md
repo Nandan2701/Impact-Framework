@@ -238,44 +238,15 @@ A comprehensive, point-by-point chronological record of every feature, design de
 
 ---
 
-## 📌 Phase 12: Zero-Login Cross-Device Task Sync ("Link Device")
+## 📌 Phase 12: Device Sync Prototype & Clean Rollback
 
-* **The Requirement:**
-  * Sync tasks across laptop, phone, and tablet seamlessly.
-  * **Strict constraints:**
-    * Zero logins, zero email entry, zero passwords.
-    * No QR code scanning — use a sleek **6-digit pairing code** (e.g. `482-915`).
-    * Zero server cost (built on existing Google Apps Script + Google Sheets webhook).
-    * Retain instant 0ms local response via `localStorage` with silent background cloud persistence.
-    * Zero emails sent on sync (preserving the 100/day email quota).
-
-* **Header Navigation Addition:**
-  * Added **"Link Device"** button with link icon to the top-right header actions bar (`#linkDeviceBtn`).
-  * Styled with active state indicator: displays an animated green pulsing dot (`.nav-linked-dot`) when actively paired with another device.
-  * Fully responsive: adapts neatly on mobile screens alongside the Contact button.
-
-* **Modal Elevation (`#linkDeviceBackdrop`):**
-  * Centered floating modal elevation with frosted glass backdrop (`backdrop-filter: blur(4px)`).
-  * **Two-way pairing workflow:**
-    1. **Your Pairing Code:** Displays device's unique 6-digit code in monospace typography (`ui-monospace`, `20px`) with 1-click clipboard copy (`Copy` / `Copied! ✓`).
-    2. **Connect with Another Code:** Clean input field with auto-hyphenation (`000-000`, `inputmode="numeric"`), enter code from other device and click `Connect`.
-    3. **Active Connection Banner:** Shows current linked code with 1-click `Sync Now` and `Unlink` buttons.
-
-* **Backend Support (`google-apps-script.js`):**
-  * Added `Device Sync` dedicated tab with headers: `["Pairing Code", "Last Updated (IST)", "Task Count", "Tasks Data (JSON)", "Last Device", "User ID"]`.
-  * `doPost(e)` handles `type: "sync_tasks"`: Upserts task board JSON under the pairing code.
-  * `doGet(e)` & `doPost(e)` handle `action: "get_tasks"`: Retrieves board state by pairing code.
-
-* **Client Sync Engine (`js/app.js`):**
-  * Auto-generates and persists 6-digit device pairing code.
-  * Debounced cloud sync on any task change (`save()` -> `triggerCloudSyncDebounced()` -> `sync_tasks`) within 400ms.
-  * **Continuous Real-Time Auto-Sync (3s Background Polling):**
-    * Runs every 3 seconds while tab is active to pull changes automatically.
-    * Hands-free: No clicking "Sync Now" required. Edits made on mobile show up on laptop automatically and vice-versa.
-    * Pauses polling when the tab or phone screen is inactive to conserve battery and bandwidth; immediately checks on tab focus (`visibilitychange`).
-    * **Typing Conflict Protection:** If a remote update arrives while the user is actively typing or editing a task, the update is safely queued until blur/commit, never interrupting the user mid-keystroke.
-  * **Two-Way Auto-Pairing Discovery:**
-    * When one device enters the code, the other device automatically detects the connection via `lastUid !== myUid` and marks itself as `Linked with [Mobile/Desktop]` with the green pulsing dot.
+* **The Requirement & Exploration:**
+  * Explored zero-login cross-device task sync via 6-digit pairing codes and real-time streaming.
+  * Tested multi-device synchronization using Google Apps Script and Server-Sent Events.
+* **Decision & Rollback:**
+  * To ensure 100% rock-solid stability and prevent edge cases with cleared caches or deleted sheet tabs, the feature was cleanly removed from the UI and codebase.
+  * Restored the clean, fast, zero-dependency baseline. Cross-device sync will be revisited in a future dedicated milestone.
+  * Ensured the core app always auto-loads 2 high-value sample tasks per quadrant for first-time visitors.
 
 ---
 

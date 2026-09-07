@@ -16,21 +16,12 @@
     <header class="app-header">
       <div class="header-spacer"></div>
       <h1 class="app-title">Impact Framework</h1>
-      <div class="header-actions">
-        <button class="nav-trigger" id="linkDeviceBtn" type="button" title="Link laptop and phone" aria-label="Link Device">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-          </svg>
-          <span>Link Device</span>
-        </button>
-        <button class="contact-trigger" id="contactBtn" type="button" title="Contact info & App rating" aria-label="Open contact and info">
-          <svg viewBox="0 0 24 24">
-            <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-          </svg>
-          <span>Contact</span>
-        </button>
-      </div>
+      <button class="contact-trigger" id="contactBtn" type="button" title="Contact info & App rating" aria-label="Open contact and info">
+        <svg viewBox="0 0 24 24">
+          <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+        </svg>
+        <span>Contact</span>
+      </button>
     </header>
 
     <!-- Full-screen 4-block matrix canvas -->
@@ -213,84 +204,8 @@
       </div>
     </div>
   </aside>
-
-  <!-- Link Device Modal Dialog (Floating Elevation) -->
-  <div class="link-device-backdrop" id="linkDeviceBackdrop" aria-hidden="true">
-    <div class="link-device-modal-card" role="dialog" aria-modal="true" aria-labelledby="linkDeviceTitle">
-      <div class="focus-review-header">
-        <div class="link-modal-title-wrap">
-          <div class="link-modal-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-            </svg>
-          </div>
-          <h3 class="focus-review-title" id="linkDeviceTitle">Link Device</h3>
-        </div>
-        <button class="focus-review-close" id="linkDeviceCloseBtn" type="button" aria-label="Close modal">&times;</button>
-      </div>
-
-      <p class="link-modal-desc">
-        Sync tasks between your laptop and phone with a simple 6-digit code. No sign in or password required.
-      </p>
-
-      <!-- Active Connection Banner (Shown when linked) -->
-      <div class="link-active-banner" id="linkActiveBanner" style="display: none;">
-        <div class="link-active-status">
-          <span class="link-active-dot"></span>
-          <span><span id="linkActiveTitle">Linked: </span><strong id="currentPairingCodeDisplay">---</strong></span>
-        </div>
-        <div class="link-active-badge">
-          <span class="pulse-ring"></span>
-          <span>Live Instant Sync</span>
-        </div>
-        <div class="link-active-actions">
-          <button class="link-btn-sync-now" id="linkSyncNowBtn" type="button">Sync Now</button>
-          <button class="link-btn-unlink" id="linkUnlinkBtn" type="button">Unlink</button>
-        </div>
-      </div>
-
-      <!-- Section 1: This Device's Code -->
-      <div class="device-section">
-        <div class="device-section-label">Your Device Pairing Code</div>
-        <div class="device-code-card">
-          <div class="device-code-number" id="myPairingCode">--- ---</div>
-          <button class="device-code-copy-btn" id="copyPairingCodeBtn" type="button" aria-label="Copy Pairing Code">
-            <span>Copy</span>
-          </button>
-        </div>
-        <div class="device-section-help">Enter this code on your other device to connect.</div>
-      </div>
-
-      <div class="link-modal-divider">
-        <span>OR</span>
-      </div>
-
-      <!-- Section 2: Enter code from another device -->
-      <div class="device-section">
-        <div class="device-section-label">Connect with Another Code</div>
-        <form class="link-code-form" id="linkCodeForm">
-          <div class="link-code-input-wrap">
-            <input
-              type="text"
-              class="link-code-input"
-              id="pairCodeInput"
-              placeholder="000-000"
-              maxlength="7"
-              inputmode="numeric"
-              autocomplete="off"
-              aria-label="Enter 6-digit pairing code"
-            />
-            <button class="link-btn-submit" id="linkSubmitBtn" type="submit">Connect</button>
-          </div>
-        </form>
-        <div class="link-feedback" id="linkFeedback"></div>
-      </div>
-    </div>
-  </div>
-
-  <script src="js/config.js?v=3.4"></script>
-  <script src="js/app.js?v=3.4"></script>
+  <script src="js/config.js?v=4.0"></script>
+  <script src="js/app.js?v=4.0"></script>
   <!-- Vercel Web Analytics & Speed Insights -->
   <script defer src="/_vercel/insights/script.js"></script>
   <script defer src="/_vercel/speed-insights/script.js"></script>

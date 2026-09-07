@@ -2,7 +2,7 @@
  * ==============================================================================
  * Impact Framework — Unified Google Sheets & Instant Gmail Webhook
  * ==============================================================================
- * This script handles FOUR types of requests:
+ * This script handles TWO types of incoming data with full visitor telemetry:
  *   1. User Reviews (type = "review"):
  *      - Appends to "Reviews" (or "Sheet1") with full visitor analytics.
  *      - Sends instant HTML email alert to nandanbhole72@gmail.com.
@@ -10,13 +10,6 @@
  *   2. User Tasks (type = "task"):
  *      - Appends to "User Tasks" (Date, User ID, Quadrant, Action, Task, Analytics).
  *      - SILENT LOG: Does NOT send an email to preserve your 100/day email quota!
- *
- *   3. Device Sync - Save Board (type = "sync_tasks"):
- *      - Upserts board state in "Device Sync" tab under 6-digit pairing code.
- *      - SILENT: NO email sent.
- *
- *   4. Device Sync - Fetch Board (type = "get_tasks" or GET ?action=get_tasks):
- *      - Retrieves latest board tasks by 6-digit pairing code for cross-device sync.
  * ==============================================================================
  */
 
@@ -80,15 +73,6 @@ var TASK_HEADERS = [
   "App Version"
 ];
 
-var SYNC_HEADERS = [
-  "Pairing Code",
-  "Last Updated (IST)",
-  "Task Count",
-  "Tasks Data (JSON)",
-  "Last Device",
-  "User ID"
-];
-
 function ensureHeaders(sheet, headers, headerBg, headerColor) {
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(headers);
@@ -117,120 +101,6 @@ function doPost(e) {
     var now = new Date();
     var ss = SpreadsheetApp.getActiveSpreadsheet();
 
-    // ==========================================================================
-    // HANDLER 1: DEVICE SYNC — SAVE BOARD (Silent)
-    // ==========================================================================
-    if (data.type === "sync_tasks") {
-      var rawCode = String(data.code || "").replace(/[^0-9A-Za-z]/g, "").trim();
-      if (!rawCode) {
-        return ContentService
-          .createTextOutput(JSON.stringify({ status: "error", message: "Missing pairing code." }))
-          .setMimeType(ContentService.MimeType.JSON);
-      }
-
-      var syncSheet = ss.getSheetByName("Device Sync");
-      if (!syncSheet) {
-        syncSheet = ss.insertSheet("Device Sync");
-      }
-      ensureHeaders(syncSheet, SYNC_HEADERS, "#e6f4ea", "#137333");
-
-      var taskCount = 0;
-      if (data.tasks && typeof data.tasks === "object") {
-        for (var q in data.tasks) {
-          if (Array.isArray(data.tasks[q])) taskCount += data.tasks[q].length;
-        }
-      }
-
-      var payloadObj = {
-        tasks: data.tasks || {},
-        updatedAt: Number(data.updatedAt) || now.getTime(),
-        device: data.device || "Desktop",
-        uid: data.uid || "anon"
-      };
-
-      var rowData = [
-        rawCode,
-        now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
-        taskCount,
-        JSON.stringify(payloadObj),
-        data.device || "Desktop",
-        data.uid || "anon"
-      ];
-
-      var values = syncSheet.getDataRange().getValues();
-      var targetRow = -1;
-      for (var i = 1; i < values.length; i++) {
-        if (String(values[i][0]).replace(/[^0-9A-Za-z]/g, "") === rawCode) {
-          targetRow = i + 1;
-          break;
-        }
-      }
-
-      if (targetRow > 0) {
-        syncSheet.getRange(targetRow, 1, 1, rowData.length).setValues([rowData]);
-      } else {
-        syncSheet.appendRow(rowData);
-      }
-
-      return ContentService
-        .createTextOutput(JSON.stringify({
-          status: "success",
-          type: "sync_tasks",
-          code: rawCode,
-          updatedAt: payloadObj.updatedAt,
-          taskCount: taskCount,
-          savedAt: now.toISOString()
-        }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // ==========================================================================
-    // HANDLER 2: DEVICE SYNC — GET BOARD (Silent)
-    // ==========================================================================
-    if (data.type === "get_tasks") {
-      var searchCode = String(data.code || "").replace(/[^0-9A-Za-z]/g, "").trim();
-      var sheetSync = ss.getSheetByName("Device Sync");
-
-      if (sheetSync && sheetSync.getLastRow() > 1) {
-        var allRows = sheetSync.getDataRange().getValues();
-        for (var j = 1; j < allRows.length; j++) {
-          if (String(allRows[j][0]).replace(/[^0-9A-Za-z]/g, "") === searchCode) {
-            var rawContent = allRows[j][3] || "{}";
-            var parsedPayload = {};
-            try {
-              parsedPayload = JSON.parse(rawContent);
-            } catch(errJson) { parsedPayload = {}; }
-
-            var returnTasks = parsedPayload.tasks !== undefined ? parsedPayload.tasks : parsedPayload;
-            var returnUpdatedAt = parsedPayload.updatedAt || 0;
-
-            return ContentService
-              .createTextOutput(JSON.stringify({
-                status: "success",
-                type: "get_tasks",
-                code: searchCode,
-                tasks: returnTasks,
-                updatedAt: returnUpdatedAt,
-                lastDevice: allRows[j][4] || parsedPayload.device || "Desktop",
-                lastUid: allRows[j][5] || parsedPayload.uid || "anon",
-                lastUpdated: allRows[j][1],
-                taskCount: allRows[j][2]
-              }))
-              .setMimeType(ContentService.MimeType.JSON);
-          }
-        }
-      }
-
-      return ContentService
-        .createTextOutput(JSON.stringify({
-          status: "not_found",
-          type: "get_tasks",
-          code: searchCode,
-          message: "No tasks found for code " + searchCode
-        }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
     // Prepare shared telemetry values
     var city = data.city || "Unknown";
     var region = data.region || "Unknown";
@@ -253,7 +123,7 @@ function doPost(e) {
     var uid = data.uid || "anon";
 
     // ==========================================================================
-    // HANDLER 3: USER TASKS (Silent Logging — NO Email to save quota)
+    // HANDLER 1: USER TASKS (Silent Logging — NO Email to save quota)
     // ==========================================================================
     if (data.type === "task") {
       var taskSheet = ss.getSheetByName("User Tasks");
@@ -296,14 +166,14 @@ function doPost(e) {
     }
 
     // ==========================================================================
-    // HANDLER 4: USER REVIEWS (Saves to Sheet + Sends Instant Gmail Alert)
+    // HANDLER 2: USER REVIEWS (Saves to Sheet + Sends Instant Gmail Alert)
     // ==========================================================================
     var rating = data.rating || 5;
     var reviewText = data.review || "";
     var characterCount = data.character_count || reviewText.length;
 
     var reviewSheet = ss.getSheetByName("Reviews") || ss.getSheetByName("Sheet1") || ss.getSheets()[0];
-    if (reviewSheet.getName() === "User Tasks" || reviewSheet.getName() === "Device Sync") {
+    if (reviewSheet.getName() === "User Tasks") {
       reviewSheet = ss.insertSheet("Reviews");
     }
 
@@ -417,50 +287,6 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  try {
-    var p = (e && e.parameter) || {};
-    if (p.action === "get_tasks" && p.code) {
-      var ss = SpreadsheetApp.getActiveSpreadsheet();
-      var syncSheet = ss.getSheetByName("Device Sync");
-      if (!syncSheet) {
-        syncSheet = ss.insertSheet("Device Sync");
-        ensureHeaders(syncSheet, SYNC_HEADERS, "#e6f4ea", "#137333");
-      }
-      if (syncSheet.getLastRow() > 1) {
-        var cleanCode = String(p.code).replace(/[^0-9A-Za-z]/g, "").trim();
-        var values = syncSheet.getDataRange().getValues();
-        for (var i = 1; i < values.length; i++) {
-          if (String(values[i][0]).replace(/[^0-9A-Za-z]/g, "") === cleanCode) {
-            var rawVal = values[i][3] || "{}";
-            var parsed = {};
-            try {
-              parsed = JSON.parse(rawVal);
-            } catch(errJson) { parsed = {}; }
-
-            var tasks = parsed.tasks !== undefined ? parsed.tasks : parsed;
-            var updatedAt = parsed.updatedAt || 0;
-
-            return ContentService
-              .createTextOutput(JSON.stringify({
-                status: "success",
-                code: cleanCode,
-                tasks: tasks,
-                updatedAt: updatedAt,
-                lastDevice: values[i][4] || parsed.device || "Desktop",
-                lastUid: values[i][5] || parsed.uid || "anon",
-                lastUpdated: values[i][1],
-                taskCount: values[i][2]
-              }))
-              .setMimeType(ContentService.MimeType.JSON);
-          }
-        }
-      }
-      return ContentService
-        .createTextOutput(JSON.stringify({ status: "not_found", message: "Pairing code not found." }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-  } catch (err) {}
-
   return ContentService
     .createTextOutput("Impact Framework Google Sheets & Gmail Webhook is Active.")
     .setMimeType(ContentService.MimeType.TEXT);
