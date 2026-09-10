@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Impact Framework — Title Style Variations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-color: #fdfdfc;
+      --card-bg: #ffffff;
+      --line-color: #22262b;
+      --line-subtle: #e5e3db;
+      --text-main: #181b1e;
+      --text-muted: #737069;
+      --text-faint: #a6a39b;
+      --accent-q1: #c54242;
+      --accent-q2: #2b7757;
+      --accent-q3: #b07c1b;
+      --accent-q4: #6b665f;
+    }
+
+    body {
+      background-color: #f7f6f2;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: var(--text-main);
+      padding: 40px 24px 100px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1140px;
+      margin: 0 auto;
+    }
+
+    /* Page Header */
+    .page-header {
+      margin-bottom: 36px;
+      text-align: center;
+    }
+
+    .page-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--line-color);
+      color: #ffffff;
+      margin-bottom: 12px;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .page-desc {
+      font-size: 15px;
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 36px;
+    }
+
+    .filter-btn {
+      background: #ffffff;
+      border: 1.5px solid var(--line-subtle);
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--line-color);
+      color: var(--text-main);
+    }
+
+    .filter-btn.active {
+      background: var(--line-color);
+      border-color: var(--line-color);
+      color: #ffffff;
+    }
+
+    /* Grid of Variations */
+    .variations-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 24px;
+    }
+
+    /* Card */
+    .var-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--line-subtle);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .var-card:hover {
+      border-color: var(--line-color);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      transform: translateY(-2px);
+    }
+
+    .var-card.featured {
+      border-color: var(--line-color);
+      position: relative;
+    }
+
+    .var-card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #faf9f6;
+    }
+
+    .var-badge {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .var-category {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(34, 38, 43, 0.06);
+      color: var(--text-muted);
+    }
+
+    /* Mock App Header Preview Container */
+    .var-preview-stage {
+      background-color: var(--bg-color);
+      padding: 28px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid var(--line-subtle);
+      position: relative;
+      min-height: 110px;
+    }
+
+    /* Simulated Top Bar with Contact Button for Real Context */
+    .mock-header-bar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 12px;
+      border-bottom: 1.5px solid var(--line-color);
+      background: var(--bg-color);
+      margin-bottom: 12px;
+      border-radius: 4px 4px 0 0;
+    }
+
+    .mock-spacer {
+      width: 60px;
+    }
+
+    .mock-contact-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid var(--line-color);
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-main);
+      background: transparent;
+    }
+
+    .mock-contact-btn svg {
+      width: 10px;
+      height: 10px;
+      fill: currentColor;
+    }
+
+    /* Card Details */
+    .var-info {
+      padding: 16px 18px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .var-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .var-desc {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      flex: 1;
+    }
+
+    .code-preview {
+      background: #1e2227;
+      color: #abb2bf;
+      padding: 10px 12px;
+      border-radius: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      margin-bottom: 12px;
+      border: 1px solid #2d333b;
+    }
+
+    .var-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-copy {
+      flex: 1;
+      background: #ffffff;
+      border: 1.5px solid var(--line-color);
+      color: var(--text-main);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+
+    .btn-copy:hover {
+      background: var(--line-color);
+      color: #ffffff;
+    }
+
+    .btn-copy.copied {
+      background: #2b7757;
+      border-color: #2b7757;
+      color: #ffffff;
+    }
+
+    /* Base Title Class */
+    .app-title-base {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-main);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-align: center;
+      display: inline-block;
+      transition: all 0.2s ease;
+    }
+
+    /* ==========================================================================
+       THE 15 CURATED TITLE VARIATIONS
+       ========================================================================== */
+
+    /* 1. Subtle Editorial Drop (Classic Paper Depth) */
+    .title-v1 {
+      color: #181b1e;
+      text-shadow: 0 1.5px 3px rgba(24, 27, 30, 0.16), 0 3px 8px rgba(24, 27, 30, 0.07);
+    }
+
+    /* 2. Letterpress Deboss (Tactile Engraved Ink) */
+    .title-v2 {
+      color: #202428;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9), 0 -1px 0 rgba(0, 0, 0, 0.28);
+    }
+
+    /* 3. Sharp Architectural Offset (Brutalist Drafting) */
+    .title-v3 {
+      color: var(--text-main);
+      text-shadow: 2px 2px 0 #d5d2c8;
+    }
+
+    /* 4. 4-Quadrant Spectral Aura (Homage to Matrix Colors) */
+    .title-v4 {
+      color: #14171a;
+      text-shadow:
+        -3px -2px 10px rgba(197, 66, 66, 0.22),
+        3px -2px 10px rgba(43, 119, 87, 0.22),
+        -3px 2px 10px rgba(176, 124, 27, 0.22),
+        3px 2px 10px rgba(107, 102, 95, 0.22);
+    }
+
+    /* 5. Elevated Paper Pill Badge (Floating Plaque) */
+    .title-v5 {
+      background: #ffffff;
+      border: 1.5px solid var(--line-color);
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-size: 15px;
+      letter-spacing: 0.08em;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    /* 6. Ambient Charcoal Diffusion (High-End SaaS Floating) */
+    .title-v6 {
+      color: #111315;
+      text-shadow: 0 4px 16px rgba(24, 27, 30, 0.24), 0 1px 3px rgba(24, 27, 30, 0.12);
+    }
+
+    /* 7. Two-Tone Ink Gradient with Elevation */
+    .title-v7 {
+      background: linear-gradient(180deg, #181b1e 30%, #4b5158 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.14));
+    }
+
+    /* 8. Layered Relief Stencil (Triple Micro-Step) */
+    .title-v8 {
+      color: #1a1d20;
+      text-shadow:
+        1px 1px 0 #ffffff,
+        2px 2px 0 #c7c4b9,
+        3px 3px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 9. Minimal Focus Vector Underline */
+    .title-v9 {
+      position: relative;
+      padding-bottom: 5px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .title-v9::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 28px;
+      height: 2.5px;
+      background: var(--line-color);
+      border-radius: 2px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+    }
+
+    /* 10. Technical Monospace Matrix Frame */
+    .title-v10 {
+      border: 1px dashed var(--text-faint);
+      padding: 3px 12px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.6);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      letter-spacing: 0.12em;
+    }
+    .title-v10::before {
+      content: "[ ";
+      color: var(--accent-q3);
+      font-weight: 400;
+    }
+    .title-v10::after {
+      content: " ]";
+      color: var(--accent-q3);
+      font-weight: 400;
+    }
+
+    /* 11. Warm Golden Hour Halftone Glow */
+    .title-v11 {
+      color: #1a1b1c;
+      text-shadow:
+        0 2px 10px rgba(176, 124, 27, 0.28),
+        0 1px 2px rgba(24, 27, 30, 0.15);
+    }
+
+    /* 12. Chiseled 3D Isometric Punch */
+    .title-v12 {
+      color: #181b1e;
+      text-shadow:
+        0 1px 0 #8c8980,
+        0 2px 0 #6e6b63,
+        0 3px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* 13. Frosted Minimalist Glass Plaque */
+    .title-v13 {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(216, 214, 207, 0.8);
+      padding: 3px 16px;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+      text-shadow: 0 1px 1px rgba(255,255,255,0.8);
+    }
+
+    /* 14. Split Accent Hierarchy ("IMPACT" Bold + "FRAMEWORK" Muted Relief) */
+    .title-v14 {
+      display: inline-flex;
+      gap: 6px;
+    }
+    .title-v14-a {
+      font-weight: 800;
+      color: var(--text-main);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+    .title-v14-b {
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    /* 15. Crosshair Matrix Reticle (Aligned with 4 Quadrants) */
+    .title-v15 {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-shadow: 0 1.5px 3px rgba(24, 27, 30, 0.14);
+    }
+    .title-v15::before,
+    .title-v15::after {
+      content: "";
+      width: 14px;
+      height: 1.5px;
+      background: var(--text-muted);
+      opacity: 0.7;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--line-color);
+      color: #ffffff;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header class="page-header">
+      <span class="page-tag">Design System Gallery</span>
+      <h1 class="page-title">"Impact Framework" Title Variations</h1>
+      <p class="page-desc">15 curated aesthetic treatments for the main header title. Click "Copy CSS" on your favorite to apply it to your app.</p>
+    </header>
+
+    <!-- Filter Category Buttons -->
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all">All Variations (15)</button>
+      <button class="filter-btn" data-filter="shadow">Subtle Shadows</button>
+      <button class="filter-btn" data-filter="paper">Paper & Letterpress</button>
+      <button class="filter-btn" data-filter="badge">Badges & Plaques</button>
+      <button class="filter-btn" data-filter="architectural">Architectural & Matrix</button>
+    </div>
+
+    <!-- The 15 Variations Grid -->
+    <div class="variations-grid" id="variationsGrid">
+
+      <!-- 1 -->
+      <div class="var-card" data-category="shadow">
+        <div class="var-card-header">
+          <span class="var-badge">VARIATION 01</span>
+          <span class="var-category">Subtle Shadows</span>
+        </div>
+        <div class="var-preview-stage">
+          <div class="mock-header-bar">
+            <div class="mock-spacer"></div>
+            <h1 class="app-title-base title-v1">Impact Framework</h1>
+            <div class="mock-contact-btn">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              <span>Contact</span>
+            </div>
+          </div>
+        </div>
+        <div class="var-info">
+          <div class="var-name">Subtle Editorial Drop</div>
+          <div class="var-desc">A delicate dual-layer charcoal shadow. Gives the title a clean lift above the paper without appearing artificial or heavy.</div>
+          <div class="code-preview">text-shadow: 0 1.5px 3px rgba(24, 27, 30, 0.16), 0 3px 8px rgba(24, 27, 30, 0.07);</div>
+          <div class="var-actions">
+            <button class="btn-copy" onclick="copyCss(this, 'text-shadow: 0 1.5px 3px rgba(24, 27, 30, 0.16), 0 3px 8px rgba(24, 27, 30, 0.07);')">📋 Copy CSS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2 -->
+      <div class="var-card" data-category="paper">
+        <div class="var-card-header">
+          <span class="var-badge">VARIATION 02</span>
+          <span class="var-category">Paper & Letterpress</span>
+        </div>
+        <div class="var-preview-stage">
+          <div class="mock-header-bar">
+            <div class="mock-spacer"></div>
+            <h1 class="app-title-base title-v2">Impact Framework</h1>
+            <div class="mock-contact-btn">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              <span>Contact</span>
+            </div>
+          </div>
+        </div>
+        <div class="var-info">
+          <div class="var-name">Letterpress Deboss</div>
+          <div class="var-desc">Intaglio debossed print effect with a bright white bottom reflection and top dark recess shadow. Looks physically stamped into thick cotton cardstock.</div>
+          <div class="code-preview">color: #202428;
+text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9), 0 -1px 0 rgba(0, 0, 0, 0.28);</div>
+          <div class="var-actions">
+            <button class="btn-copy" onclick="copyCss(this, 'color: #202428;\ntext-shadow: 0 1px 0 rgba(255, 255, 255, 0.9), 0 -1px 0 rgba(0, 0, 0, 0.28);')">📋 Copy CSS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 -->
+      <div class="var-card" data-category="architectural">
+        <div class="var-card-header">
+          <span class="var-badge">VARIATION 03</span>
+          <span class="var-category">Architectural</span>
+        </div>
+        <div class="var-preview-stage">
+          <div class="mock-header-bar">
+            <div class="mock-spacer"></div>
+            <h1 class="app-title-base title-v3">Impact Framework</h1>
+            <div class="mock-contact-btn">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              <span>Contact</span>
+            </div>
+          </div>
+        </div>
+        <div class="var-info">
+          <div class="var-name">Sharp Architectural Offset</div>
+          <div class="var-desc">Hard-edge zero-blur drafting shadow. Resonates cleanly with Bauhaus typography and engineering blueprints.</div>
+          <div class="code-preview">text-shadow: 2px 2px 0 #d5d2c8;</div>
+          <div class="var-actions">
+            <button class="btn-copy" onclick="copyCss(this, 'text-shadow: 2px 2px 0 #d5d2c8;')">📋 Copy CSS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 -->
+      <div class="var-card" data-category="shadow">
+        <div class="var-card-header">
+          <span class="var-badge">VARIATION 04</span>
+          <span class="var-category">Subtle Shadows</span>
+        </div>
+        <div class="var-preview-stage">
+          <div class="mock-header-bar">
+            <div class="mock-spacer"></div>
+            <h1 class="app-title-base title-v4">Impact Framework</h1>
+            <div class="mock-contact-btn">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              <span>Contact</span>
+            </div>
+          </div>
+        </div>
+        <div class="var-info">
+          <div class="var-name">4-Quadrant Spectral Aura</div>
+          <div class="var-desc">A whisper of ambient chromatic glow blending the four matrix quadrant colors (Red Q1, Green Q2, Gold Q3, Slate Q4).</div>
+          <div class="code-preview">text-shadow:
+  -3px -2px 10px rgba(197, 66, 66, 0.22),
+  3px -2px 10px rgba(43, 119, 87, 0.22),
+  -3px 2px 10px rgba(176, 124, 27, 0.22),
+  3px 2px 10px rgba(107, 102, 95, 0.22);</div>
+          <div class="var-actions">
+            <button class="btn-copy" onclick="copyCss(this, 'text-shadow: -3px -2px 10px rgba(197, 66, 66, 0.22), 3px -2px 10px rgba(43, 119, 87, 0.22), -3px 2px 10px rgba(176, 124, 27, 0.22), 3px 2px 10px rgba(107, 102, 95, 0.22);')">📋 Copy CSS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5 -->
+      <div class="var-card" data-category="badge">
+        <div class="var-card-header">
+          <span class="var-badge">VARIATION 05</span>
+          <span class="var-category">Badges & Plaques</span>
+        </div>
+        <div class="var-preview-stage">
+          <div class="mock-header-bar">
+            <div class="mock-spacer"></div>
+            <h1 class="app-title-base title-v5">Impact Framework</h1>
+            <div class="mock-contact-btn">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              <span>Contact</span>
+            </div>
+          </div>
+        </div>
+        <div class="var-info">
+          <div class="var-name">Elevated Paper Pill Badge</div>
+          <div class="var-desc">Encloses the title in an elevated paper pill with a delicate 1.5px border and soft base shadow. Commands immediate visual authority.</div>
+          <div class="code-preview">background: #ffffff;
+border: 1.5px solid var(--line-color);
+border-radius: 999px;
+padding: 4px 14px;
+box-shadow: 0 3px 6px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);</div>
+          <div class="var-actions">
+            <button class="btn-copy" onclick="copyCss(this, 'background: #ffffff;\nborder: 1.5px solid var(--line-color);\nborder-radius: 999px;\npadding: 4px 14px;\nbox-shadow: 0 3px 6px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);')">📋 Copy CSS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6 -->
+      <div class="var-card" data-category="shadow">
+        <div class="var-card-header">
+          <span class="var-badge">VARIATION 06</span>
+          <span class="var-category">Subtle Shadows</span>
+        </div>
+        <div class="var-preview-stage">
+          <div class="mock-header-bar">
+            <div class="mock-spacer"></div>
+            <h1 class="app-title-base title-v6">Impact Framework</h1>
+            <div class="mock-contact-btn">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              <span>Contact</span>
+            </div>
+          </div>
+        </div>
+        <div class="var-info">
+          <div class="var-name">Ambient Charcoal Diffusion</div>
+          <div class="var-desc">Broad, silky, low-contrast studio diffusion shadow. Feels luxurious, contemporary, and confident.</div>
+          <div class="code-preview">color: #111315;
+text-shadow: 0 4px 16px rgba(24, 27, 30, 0.24), 0 1px 3px rgba(24, 27, 30, 0.12);</div>
+          <div class="var-actions">
+            <button class="btn-copy" onclick="copyCss(this, 'color: #111315;\ntext-shadow: 0 4px 16px rgba(24, 27, 30, 0.24), 0 1px 3px rgba(24, 27, 30, 0.12);')">📋 Copy CSS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7 -->
+      <div class="var-card" data-category="shadow">
+        <div class="var-card-header">
+          <span class="var-badge">VARIATION 07</span>
+          <span class="var-category">Subtle Shadows</span>
+        </div>
+        <div class="var-preview-stage">
+          <div class="mock-header-bar">
+            <div class="mock-spacer"></div>
+            <h1 class="app-title-base title-v7">Impact Framework</h1>
+            <div class="mock-contact-btn">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              <span>Contact</span>
+            </div>
+          </div>
+        </div>
+        <div class="var-info">
+          <div class="var-name">Two-Tone Gradient Ink</div>
+          <div class="var-desc">Top-to-bottom subtle charcoal ink gradient paired with a soft drop-shadow filter. Enhances dimensional depth without loud colors.</div>
+          <div class="code-preview">background: linear-gradient(180deg, #181b1e 30%, #4b5158 100%);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.14));</div>
+          <div class="var-actions">
+            <button class="btn-copy" onclick="copyCss(this, 'background: linear-gradient(180deg, #181b1e 30%, #4b5158 100%);\n-webkit-background-clip: text;\n-webkit-text-fill-color: transparent;\nfilter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.14));')">📋 Copy CSS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8 -->
+      <div class="var-card" data-category="paper">
+        <div class="var-card-header">
+          <span class="var-badge">VARIATION 08</span>
+          <span class="var-category">Paper & Letterpress</span>
+        </div>
+        <div class="var-preview-stage">
+          <div class="mock-header-bar">
+            <div class="mock-spacer"></div>
+            <h1 class="app-title-base title-v8">Impact Framework</h1>
+            <div class="mock-contact-btn">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              <span>Contact</span>
+            </div>
+          </div>
+        </div>
+        <div class="var-info">
+          <div class="var-name">Layered Relief Stencil</div>
+          <div class="var-desc">Three-step micro relief: pure white highlight, parchment shadow step, and ambient diffuse base. Stenciled paper craft feel.</div>
+          <div class="code-preview">text-shadow:
+  1px 1px 0 #ffffff,
+  2px 2px 0 #c7c4b9,
+  3px 3px 5px rgba(0, 0, 0, 0.1);</div>
+          <div class="var-actions">
+            <button class="btn-copy" onclick="copyCss(this, 'text-shadow: 1px 1px 0 #ffffff, 2px 2px 0 #c7c4b9, 3px 3px 5px rgba(0, 0, 0, 0.1);')">📋 Copy CSS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9 -->
+      <div class="var-card" data-category="architectural">
+        <div class="var-card-header">
+          <span class="var-badge">VARIATION 09</span>
+          <span class="var-category">Architectural</span>
+        </div>
+        <div class="var-preview-stage">
+          <div class="mock-header-bar">
+            <div class="mock-spacer"></div>
+            <h1 class="app-title-base title-v9">Impact Framework</h1>
+            <div class="mock-contact-btn">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              <span>Contact</span>
+            </div>
+          </div>
+        </div>
+        <div class="var-info">
+          <div class="var-name">Minimal Focus Vector Underline</div>
+          <div class="var-desc">Crisp text shadow accompanied by an anchored 28px centered baseline bar. Subtly pulls the user's eye to the center axis.</div>
+          <div class="code-preview">text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+/* Accompanied by centered ::after underline bar */</div>
+          <div class="var-actions">
+            <button class="btn-copy" onclick="copyCss(this, 'position: relative;\npadding-bottom: 5px;\ntext-shadow: 0 1px 2px rgba(0,0,0,0.1);')">📋 Copy CSS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10 -->
+      <div class="var-card" data-category="architectural">
+        <div class="var-card-header">
+          <span class="var-badge">VARIATION 10</span>
+          <span class="var-category">Architectural</span>
+        </div>
+        <div class="var-preview-stage">
+          <div class="mock-header-bar">
+            <div class="mock-spacer"></div>
+            <h1 class="app-title-base title-v10">Impact Framework</h1>
+            <div class="mock-contact-btn">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              <span>Contact</span>
+            </div>
+          </div>
+        </div>
+        <div class="var-info">
+          <div class="var-name">Technical Matrix Frame</div>
+          <div class="var-desc">Enclosed in subtle dashed blueprint border with bracket accents. Perfectly mirrors the programmatic matrix theme.</div>
+          <div class="code-preview">border: 1px dashed #a6a39b;
+padding: 3px 12px;
+background: rgba(255, 255, 255, 0.6);
+text-shadow: 0 1px 2px rgba(0,0,0,0.06);</div>
+          <div class="var-actions">
+            <button class="btn-copy" onclick="copyCss(this, 'border: 1px dashed #a6a39b;\npadding: 3px 12px;\nbackground: rgba(255, 255, 255, 0.6);\ntext-shadow: 0 1px 2px rgba(0,0,0,0.06);')">📋 Copy CSS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 11 -->
+      <div class="var-card" data-category="shadow">
+        <div class="var-card-header">
+          <span class="var-badge">VARIATION 11</span>
+          <span class="var-category">Subtle Shadows</span>
+        </div>
+        <div class="var-preview-stage">
+          <div class="mock-header-bar">
+            <div class="mock-spacer"></div>
+            <h1 class="app-title-base title-v11">Impact Framework</h1>
+            <div class="mock-contact-btn">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              <span>Contact</span>
+            </div>
+          </div>
+        </div>
+        <div class="var-info">
+          <div class="var-name">Warm Golden Halftone Glow</div>
+          <div class="var-desc">Warm amber/ochre under-glow reminiscent of golden-hour natural sunlight falling across a paper desk.</div>
+          <div class="code-preview">color: #1a1b1c;
+text-shadow:
+  0 2px 10px rgba(176, 124, 27, 0.28),
+  0 1px 2px rgba(24, 27, 30, 0.15);</div>
+          <div class="var-actions">
+            <button class="btn-copy" onclick="copyCss(this, 'color: #1a1b1c;\ntext-shadow: 0 2px 10px rgba(176, 124, 27, 0.28), 0 1px 2px rgba(24, 27, 30, 0.15);')">📋 Copy CSS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 12 -->
+      <div class="var-card" data-category="paper">
+        <div class="var-card-header">
+          <span class="var-badge">VARIATION 12</span>
+          <span class="var-category">Paper & Letterpress</span>
+        </div>
+        <div class="var-preview-stage">
+          <div class="mock-header-bar">
+            <div class="mock-spacer"></div>
+            <h1 class="app-title-base title-v12">Impact Framework</h1>
+            <div class="mock-contact-btn">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              <span>Contact</span>
+            </div>
+          </div>
+        </div>
+        <div class="var-info">
+          <div class="var-name">Chiseled 3D Isometric Punch</div>
+          <div class="var-desc">Physical extruded block shadow mimicking metal movable type (typewriter/linotype punch). Strong, physical, tactile.</div>
+          <div class="code-preview">color: #181b1e;
+text-shadow:
+  0 1px 0 #8c8980,
+  0 2px 0 #6e6b63,
+  0 3px 4px rgba(0, 0, 0, 0.2);</div>
+          <div class="var-actions">
+            <button class="btn-copy" onclick="copyCss(this, 'color: #181b1e;\ntext-shadow: 0 1px 0 #8c8980, 0 2px 0 #6e6b63, 0 3px 4px rgba(0, 0, 0, 0.2);')">📋 Copy CSS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 13 -->
+      <div class="var-card" data-category="badge">
+        <div class="var-card-header">
+          <span class="var-badge">VARIATION 13</span>
+          <span class="var-category">Badges & Plaques</span>
+        </div>
+        <div class="var-preview-stage">
+          <div class="mock-header-bar">
+            <div class="mock-spacer"></div>
+            <h1 class="app-title-base title-v13">Impact Framework</h1>
+            <div class="mock-contact-btn">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              <span>Contact</span>
+            </div>
+          </div>
+        </div>
+        <div class="var-info">
+          <div class="var-name">Frosted Glass Plaque</div>
+          <div class="var-desc">Subtle glassmorphism pill with backdrop blur, fine hairline border, and gentle ambient elevation. Modern and crisp.</div>
+          <div class="code-preview">background: rgba(255, 255, 255, 0.7);
+backdrop-filter: blur(8px);
+border: 1px solid rgba(216, 214, 207, 0.8);
+padding: 3px 16px;
+border-radius: 6px;
+box-shadow: 0 4px 12px rgba(0,0,0,0.04);</div>
+          <div class="var-actions">
+            <button class="btn-copy" onclick="copyCss(this, 'background: rgba(255, 255, 255, 0.7);\nbackdrop-filter: blur(8px);\nborder: 1px solid rgba(216, 214, 207, 0.8);\npadding: 3px 16px;\nborder-radius: 6px;\nbox-shadow: 0 4px 12px rgba(0,0,0,0.04);')">📋 Copy CSS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 14 -->
+      <div class="var-card" data-category="paper">
+        <div class="var-card-header">
+          <span class="var-badge">VARIATION 14</span>
+          <span class="var-category">Paper & Letterpress</span>
+        </div>
+        <div class="var-preview-stage">
+          <div class="mock-header-bar">
+            <div class="mock-spacer"></div>
+            <h1 class="app-title-base title-v14">
+              <span class="title-v14-a">Impact</span>
+              <span class="title-v14-b">Framework</span>
+            </h1>
+            <div class="mock-contact-btn">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              <span>Contact</span>
+            </div>
+          </div>
+        </div>
+        <div class="var-info">
+          <div class="var-name">Split Hierarchy & Relief</div>
+          <div class="var-desc">"IMPACT" is bold ink with a grounding drop shadow, while "FRAMEWORK" has light letterpress relief. Adds rhythm and brand identity.</div>
+          <div class="code-preview">.impact { font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+.framework { font-weight: 600; color: #737069; text-shadow: 0 1px 0 #fff; }</div>
+          <div class="var-actions">
+            <button class="btn-copy" onclick="copyCss(this, '/* IMPACT */ font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.15);\n/* FRAMEWORK */ font-weight: 600; color: #737069; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);')">📋 Copy CSS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 15 -->
+      <div class="var-card" data-category="architectural">
+        <div class="var-card-header">
+          <span class="var-badge">VARIATION 15</span>
+          <span class="var-category">Architectural</span>
+        </div>
+        <div class="var-preview-stage">
+          <div class="mock-header-bar">
+            <div class="mock-spacer"></div>
+            <h1 class="app-title-base title-v15">Impact Framework</h1>
+            <div class="mock-contact-btn">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              <span>Contact</span>
+            </div>
+          </div>
+        </div>
+        <div class="var-info">
+          <div class="var-name">Crosshair Matrix Reticle</div>
+          <div class="var-desc">Title flanked by clean 14px horizontal reticle ticks and paired with a subtle drop shadow. Visually echoes the 4 quadrant dividing axes below.</div>
+          <div class="code-preview">text-shadow: 0 1.5px 3px rgba(24, 27, 30, 0.14);
+/* Flanked by hairline ::before and ::after reticle ticks */</div>
+          <div class="var-actions">
+            <button class="btn-copy" onclick="copyCss(this, 'display: inline-flex; align-items: center; gap: 10px;\ntext-shadow: 0 1.5px 3px rgba(24, 27, 30, 0.14);')">📋 Copy CSS</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast">CSS copied to clipboard!</div>
+
+  <script>
+    // 1-Click Copy CSS Helper
+    function copyCss(btn, text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '✓ Copied!';
+        btn.classList.add('copied');
+        showToast('CSS copied to clipboard! Ready to apply.');
+
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2200);
+    }
+
+    // Category Filter Functionality
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const filter = btn.dataset.filter;
+        document.querySelectorAll('.var-card').forEach(card => {
+          if (filter === 'all' || card.dataset.category === filter) {
+            card.style.display = 'flex';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
