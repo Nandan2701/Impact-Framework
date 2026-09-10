@@ -177,10 +177,28 @@ function createTaskElement(q, task) {
   doneBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     task.done = !task.done;
-    render();
     if (task.done) {
+      // Automatically move completed task to the bottom of its quadrant section
+      const idx = state[q].findIndex((t) => t.id === task.id);
+      if (idx !== -1) {
+        const [movedTask] = state[q].splice(idx, 1);
+        state[q].push(movedTask);
+      }
       logTaskToGoogleSheets("Completed", q, task.text);
+    } else {
+      // When unmarked as done, move it before the first completed task
+      const idx = state[q].findIndex((t) => t.id === task.id);
+      if (idx !== -1) {
+        const [movedTask] = state[q].splice(idx, 1);
+        const firstDoneIdx = state[q].findIndex((other) => other.done);
+        if (firstDoneIdx !== -1) {
+          state[q].splice(firstDoneIdx, 0, movedTask);
+        } else {
+          state[q].push(movedTask);
+        }
+      }
     }
+    render();
   });
 
   actions.append(delBtn, doneBtn);
@@ -533,7 +551,13 @@ function initAddForms() {
       const text = input.value.trim();
       if (!text) return;
       localStorage.removeItem("impact_board_explicitly_emptied");
-      state[q].push({ id: uid(), text, done: false });
+      const newTask = { id: uid(), text, done: false };
+      const firstDoneIdx = state[q].findIndex((t) => t.done);
+      if (firstDoneIdx !== -1) {
+        state[q].splice(firstDoneIdx, 0, newTask);
+      } else {
+        state[q].push(newTask);
+      }
       input.value = "";
       render();
 
