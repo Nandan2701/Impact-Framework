@@ -76,21 +76,30 @@ function render() {
     const list = document.querySelector(`.task-list[data-quadrant="${q}"]`);
     if (!list) continue;
     list.textContent = "";
-    for (const task of state[q]) {
-      list.appendChild(createTaskElement(q, task));
-    }
+    state[q].forEach((task, index) => {
+      list.appendChild(createTaskElement(q, task, index));
+    });
   }
   save();
 }
 
-function createTaskElement(q, task) {
+function createTaskElement(q, task, index) {
   const li = document.createElement("li");
   li.className = "task" + (task.done ? " done" : "");
   li.dataset.id = task.id;
   li.dataset.quadrant = q;
 
+  const numText = typeof index === "number" ? `${index + 1}.` : "";
+
   // Editing Mode with smooth Docs Silk caret
   if (editingId === task.id) {
+    if (numText) {
+      const num = document.createElement("span");
+      num.className = "task-num";
+      num.textContent = numText;
+      li.appendChild(num);
+    }
+
     const wrap = document.createElement("div");
     wrap.className = "smooth-input-wrap";
     wrap.style.flex = "1";
@@ -128,6 +137,11 @@ function createTaskElement(q, task) {
     });
     return li;
   }
+
+  // Task Number (1, 2, 3...) on the left side
+  const num = document.createElement("span");
+  num.className = "task-num";
+  num.textContent = numText;
 
   // Task Text (Double-click or double-tap only to edit)
   const text = document.createElement("span");
@@ -202,7 +216,7 @@ function createTaskElement(q, task) {
   });
 
   actions.append(delBtn, doneBtn);
-  li.append(text, actions);
+  li.append(num, text, actions);
 
   // Setup Manual Pointer Drag
   setupPointerDrag(li, q, task);
@@ -552,12 +566,7 @@ function initAddForms() {
       if (!text) return;
       localStorage.removeItem("impact_board_explicitly_emptied");
       const newTask = { id: uid(), text, done: false };
-      const firstDoneIdx = state[q].findIndex((t) => t.done);
-      if (firstDoneIdx !== -1) {
-        state[q].splice(firstDoneIdx, 0, newTask);
-      } else {
-        state[q].push(newTask);
-      }
+      state[q].unshift(newTask);
       input.value = "";
       render();
 
@@ -661,6 +670,10 @@ function setupPointerDrag(li, fromQuadrant, task) {
         floatingEl.style.left = (moveEvent.clientX - offsetX) + "px";
         floatingEl.style.top = (moveEvent.clientY - offsetY) + "px";
 
+        const numSpan = document.createElement("span");
+        numSpan.className = "task-num";
+        numSpan.textContent = li.querySelector(".task-num")?.textContent || "";
+
         const textSpan = document.createElement("span");
         textSpan.className = "task-text";
         textSpan.textContent = task.text;
@@ -668,7 +681,7 @@ function setupPointerDrag(li, fromQuadrant, task) {
         const square = document.createElement("div");
         square.className = "task-done-square";
 
-        floatingEl.append(textSpan, square);
+        floatingEl.append(numSpan, textSpan, square);
         document.body.appendChild(floatingEl);
 
         // Completely hide original from list

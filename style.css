@@ -282,6 +282,24 @@ body.drawer-open .app-container {
   flex-shrink: 0;
 }
 
+/* Task Number Index on Left */
+.task-num {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+  min-width: 16px;
+  text-align: right;
+  line-height: 1.4;
+}
+
+.task.done .task-num {
+  color: var(--task-done-color);
+  opacity: 0.6;
+}
+
 /* Task Content Text */
 .task-text {
   flex: 1;
@@ -524,6 +542,11 @@ body.drawer-open .app-container {
     gap: 6px;
     font-size: 11px;
     border-radius: 3px;
+  }
+  .task-num {
+    font-size: 10.5px;
+    min-width: 13px;
+    line-height: 1.25;
   }
   .task-text {
     line-height: 1.25;
