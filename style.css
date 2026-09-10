@@ -84,13 +84,57 @@ body.drawer-open .app-container {
   width: 80px;
 }
 
+/* Header Title — Variation 15 (Crosshair Reticle) + Variation 14 (Split Relief & Shadow) */
 .app-title {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--text-main);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 16.5px;
   text-transform: uppercase;
+  user-select: none;
   letter-spacing: 0.05em;
-  text-align: center;
+  margin: 0 auto;
+}
+
+/* Crosshair Reticle Ticks (Variation 15) */
+.app-title::before,
+.app-title::after {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 1.5px;
+  background: var(--text-muted);
+  opacity: 0.5;
+  border-radius: 1px;
+  transition: all 0.2s ease;
+}
+
+.app-title:hover::before,
+.app-title:hover::after {
+  opacity: 0.85;
+  width: 20px;
+  background: var(--line-color);
+}
+
+/* Split Accent Typography & Relief (Variation 14) */
+.title-impact {
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: 0.06em;
+  text-shadow: 0 2px 4px rgba(24, 27, 30, 0.16);
+  transition: text-shadow 0.2s ease;
+}
+
+.title-framework {
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.09em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.95), 0 -0.5px 0 rgba(0, 0, 0, 0.1);
+}
+
+.app-title:hover .title-impact {
+  text-shadow: 0 3px 8px rgba(24, 27, 30, 0.22);
 }
 
 /* Contact Trigger Button at Top-Right */
@@ -486,8 +530,17 @@ body.drawer-open .app-container {
     padding: 0 10px;
   }
   .app-title {
-    font-size: 12px;
-    letter-spacing: 0.08em;
+    font-size: 11px;
+    gap: 6px;
+    letter-spacing: 0.04em;
+  }
+  .app-title::before,
+  .app-title::after {
+    width: 8px;
+    height: 1px;
+  }
+  .header-spacer {
+    width: 50px;
   }
   .matrix-canvas {
     width: 100vw;
