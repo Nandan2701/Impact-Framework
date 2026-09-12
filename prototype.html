@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Impact Framework — Editorial Monograph Prototype</title>
+  
+  <!-- Curated Font Pairings: Newsreader (Authoritative Editorial Serif) + Plus Jakarta Sans (Crisp Modern Architectural Sans) + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       ARCHITECTURAL EDITORIAL MONOGRAPH DESIGN SYSTEM
+       Awwwards-Tier Warm Sepia / Parchment Aesthetic
+       ========================================================================== */
+    :root {
+      /* Warm Parchment Palette (Zero Harsh Black & White) */
+      --bg-base: #f7f4ed;              /* Authentic warm monograph paper */
+      --bg-surface: #fcfbfa;           /* Off-cream elevated paper surface */
+      --bg-surface-subtle: #f1ede3;    /* Secondary warm parchment recess */
+      --bg-surface-glass: rgba(247, 244, 237, 0.82); /* Frosted ambient glass */
+      
+      /* Deep Warm Espresso Typography Hierarchy */
+      --ink-espresso: #201b17;         /* Deepest espresso heading ink */
+      --ink-primary: #322b24;          /* Warm readable text for tasks */
+      --ink-secondary: #6e6457;        /* Weathered editorial sepia */
+      --ink-tertiary: #968c7e;         /* Light caption sepia */
+      --ink-faint: #c3bbb0;            /* Gentle boundary & placeholder */
+      
+      /* Architectural Hairlines & Contour Rings */
+      --border-contour: #e2dbce;       /* Visible crisp architectural hairline */
+      --border-contour-subtle: #eae5da;/* Softer internal quadrant hairline */
+      --contour-ring: rgba(32, 27, 23, 0.05); /* Structural edge ambient ring */
+      --contour-focus: rgba(32, 27, 23, 0.16);
+      
+      /* Curated Tinted Neutrals — Editorial Quadrant Accents */
+      --tint-q1: #ab3e31;              /* Terracotta Venetian Red */
+      --tint-q1-soft: rgba(171, 62, 49, 0.08);
+      --tint-q2: #2b614d;              /* Antique Cypress Green */
+      --tint-q2-soft: rgba(43, 97, 77, 0.08);
+      --tint-q3: #a06e22;              /* Warm Ocre / Raw Sienna */
+      --tint-q3-soft: rgba(160, 110, 34, 0.08);
+      --tint-q4: #5e5750;              /* Architectural Warm Umber */
+      --tint-q4-soft: rgba(94, 87, 80, 0.08);
+
+      /* Typography Tokens */
+      --font-serif: 'Newsreader', Georgia, Cambria, serif;
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Intentional Spatial Rhythm & Micro Spacing */
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-pill: 999px;
+      
+      --shadow-micro: 0 1px 2px rgba(32, 27, 23, 0.03), 0 0 0 1px var(--border-contour);
+      --shadow-lift: 0 4px 14px -3px rgba(32, 27, 23, 0.07), 0 0 0 1px var(--border-contour);
+      --shadow-drawer: -12px 0 36px -8px rgba(32, 27, 23, 0.12), -1px 0 0 var(--border-contour);
+    }
+
+    /* Reset & Clean Foundation */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      margin: 0;
+      padding: 0;
+      overflow: hidden; /* Completely fit on screen: ZERO page-level scrolling */
+      background-color: var(--bg-base);
+      color: var(--ink-primary);
+      font-family: var(--font-serif);
+      font-size: 14.5px;
+      line-height: 1.7; /* Generous line height */
+      user-select: none;
+    }
+
+    /* Subtle Architectural Grain Overlay for High-End Monograph Tactility */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.032;
+      z-index: 9999;
+      background-image: radial-gradient(var(--ink-espresso) 0.75px, transparent 0.75px);
+      background-size: 14px 14px;
+    }
+
+    /* Screen Wrapper */
+    .app-screen {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ==========================================================================
+       TOP APP BAR — Minimalist Editorial Header (Compact Fixed 48px)
+       ========================================================================== */
+    .editorial-header {
+      height: 48px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-surface-glass);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-contour);
+      z-index: 40;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .monograph-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ink-tertiary);
+      padding: 2px 7px;
+      border: 1px solid var(--border-contour);
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface);
+    }
+
+    /* Title: Bold Architectural Sans + Refined Editorial Serif Pair */
+    .brand-title {
+      font-family: var(--font-sans);
+      font-size: 14.5px;
+      font-weight: 800;
+      letter-spacing: -0.015em;
+      color: var(--ink-espresso);
+      display: inline-flex;
+      align-items: baseline;
+      gap: 6px;
+      text-decoration: none;
+    }
+
+    .brand-title .title-accent {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 15px;
+      color: var(--ink-secondary);
+      letter-spacing: 0.01em;
+    }
+
+    .header-center-info {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ink-tertiary);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .header-center-info .dot-divider {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--ink-faint);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Minimalist Tactile Action Button */
+    .btn-minimal {
+      font-family: var(--font-sans);
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: var(--ink-primary);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-contour);
+      padding: 4px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      outline: none;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: var(--shadow-micro);
+    }
+
+    .btn-minimal:hover {
+      background: var(--ink-espresso);
+      color: var(--bg-base);
+      border-color: var(--ink-espresso);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(32, 27, 23, 0.1);
+    }
+
+    .btn-minimal:active {
+      transform: translateY(0);
+    }
+
+    .btn-minimal svg {
+      width: 12px;
+      height: 12px;
+      fill: currentColor;
+    }
+
+    /* Sub-bar / Prologue Strip (Fixed 32px height) */
+    .monograph-prologue {
+      height: 32px;
+      flex-shrink: 0;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-contour);
+      background: var(--bg-base);
+      user-select: none;
+    }
+
+    .prologue-title {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .prologue-meta {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 12.5px;
+      color: var(--ink-tertiary);
+    }
+
+    /* ==========================================================================
+       MAIN EDITORIAL MATRIX CONTAINER & ARCHITECTURAL GRID (Exact Fit 100vh)
+       ========================================================================== */
+    .app-workspace {
+      flex: 1;
+      min-height: 0; /* Essential: allows workspace to respect parent height */
+      height: calc(100vh - 80px);
+      height: calc(100dvh - 80px);
+      padding: 16px 24px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    /* The 4-Block Architectural Grid */
+    .editorial-grid {
+      flex: 1;
+      min-height: 0; /* Essential: prevents overflow outside screen */
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 16px; /* Intentional breathing room between blocks */
+      overflow: hidden;
+    }
+
+    /* Quadrant Card: Elevated Monograph Block */
+    .quadrant-block {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-contour);
+      border-radius: var(--radius-md);
+      padding: 14px 18px 10px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0; /* Essential: shrink gracefully inside grid */
+      height: 100%;
+      position: relative;
+      box-shadow: var(--shadow-micro);
+      overflow: hidden;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .quadrant-block:hover {
+      box-shadow: var(--shadow-lift);
+      border-color: #d8d0c2;
+    }
+
+    /* Top Accent Rule of each Quadrant */
+    .quadrant-block::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 16px;
+      right: 16px;
+      height: 2px;
+      background: var(--quadrant-tint, var(--ink-espresso));
+      opacity: 0.85;
+      border-radius: 0 0 2px 2px;
+    }
+
+    .quadrant-block[data-quadrant="q1"] { --quadrant-tint: var(--tint-q1); }
+    .quadrant-block[data-quadrant="q2"] { --quadrant-tint: var(--tint-q2); }
+    .quadrant-block[data-quadrant="q3"] { --quadrant-tint: var(--tint-q3); }
+    .quadrant-block[data-quadrant="q4"] { --quadrant-tint: var(--tint-q4); }
+
+    /* Quadrant Header Row */
+    .quadrant-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border-contour-subtle);
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .head-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .quadrant-roman {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 600;
+      color: var(--quadrant-tint);
+      letter-spacing: 0.08em;
+    }
+
+    /* Heading: Crisp Modern Sans with Tight Tracking */
+    .quadrant-title {
+      font-family: var(--font-sans);
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink-espresso);
+      line-height: 1.25;
+    }
+
+    .quadrant-subtitle {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 11.5px;
+      color: var(--ink-tertiary);
+      margin-top: 1px;
+    }
+
+    /* Minimalist Quadrant Tag */
+    .quadrant-pill {
+      font-family: var(--font-sans);
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      border: 1px solid currentColor;
+      color: var(--quadrant-tint);
+      background: var(--quadrant-bg-soft, transparent);
+      flex-shrink: 0;
+    }
+
+    .quadrant-block[data-quadrant="q1"] .quadrant-pill { background: var(--tint-q1-soft); }
+    .quadrant-block[data-quadrant="q2"] .quadrant-pill { background: var(--tint-q2-soft); }
+    .quadrant-block[data-quadrant="q3"] .quadrant-pill { background: var(--tint-q3-soft); }
+    .quadrant-block[data-quadrant="q4"] .quadrant-pill { background: var(--tint-q4-soft); }
+
+    /* ==========================================================================
+       TASK LIST & EDITORIAL TYPOGRAPHY
+       Generous 1.7 Line Height + Authoritative Editorial Serif
+       ========================================================================== */
+    .editorial-task-list {
+      list-style: none;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-height: 0; /* Crucial: permits shrinking inside grid cell */
+      overflow-y: auto;
+      padding-right: 4px;
+      margin-bottom: 4px;
+    }
+
+    /* Custom Parchment Scrollbar */
+    .editorial-task-list::-webkit-scrollbar {
+      width: 3px;
+    }
+    .editorial-task-list::-webkit-scrollbar-thumb {
+      background: var(--border-contour);
+      border-radius: 3px;
+    }
+
+    /* Task Item Card: Micro-tactile elevation and hover state */
+    .editorial-task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      padding: 4px 7px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      background: transparent;
+      transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: default;
+      position: relative;
+    }
+
+    .editorial-task-item:hover {
+      background: var(--bg-surface-subtle);
+      border-color: var(--border-contour-subtle);
+      transform: translateY(-1px);
+    }
+
+    /* Numeric Index: Crisp Sans / JetBrains Mono */
+    .task-index {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--ink-tertiary);
+      min-width: 20px;
+      padding-top: 2px;
+      user-select: none;
+    }
+
+    /* Task Text: Authoritative Editorial Serif with 1.75 Line Height */
+    .task-body-text {
+      flex: 1;
+      font-family: var(--font-serif);
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.75;
+      color: var(--ink-primary);
+      word-break: break-word;
+      letter-spacing: -0.005em;
+      transition: color 0.2s ease, opacity 0.2s ease;
+    }
+
+    /* Completed Strikethrough State */
+    .editorial-task-item.completed .task-body-text {
+      text-decoration: line-through;
+      text-decoration-color: var(--ink-tertiary);
+      text-decoration-thickness: 1.2px;
+      color: var(--ink-tertiary);
+      opacity: 0.65;
+    }
+
+    .editorial-task-item.completed .task-index {
+      opacity: 0.45;
+    }
+
+    /* Task Actions Right Cluster */
+    .task-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-top: 3px;
+      flex-shrink: 0;
+    }
+
+    /* Delete Button with Soft Amber-Red Hover */
+    .task-action-del {
+      background: transparent;
+      border: none;
+      color: var(--ink-faint);
+      cursor: pointer;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-size: 14px;
+      line-height: 1;
+      opacity: 0;
+      transition: all 0.15s ease;
+    }
+
+    .editorial-task-item:hover .task-action-del {
+      opacity: 1;
+      color: var(--ink-secondary);
+    }
+
+    .task-action-del:hover {
+      color: var(--tint-q1) !important;
+      background: var(--tint-q1-soft);
+    }
+
+    /* Tactile Square Checkbox */
+    .editorial-checkbox {
+      width: 17px;
+      height: 17px;
+      border: 1.5px solid #a89f92;
+      border-radius: 3px;
+      background: var(--bg-surface);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.16s ease;
+      outline: none;
+      flex-shrink: 0;
+    }
+
+    .editorial-checkbox:hover {
+      border-color: var(--ink-espresso);
+      background: #fbf9f4;
+    }
+
+    .editorial-task-item.completed .editorial-checkbox {
+      background: var(--ink-espresso);
+      border-color: var(--ink-espresso);
+    }
+
+    .editorial-checkbox::after {
+      content: "";
+      width: 4.5px;
+      height: 8.5px;
+      border: solid transparent;
+      border-width: 0 1.6px 1.6px 0;
+      transform: rotate(45deg) translate(-0.5px, -1px);
+      transition: border-color 0.15s ease;
+    }
+
+    .editorial-task-item.completed .editorial-checkbox::after {
+      border-color: var(--bg-surface);
+    }
+
+    /* ==========================================================================
+       TACTILE INLINE ADD TASK FORM
+       ========================================================================== */
+    .editorial-add-form {
+      margin-top: auto;
+      padding-top: 6px;
+      border-top: 1px dashed var(--border-contour-subtle);
+      flex-shrink: 0;
+    }
+
+    .input-field-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    .add-task-input {
+      width: 100%;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      padding: 4px 8px;
+      font-family: var(--font-serif);
+      font-size: 13.5px;
+      line-height: 1.4;
+      color: var(--ink-espresso);
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .add-task-input::placeholder {
+      font-family: var(--font-serif);
+      font-style: italic;
+      color: var(--ink-faint);
+    }
+
+    .add-task-input:focus {
+      background: var(--bg-surface-subtle);
+      border-color: var(--border-contour);
+      box-shadow: 0 0 0 3px var(--contour-ring);
+    }
+
+    .input-submit-hint {
+      position: absolute;
+      right: 10px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--ink-tertiary);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
+    .add-task-input:focus ~ .input-submit-hint {
+      opacity: 1;
+    }
+
+    /* ==========================================================================
+       SIDEBAR MONOGRAPH CONTACT & RATING DRAWER (Frosted Warm Ambient Glass)
+       ========================================================================== */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(32, 27, 23, 0.35);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 90;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
+    }
+
+    .drawer-backdrop.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .monograph-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 380px;
+      max-width: 90vw;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border-contour);
+      box-shadow: var(--shadow-drawer);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .monograph-drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-top-bar {
+      height: 60px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-contour);
+      background: var(--bg-surface);
+    }
+
+    .drawer-heading {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--ink-espresso);
+    }
+
+    .drawer-close-btn {
+      background: transparent;
+      border: 1px solid var(--border-contour);
+      border-radius: var(--radius-sm);
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--ink-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .drawer-close-btn:hover {
+      background: var(--ink-espresso);
+      color: var(--bg-base);
+      border-color: var(--ink-espresso);
+    }
+
+    .drawer-scroll-body {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Monograph Info Tile */
+    .monograph-tile {
+      background: var(--bg-base);
+      border: 1px solid var(--border-contour);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .tile-caption {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ink-tertiary);
+    }
+
+    .tile-value-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .tile-value {
+      font-family: var(--font-serif);
+      font-size: 15px;
+      color: var(--ink-espresso);
+      font-weight: 500;
+    }
+
+    .copy-pill-btn {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border: 1px solid var(--border-contour);
+      border-radius: var(--radius-pill);
+      background: var(--bg-surface);
+      color: var(--ink-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .copy-pill-btn:hover {
+      background: var(--ink-espresso);
+      color: var(--bg-base);
+    }
+
+    /* Rating Component in Monograph Drawer */
+    .rating-monograph-card {
+      border: 1px solid var(--border-contour);
+      border-radius: var(--radius-md);
+      background: var(--bg-surface);
+      padding: 20px 16px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .rating-card-title {
+      font-family: var(--font-sans);
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink-espresso);
+      letter-spacing: -0.01em;
+    }
+
+    .rating-card-sub {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 13px;
+      color: var(--ink-secondary);
+    }
+
+    .star-rating-row {
+      display: flex;
+      gap: 6px;
+      margin: 6px 0;
+    }
+
+    .star-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      outline: none;
+      color: #d1c8bb;
+      transition: transform 0.15s ease, color 0.15s ease;
+    }
+
+    .star-btn:hover,
+    .star-btn.active {
+      color: #b57a22;
+      transform: scale(1.12);
+    }
+
+    .star-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+
+    /* Monograph Design Notes Floating Toast */
+    .monograph-toast {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-contour);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: var(--ink-secondary);
+      box-shadow: var(--shadow-micro);
+    }
+
+    .toast-title {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink-espresso);
+      margin-bottom: 4px;
+    }
+
+    /* ==========================================================================
+       RESPONSIVE EDITORIAL BREAKPOINTS
+       ========================================================================== */
+    @media (max-width: 960px) {
+      .app-workspace {
+        padding: 20px 16px 36px;
+      }
+      .editorial-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
+      .header-center-info {
+        display: none;
+      }
+      .editorial-header {
+        padding: 0 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-screen">
+    <!-- Top Editorial Header -->
+    <header class="editorial-header">
+    <div class="header-left">
+      <span class="monograph-label">Prototype</span>
+      <a href="#" class="brand-title">
+        IMPACT <span class="title-accent">— Framework</span>
+      </a>
+    </div>
+
+    <div class="header-center-info">
+      <span>Monograph Editorial Layout</span>
+      <span class="dot-divider"></span>
+      <span>Warm Sepia Edition</span>
+      <span class="dot-divider"></span>
+      <span>1.75 Line Rhythm</span>
+    </div>
+
+    <div class="header-right">
+      <button class="btn-minimal" id="toggleDrawerBtn" type="button">
+        <svg viewBox="0 0 24 24">
+          <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+        </svg>
+        <span>Colophon & Info</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Workspace Container -->
+  <main class="app-workspace">
+    
+    <!-- Editorial Prologue / Header Subtitle -->
+    <section class="monograph-prologue">
+      <div class="prologue-title">
+        <span>Architectural Decision Matrix</span>
+        <span style="font-weight: 400; color: var(--ink-tertiary);">|</span>
+        <span style="font-weight: 500; font-size: 12px; text-transform: none; font-family: var(--font-serif); font-style: italic;">
+          Intentional negative space & generous vertical rhythm
+        </span>
+      </div>
+      <div class="prologue-meta">
+        Double click any task to edit • Tap square to complete
+      </div>
+    </section>
+
+    <!-- The 4-Block Architectural Matrix -->
+    <div class="editorial-grid">
+      
+      <!-- Quadrant 1: High Impact, Easy to Do -->
+      <section class="quadrant-block" data-quadrant="q1">
+        <header class="quadrant-head">
+          <div class="head-meta">
+            <span class="quadrant-roman">SECT. 01</span>
+            <h2 class="quadrant-title">High Impact, Easy to Do</h2>
+            <p class="quadrant-subtitle">Immediate leverage & frictionless execution</p>
+          </div>
+          <span class="quadrant-pill">DO FIRST</span>
+        </header>
+
+        <ul class="editorial-task-list" id="list-q1">
+          <li class="editorial-task-item">
+            <span class="task-index">01.</span>
+            <span class="task-body-text">Frontend Coding & component craftsmanship (morning focus)</span>
+            <div class="task-controls">
+              <button class="task-action-del" title="Delete" type="button">&times;</button>
+              <button class="editorial-checkbox" title="Mark done" type="button"></button>
+            </div>
+          </li>
+          <li class="editorial-task-item">
+            <span class="task-index">02.</span>
+            <span class="task-body-text">Submit Bain application & tailor monograph portfolio</span>
+            <div class="task-controls">
+              <button class="task-action-del" title="Delete" type="button">&times;</button>
+              <button class="editorial-checkbox" title="Mark done" type="button"></button>
+            </div>
+          </li>
+          <li class="editorial-task-item">
+            <span class="task-index">03.</span>
+            <span class="task-body-text">Level 3 & 4 data structure review (afternoon deep work)</span>
+            <div class="task-controls">
+              <button class="task-action-del" title="Delete" type="button">&times;</button>
+              <button class="editorial-checkbox" title="Mark done" type="button"></button>
+            </div>
+          </li>
+          <li class="editorial-task-item">
+            <span class="task-index">04.</span>
+            <span class="task-body-text">Prompt engineering & architectural pattern testing</span>
+            <div class="task-controls">
+              <button class="task-action-del" title="Delete" type="button">&times;</button>
+              <button class="editorial-checkbox" title="Mark done" type="button"></button>
+            </div>
+          </li>
+        </ul>
+
+        <form class="editorial-add-form" onsubmit="event.preventDefault(); addTask('q1');">
+          <div class="input-field-wrap">
+            <input type="text" class="add-task-input" id="input-q1" placeholder="+ Inscribe new task..." autocomplete="off">
+            <span class="input-submit-hint">↵ Return</span>
+          </div>
+        </form>
+      </section>
+
+      <!-- Quadrant 2: High Impact, Hard to Do -->
+      <section class="quadrant-block" data-quadrant="q2">
+        <header class="quadrant-head">
+          <div class="head-meta">
+            <span class="quadrant-roman">SECT. 02</span>
+            <h2 class="quadrant-title">High Impact, Hard to Do</h2>
+            <p class="quadrant-subtitle">Strategic craftsmanship & compound mastery</p>
+          </div>
+          <span class="quadrant-pill">SCHEDULE</span>
+        </header>
+
+        <ul class="editorial-task-list" id="list-q2">
+          <li class="editorial-task-item">
+            <span class="task-index">01.</span>
+            <span class="task-body-text">Hands-on algorithmic problem solving (45% time block)</span>
+            <div class="task-controls">
+              <button class="task-action-del" title="Delete" type="button">&times;</button>
+              <button class="editorial-checkbox" title="Mark done" type="button"></button>
+            </div>
+          </li>
+          <li class="editorial-task-item">
+            <span class="task-index">02.</span>
+            <span class="task-body-text">Advanced SQL query optimization & relational structures</span>
+            <div class="task-controls">
+              <button class="task-action-del" title="Delete" type="button">&times;</button>
+              <button class="editorial-checkbox" title="Mark done" type="button"></button>
+            </div>
+          </li>
+          <li class="editorial-task-item">
+            <span class="task-index">03.</span>
+            <span class="task-body-text">Generative AI, retrieval pipelines & agentic orchestration</span>
+            <div class="task-controls">
+              <button class="task-action-del" title="Delete" type="button">&times;</button>
+              <button class="editorial-checkbox" title="Mark done" type="button"></button>
+            </div>
+          </li>
+          <li class="editorial-task-item">
+            <span class="task-index">04.</span>
+            <span class="task-body-text">Prepare for technical assessment rounds & system interviews</span>
+            <div class="task-controls">
+              <button class="task-action-del" title="Delete" type="button">&times;</button>
+              <button class="editorial-checkbox" title="Mark done" type="button"></button>
+            </div>
+          </li>
+        </ul>
+
+        <form class="editorial-add-form" onsubmit="event.preventDefault(); addTask('q2');">
+          <div class="input-field-wrap">
+            <input type="text" class="add-task-input" id="input-q2" placeholder="+ Inscribe new task..." autocomplete="off">
+            <span class="input-submit-hint">↵ Return</span>
+          </div>
+        </form>
+      </section>
+
+      <!-- Quadrant 3: Low Impact, Easy to Do -->
+      <section class="quadrant-block" data-quadrant="q3">
+        <header class="quadrant-head">
+          <div class="head-meta">
+            <span class="quadrant-roman">SECT. 03</span>
+            <h2 class="quadrant-title">Low Impact, Easy to Do</h2>
+            <p class="quadrant-subtitle">Operational hygiene & delegable routines</p>
+          </div>
+          <span class="quadrant-pill">DELEGATE</span>
+        </header>
+
+        <ul class="editorial-task-list" id="list-q3">
+          <li class="editorial-task-item">
+            <span class="task-index">01.</span>
+            <span class="task-body-text">Select 5 trusted peers to share product review draft</span>
+            <div class="task-controls">
+              <button class="task-action-del" title="Delete" type="button">&times;</button>
+              <button class="editorial-checkbox" title="Mark done" type="button"></button>
+            </div>
+          </li>
+          <li class="editorial-task-item">
+            <span class="task-index">02.</span>
+            <span class="task-body-text">Submit standard role application for MathCo</span>
+            <div class="task-controls">
+              <button class="task-action-del" title="Delete" type="button">&times;</button>
+              <button class="editorial-checkbox" title="Mark done" type="button"></button>
+            </div>
+          </li>
+          <li class="editorial-task-item">
+            <span class="task-index">03.</span>
+            <span class="task-body-text">Revise 5 baseline refresher questions on relational schemas</span>
+            <div class="task-controls">
+              <button class="task-action-del" title="Delete" type="button">&times;</button>
+              <button class="editorial-checkbox" title="Mark done" type="button"></button>
+            </div>
+          </li>
+        </ul>
+
+        <form class="editorial-add-form" onsubmit="event.preventDefault(); addTask('q3');">
+          <div class="input-field-wrap">
+            <input type="text" class="add-task-input" id="input-q3" placeholder="+ Inscribe new task..." autocomplete="off">
+            <span class="input-submit-hint">↵ Return</span>
+          </div>
+        </form>
+      </section>
+
+      <!-- Quadrant 4: Low Impact, Hard to Do -->
+      <section class="quadrant-block" data-quadrant="q4">
+        <header class="quadrant-head">
+          <div class="head-meta">
+            <span class="quadrant-roman">SECT. 04</span>
+            <h2 class="quadrant-title">Low Impact, Hard to Do</h2>
+            <p class="quadrant-subtitle">Energy sinks & non-strategic frictions</p>
+          </div>
+          <span class="quadrant-pill">ELIMINATE</span>
+        </header>
+
+        <ul class="editorial-task-list" id="list-q4">
+          <li class="editorial-task-item">
+            <span class="task-index">01.</span>
+            <span class="task-body-text">Manual formatting of redundant non-critical spreadsheets</span>
+            <div class="task-controls">
+              <button class="task-action-del" title="Delete" type="button">&times;</button>
+              <button class="editorial-checkbox" title="Mark done" type="button"></button>
+            </div>
+          </li>
+          <li class="editorial-task-item">
+            <span class="task-index">02.</span>
+            <span class="task-body-text">Endless speculative tool browsing without execution</span>
+            <div class="task-controls">
+              <button class="task-action-del" title="Delete" type="button">&times;</button>
+              <button class="editorial-checkbox" title="Mark done" type="button"></button>
+            </div>
+          </li>
+        </ul>
+
+        <form class="editorial-add-form" onsubmit="event.preventDefault(); addTask('q4');">
+          <div class="input-field-wrap">
+            <input type="text" class="add-task-input" id="input-q4" placeholder="+ Inscribe new task..." autocomplete="off">
+            <span class="input-submit-hint">↵ Return</span>
+          </div>
+        </form>
+      </section>
+
+    </div>
+  </main>
+  </div> <!-- /.app-screen -->
+
+  <!-- Slide-Over Monograph Drawer Backdrop -->
+  <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>
+
+  <!-- Slide-Over Monograph Drawer -->
+  <aside class="monograph-drawer" id="monographDrawer">
+    <div class="drawer-top-bar">
+      <span class="drawer-heading">Colophon & Details</span>
+      <button class="drawer-close-btn" onclick="closeDrawer()" title="Close">&times;</button>
+    </div>
+
+    <div class="drawer-scroll-body">
+      <!-- Direct Contact Tile -->
+      <div class="monograph-tile">
+        <span class="tile-caption">Inquiries & Correspondence</span>
+        <div class="tile-value-row">
+          <span class="tile-value">nandanbhole72@gmail.com</span>
+          <button class="copy-pill-btn" id="copyEmailBtn" onclick="copyEmail(this)">Copy</button>
+        </div>
+      </div>
+
+      <!-- Edition Info Tile -->
+      <div class="monograph-tile">
+        <span class="tile-caption">Architectural Framework</span>
+        <div class="tile-value-row">
+          <span class="tile-value">Monograph Release v2.0-Alpha</span>
+          <span style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-secondary);">Editorial</span>
+        </div>
+      </div>
+
+      <!-- Google Play Style Editorial Rating Card -->
+      <div class="rating-monograph-card">
+        <span class="rating-card-title">Rate This Experience</span>
+        <p class="rating-card-sub">Reflections on craftsmanship and typographic pacing</p>
+
+        <div class="star-rating-row" id="starRow">
+          <button class="star-btn" data-star="1" onclick="setRating(1)">
+            <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+          <button class="star-btn" data-star="2" onclick="setRating(2)">
+            <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+          <button class="star-btn" data-star="3" onclick="setRating(3)">
+            <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+          <button class="star-btn" data-star="4" onclick="setRating(4)">
+            <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+          <button class="star-btn" data-star="5" onclick="setRating(5)">
+            <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+        </div>
+        <span id="ratingCaption" style="font-family: var(--font-serif); font-style: italic; font-size: 13px; color: var(--ink-secondary);">Touch any star to record appraisal</span>
+      </div>
+
+      <!-- Design Rationale Brief -->
+      <div class="monograph-toast">
+        <div class="toast-title">Typographic Principles Applied</div>
+        Warm espresso (#201b17) on soft monograph paper (#f7f4ed). Generous 1.75 line height with authoritative Newsreader serif for effortless reading flow.
+      </div>
+    </div>
+  </aside>
+
+  <!-- Interactive JavaScript Engine for Prototype Demonstrations -->
+  <script>
+    // Toggle Drawer
+    const drawerBtn = document.getElementById("toggleDrawerBtn");
+    const drawer = document.getElementById("monographDrawer");
+    const backdrop = document.getElementById("drawerBackdrop");
+
+    function openDrawer() {
+      drawer.classList.add("open");
+      backdrop.classList.add("active");
+    }
+
+    function closeDrawer() {
+      drawer.classList.remove("open");
+      backdrop.classList.remove("active");
+    }
+
+    drawerBtn.addEventListener("click", openDrawer);
+
+    // Copy Email Feedback
+    function copyEmail(btn) {
+      navigator.clipboard.writeText("nandanbhole72@gmail.com").then(() => {
+        const prev = btn.textContent;
+        btn.textContent = "Copied ✓";
+        btn.style.color = "var(--tint-q2)";
+        btn.style.borderColor = "var(--tint-q2)";
+        setTimeout(() => {
+          btn.textContent = prev;
+          btn.style.color = "";
+          btn.style.borderColor = "";
+        }, 1800);
+      });
+    }
+
+    // Interactive Checkbox & Delete Toggle
+    document.addEventListener("click", (e) => {
+      const checkbox = e.target.closest(".editorial-checkbox");
+      if (checkbox) {
+        const item = checkbox.closest(".editorial-task-item");
+        item.classList.toggle("completed");
+      }
+
+      const delBtn = e.target.closest(".task-action-del");
+      if (delBtn) {
+        const item = delBtn.closest(".editorial-task-item");
+        item.style.opacity = "0";
+        item.style.transform = "translateX(6px)";
+        setTimeout(() => item.remove(), 160);
+      }
+    });
+
+    // Double-Click Inline Task Editing
+    document.addEventListener("dblclick", (e) => {
+      const textSpan = e.target.closest(".task-body-text");
+      if (!textSpan) return;
+
+      const currentText = textSpan.textContent;
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = currentText;
+      input.style.cssText = "font-family: var(--font-serif); font-size: 15px; color: var(--ink-espresso); background: var(--bg-surface-subtle); border: 1px solid var(--border-contour); border-radius: var(--radius-sm); padding: 2px 6px; width: 100%; outline: none; line-height: 1.6;";
+
+      textSpan.replaceWith(input);
+      input.focus();
+      input.select();
+
+      function commitEdit() {
+        const newText = input.value.trim() || currentText;
+        textSpan.textContent = newText;
+        input.replaceWith(textSpan);
+      }
+
+      input.addEventListener("keydown", (evt) => {
+        if (evt.key === "Enter") {
+          commitEdit();
+        } else if (evt.key === "Escape") {
+          input.replaceWith(textSpan);
+        }
+      });
+
+      input.addEventListener("blur", commitEdit);
+    });
+
+    // Inscribe / Add New Task
+    function addTask(quadrantId) {
+      const input = document.getElementById(`input-${quadrantId}`);
+      const text = input.value.trim();
+      if (!text) return;
+
+      const list = document.getElementById(`list-${quadrantId}`);
+      const count = list.querySelectorAll(".editorial-task-item").length + 1;
+      const indexStr = count < 10 ? `0${count}.` : `${count}.`;
+
+      const li = document.createElement("li");
+      li.className = "editorial-task-item";
+      li.innerHTML = `
+        <span class="task-index">${indexStr}</span>
+        <span class="task-body-text">${escapeHtml(text)}</span>
+        <div class="task-controls">
+          <button class="task-action-del" title="Delete" type="button">&times;</button>
+          <button class="editorial-checkbox" title="Mark done" type="button"></button>
+        </div>
+      `;
+
+      list.appendChild(li);
+      input.value = "";
+      input.blur();
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, (m) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[m]));
+    }
+
+    // Star Rating Interaction
+    function setRating(val) {
+      const stars = document.querySelectorAll(".star-btn");
+      stars.forEach((s) => {
+        const starNum = parseInt(s.dataset.star, 10);
+        if (starNum <= val) {
+          s.classList.add("active");
+        } else {
+          s.classList.remove("active");
+        }
+      });
+      const caption = document.getElementById("ratingCaption");
+      caption.textContent = `Appraised at ${val} of 5 stars — Thank you`;
+    }
+  </script>
+</body>
+</html>

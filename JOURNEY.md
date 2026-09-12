@@ -250,12 +250,36 @@ A comprehensive, point-by-point chronological record of every feature, design de
 
 ---
 
+## 📌 Phase 13: Warm Sepia Palette & Architectural Quadrant Redesign
+
+* **Warm Monograph Sepia Foundation:**
+  * Replaced stark cold white background with warm parchment (`#f7f4ed`) and harmonized hover wash (`#eee9dd`).
+  * Preserved the original clean 2×2 full-bleed grid layout with intersecting dividing lines.
+
+* **Quadrant Typography Upgrade:**
+  * Implemented **Plus Jakarta Sans** (700 weight, `-0.02em` tracking) for quadrant titles (*High Impact, Easy to Do*, etc.).
+  * Retained the clean, familiar **Inter** font across task items, numbers, checkboxes, inputs, and badges for focused productivity.
+
+* **Architectural Quadrant Top Accent Micro-Lines:**
+  * Integrated dedicated colored 2.5px micro accent lines pinned to the top of each quadrant:
+    * Q1 (Do First): Terracotta Red (`#c54242`)
+    * Q2 (Schedule): Cypress Green (`#2b7757`)
+    * Q3 (Delegate): Warm Amber (`#b07c1b`)
+    * Q4 (Eliminate): Umber Gray (`#6b665f`)
+
+* **Brand Title & Minimalist Button Refinement:**
+  * Brand title updated to paired geometry: bold geometric sans **`IMPACT`** + literary italic serif **`— Framework`**.
+  * Contact button updated with understated minimalist border (`1px solid #cfc7b7`), subtle warm elevation, and tactile hover inversion.
+
+---
+
 ## 🏁 Current Project Architecture Overview
 
 ```
 Impact-Framework/
 ├── index.html               # Main application layout, contact drawer, and review modal
 ├── style.css                # Docs Silk design system, responsive grid, and animations
+├── prototype.html           # Standalone editorial monograph prototype
 ├── js/
 │   ├── app.js               # Matrix state, 24-column telemetry engine, and touch handlers
 │   └── config.js            # Google Apps Script Webhook URL configuration
