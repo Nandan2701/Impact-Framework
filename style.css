@@ -806,14 +806,6 @@ body.drawer-open .app-container {
   margin-top: 2px;
 }
 
-.info-icon-img {
-  width: 21px;
-  height: 16px;
-  object-fit: contain;
-  margin-top: 3px;
-  display: block;
-}
-
 .info-content {
   flex: 1;
 }

@@ -109,7 +109,10 @@
     <div class="drawer-body">
       <!-- Item 1: Email Address with Copy Pill -->
       <div class="info-item">
-        <img class="info-icon info-icon-img" src="gmail-logo.png" alt="Email" width="21" height="16">
+        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+          <polyline points="22,6 12,13 2,6"/>
+        </svg>
         <div class="info-content">
           <div class="info-label">Email</div>
           <div class="info-value">nandanbhole72@gmail.com</div>
@@ -273,18 +276,18 @@
           <button class="auth-tab" id="tabSignIn" type="button" role="tab" aria-selected="false">Sign In</button>
         </div>
 
-        <form class="auth-form" id="authForm" autocomplete="on">
+        <form class="auth-form" id="authForm" autocomplete="off">
           <div class="auth-field-group">
             <label class="auth-label" for="authUsername">Username</label>
-            <input class="auth-input" id="authUsername" type="text" placeholder="e.g. alex_runner" required autocomplete="username" autocapitalize="none" spellcheck="false">
+            <input class="auth-input" id="authUsername" name="sync_user" type="text" placeholder="e.g. alex_runner" required autocomplete="off" autocapitalize="none" spellcheck="false">
             <span class="auth-hint">3–20 letters, numbers, or underscores</span>
           </div>
 
           <div class="auth-field-group">
-            <label class="auth-label" for="authPassword">Password</label>
+            <label class="auth-label" for="authPassword">Sync Passcode / Password</label>
             <div class="auth-password-wrap">
-              <input class="auth-input" id="authPassword" type="password" placeholder="Enter password (min 4 chars)" required autocomplete="current-password">
-              <button class="auth-toggle-pwd" id="authTogglePwd" type="button" aria-label="Toggle password visibility" title="Show/hide password">
+              <input class="auth-input" id="authPassword" name="sync_key" type="password" placeholder="Create a sync passcode (min 4 chars)" required autocomplete="new-password">
+              <button class="auth-toggle-pwd" id="authTogglePwd" type="button" aria-label="Toggle passcode visibility" title="Show/hide passcode">
                 <svg viewBox="0 0 24 24" class="pwd-eye-icon" width="16" height="16" fill="currentColor">
                   <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
                 </svg>
