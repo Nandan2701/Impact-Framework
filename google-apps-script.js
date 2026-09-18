@@ -27,6 +27,41 @@ function testRun() {
 }
 
 /**
+ * One-Click Diagnostic Tool:
+ * Tests sending an instant review alert email to nandanbhole72@gmail.com,
+ * requests OAuth permissions if needed, and checks remaining daily quota.
+ */
+function testSendReviewEmail() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var remainingQuota = MailApp.getRemainingDailyQuota();
+  Logger.log("✓ Connected to spreadsheet: " + ss.getName());
+  Logger.log("✓ Remaining daily email quota: " + remainingQuota);
+
+  if (remainingQuota <= 0) {
+    Logger.log("⚠️ Daily email quota exhausted (0 remaining today). Google resets quota every 24 hours.");
+    return "Quota exhausted: 0 remaining today.";
+  }
+
+  var recipientEmail = "nandanbhole72@gmail.com";
+  MailApp.sendEmail({
+    to: recipientEmail,
+    subject: "⭐ [TEST] Impact Framework Review Email Test",
+    body: "This is a test review notification email from Impact Framework to verify Gmail permissions.\n\nRemaining quota today: " + (remainingQuota - 1) + " emails.",
+    htmlBody: "<div style='font-family: Arial, sans-serif; padding: 24px; border-radius: 12px; background: #ffffff; border: 1px solid #e0dfd5; max-width: 500px;'>" +
+      "<h2 style='color: #1a73e8; margin-top: 0;'>✓ Email Permissions Verified!</h2>" +
+      "<p style='color: #3c4043; font-size: 14px;'>Google Apps Script has full permission to send instant review alerts to <strong>" + recipientEmail + "</strong>.</p>" +
+      "<p><span style='font-size: 22px; color: #fbbc04;'>★★★★★</span> <strong style='color: #202124; margin-left: 8px;'>5 out of 5 stars</strong></p>" +
+      "<hr style='border: none; border-top: 1px solid #f0eee6; margin: 16px 0;'>" +
+      "<p style='color: #70757a; font-size: 12px; margin: 0;'>Remaining email quota today: <strong>" + (remainingQuota - 1) + " emails</strong></p>" +
+      "</div>",
+    name: "Impact Framework Alerts"
+  });
+
+  Logger.log("✓ Test email sent successfully to " + recipientEmail + "!");
+  return "Test email sent successfully! Remaining quota: " + (remainingQuota - 1);
+}
+
+/**
  * One-Click Migration Tool:
  * Reconstructs all tasks from the "User Tasks" sheet for a specific User ID (e.g. usr_r5nmtq4s)
  * and updates the "Accounts" sheet Tasks JSON for the specified account (e.g. nandanbhole).
@@ -162,7 +197,8 @@ var REVIEW_HEADERS = [
   "Language",
   "Referral Source",
   "Visit Count",
-  "App Version"
+  "App Version",
+  "Email Delivery Status"
 ];
 
 var TASK_HEADERS = [
@@ -543,39 +579,22 @@ function processRequest(data) {
   }
   ensureHeaders(reviewSheet, REVIEW_HEADERS, "#f1f3f4", "#202124");
 
-  var starSymbols = "★".repeat(rating) + "☆".repeat(5 - rating);
-
-  reviewSheet.appendRow([
-    now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
-    uid,
-    rating,
-    starSymbols,
-    reviewText || "(No review text provided)",
-    characterCount,
-    city,
-    region,
-    country,
-    countryCode,
-    isp,
-    ip,
-    device,
-    os,
-    browser,
-    screenRes,
-    orientation,
-    networkSpeed,
-    duration,
-    timezone,
-    language,
-    referrer,
-    visitCount,
-    appVersion
-  ]);
-
   // Send Instant Email Notification to Gmail (Reviews ONLY)
   var recipientEmail = "nandanbhole72@gmail.com";
   var locationSummary = (city !== "Unknown" ? (city + ", " + region + ", " + country) : country);
   var emailSubject = "⭐ New " + rating + "-Star Review for Impact Framework (" + locationSummary + ")";
+
+  var plainBody = "New " + rating + "-Star Review for Impact Framework\n\n" +
+    "Rating: " + rating + " / 5 (" + starSymbols + ")\n" +
+    "Review: " + (reviewText || "(The user gave a star rating without writing additional text)") + "\n\n" +
+    "Visitor Telemetry:\n" +
+    "- Location: " + locationSummary + " (" + (countryCode || "") + ")\n" +
+    "- Device: " + device + " (" + os + ")\n" +
+    "- Browser: " + browser + "\n" +
+    "- IP: " + (ip || "N/A") + "\n" +
+    "- User ID: " + uid + " (" + visitCount + ")\n" +
+    "- Network Speed: " + networkSpeed + "\n" +
+    "- Session Duration: " + duration;
 
   var htmlBody =
     '<div style="font-family: \'Segoe UI\', Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0dfd5; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.04);">' +
@@ -610,17 +629,50 @@ function processRequest(data) {
       '</table>' +
     '</div>';
 
+  var emailStatus = "Not attempted";
   try {
     MailApp.sendEmail({
       to: recipientEmail,
       subject: emailSubject,
-      htmlBody: htmlBody
+      body: plainBody,
+      htmlBody: htmlBody,
+      name: "Impact Framework Alerts"
     });
+    emailStatus = "✓ Sent to " + recipientEmail;
   } catch (mailErr) {
+    emailStatus = "⚠️ Error: " + mailErr.toString();
     Logger.log("Email sending error: " + mailErr);
   }
 
-  return jsonOutput({ status: "success", type: "review", rating: rating, savedAt: now.toISOString() });
+  reviewSheet.appendRow([
+    now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
+    uid,
+    rating,
+    starSymbols,
+    reviewText || "(No review text provided)",
+    characterCount,
+    city,
+    region,
+    country,
+    countryCode,
+    isp,
+    ip,
+    device,
+    os,
+    browser,
+    screenRes,
+    orientation,
+    networkSpeed,
+    duration,
+    timezone,
+    language,
+    referrer,
+    visitCount,
+    appVersion,
+    emailStatus
+  ]);
+
+  return jsonOutput({ status: "success", type: "review", rating: rating, emailStatus: emailStatus, savedAt: now.toISOString() });
 }
 
 function doPost(e) {
