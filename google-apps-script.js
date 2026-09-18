@@ -26,6 +26,106 @@ function testRun() {
   return "Permissions granted successfully!";
 }
 
+/**
+ * One-Click Migration Tool:
+ * Reconstructs all tasks from the "User Tasks" sheet for a specific User ID (e.g. usr_r5nmtq4s)
+ * and updates the "Accounts" sheet Tasks JSON for the specified account (e.g. nandanbhole).
+ */
+function migrateUserTasksToAccount(targetUserId, targetUsername) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  targetUserId = targetUserId || "usr_r5nmtq4s";
+  targetUsername = (targetUsername || "nandanbhole").toLowerCase().trim();
+
+  var taskSheet = ss.getSheetByName("User Tasks");
+  if (!taskSheet) {
+    Logger.log("Error: 'User Tasks' sheet not found.");
+    return { status: "error", message: "'User Tasks' sheet not found." };
+  }
+
+  var accountSheet = getAccountSheet(ss);
+  var userEntry = findUserRow(accountSheet, targetUsername);
+  if (!userEntry) {
+    Logger.log("Error: Account '" + targetUsername + "' not found in Accounts tab.");
+    return { status: "error", message: "Account '" + targetUsername + "' not found." };
+  }
+
+  var data = taskSheet.getDataRange().getValues();
+  var quadrants = {
+    q1: [],
+    q2: [],
+    q3: [],
+    q4: []
+  };
+
+  function normalizeQuadrantKey(raw) {
+    var str = (raw || "").toString().toLowerCase();
+    if (str.indexOf("q1") !== -1 || (str.indexOf("high") !== -1 && str.indexOf("easy") !== -1)) return "q1";
+    if (str.indexOf("q2") !== -1 || (str.indexOf("high") !== -1 && str.indexOf("hard") !== -1)) return "q2";
+    if (str.indexOf("q3") !== -1 || (str.indexOf("low") !== -1 && str.indexOf("easy") !== -1)) return "q3";
+    if (str.indexOf("q4") !== -1 || (str.indexOf("low") !== -1 && str.indexOf("hard") !== -1)) return "q4";
+    return "q1";
+  }
+
+  for (var r = 1; r < data.length; r++) {
+    var row = data[r];
+    var uid = (row[1] || "").toString().trim();
+    if (uid !== targetUserId) continue;
+
+    var quadKey = normalizeQuadrantKey(row[2]);
+    var action = (row[3] || "").toString().trim().toLowerCase();
+    var taskText = (row[4] || "").toString().trim();
+    if (!taskText) continue;
+
+    var list = quadrants[quadKey];
+    var existingIndex = -1;
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].text === taskText) {
+        existingIndex = i;
+        break;
+      }
+    }
+
+    if (action === "added" || action === "add") {
+      if (existingIndex === -1) {
+        list.push({
+          id: "t_" + Utilities.getUuid().replace(/-/g, "").substring(0, 8),
+          text: taskText,
+          done: false
+        });
+      }
+    } else if (action === "completed" || action === "complete") {
+      if (existingIndex !== -1) {
+        list[existingIndex].done = true;
+      } else {
+        list.push({
+          id: "t_" + Utilities.getUuid().replace(/-/g, "").substring(0, 8),
+          text: taskText,
+          done: true
+        });
+      }
+    } else if (action === "uncompleted" || action === "uncomplete") {
+      if (existingIndex !== -1) {
+        list[existingIndex].done = false;
+      }
+    } else if (action === "deleted" || action === "delete") {
+      if (existingIndex !== -1) {
+        list.splice(existingIndex, 1);
+      }
+    }
+  }
+
+  var nowIso = new Date().toISOString();
+  var tasksJson = JSON.stringify(quadrants);
+
+  // Column 3 = Tasks JSON, Column 4 = Last Updated
+  accountSheet.getRange(userEntry.rowIndex, 3).setValue(tasksJson);
+  accountSheet.getRange(userEntry.rowIndex, 4).setValue(nowIso);
+
+  Logger.log("✓ Successfully migrated tasks for " + targetUserId + " to account " + targetUsername + "!");
+  Logger.log("Reconstructed Tasks: " + tasksJson);
+  return { status: "success", username: targetUsername, tasks: quadrants, updatedAt: nowIso };
+}
+
 var SALT = "_impact_framework_salt_v1_";
 
 var ACCOUNT_HEADERS = [
