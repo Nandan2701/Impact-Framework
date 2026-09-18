@@ -1241,6 +1241,17 @@ async function sendApiRequest(payload) {
       if (res.ok) {
         const data = await res.json();
         if (data && data.status) {
+          // Detect outdated Google Apps Script (e.g. older script returns type: "review" instead of action)
+          const isAuthOrSync = payload.type && (payload.type.startsWith("auth_") || payload.type.startsWith("sync_"));
+          if (isAuthOrSync && (data.type === "review" || (!data.action && data.status === "success"))) {
+            console.warn("Outdated Google Apps Script Web App detected: Please update Google Apps Script code in Google Sheets.", data);
+            return {
+              status: "error",
+              isOutdatedScript: true,
+              message: "Google Sheet backend needs update: Open Extensions > Apps Script in your Google Sheet and deploy the latest script code to enable cloud sync."
+            };
+          }
+
           // Mirror to shadow store for instant multi-tab parity
           if (payload.type === "auth_register" && data.status === "success") {
             shadowAccounts[payload.username.toLowerCase()] = {
@@ -1373,6 +1384,10 @@ async function executeCloudPush() {
       updateSyncStatusBadge("synced", "Cloud Synced");
       const accountLastSync = document.getElementById("accountLastSync");
       if (accountLastSync) accountLastSync.textContent = "Just now";
+    } else if (res && res.isOutdatedScript) {
+      updateSyncStatusBadge("error", "Update Sheet script");
+      const accountLastSync = document.getElementById("accountLastSync");
+      if (accountLastSync) accountLastSync.textContent = "Apps Script update required";
     } else {
       updateSyncStatusBadge("error", "Sync warning");
     }
@@ -1398,7 +1413,8 @@ async function executeCloudPull(isManual = false) {
     type: "sync_pull",
     username: session.username,
     token: session.token,
-    lastSyncedAt: lastSyncedAt || ""
+    lastSyncedAt: isManual ? "" : (lastSyncedAt || ""),
+    force: isManual
   };
 
   try {
@@ -1421,6 +1437,12 @@ async function executeCloudPull(isManual = false) {
         const accountLastSync = document.getElementById("accountLastSync");
         if (accountLastSync) accountLastSync.textContent = "Just now";
       }
+    } else if (res && res.isOutdatedScript) {
+      updateSyncStatusBadge("error", "Update Sheet script");
+      const accountLastSync = document.getElementById("accountLastSync");
+      if (accountLastSync) accountLastSync.textContent = "Apps Script update required";
+    } else if (isManual) {
+      updateSyncStatusBadge("offline", "Sync offline");
     }
   } catch (err) {
     if (isManual) {

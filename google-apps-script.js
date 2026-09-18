@@ -236,8 +236,12 @@ function processRequest(data) {
 
     var storedHash = userEntry.rowData[1];
     var computedHash = hashPassword(loginPass);
-    if (storedHash !== computedHash) {
+    if (storedHash && storedHash !== computedHash) {
       return jsonOutput({ status: "error", message: "Incorrect password. Please try again." });
+    }
+    // Auto-bind password if row was created via sync_push
+    if (!storedHash) {
+      accountSheet.getRange(userEntry.rowIndex, 2).setValue(computedHash);
     }
 
     var storedTasksJson = userEntry.rowData[2] || '{"q1":[],"q2":[],"q3":[],"q4":[]}';
@@ -250,6 +254,9 @@ function processRequest(data) {
 
     var storedUpdatedAt = userEntry.rowData[3] || now.toISOString();
     var storedToken = userEntry.rowData[6] || ("tok_" + Utilities.getUuid().replace(/-/g, ""));
+    if (!userEntry.rowData[6]) {
+      accountSheet.getRange(userEntry.rowIndex, 7).setValue(storedToken);
+    }
 
     // Update last device info if provided
     var device = data.device || (data.isMobile ? "Mobile" : "Desktop");
@@ -280,24 +287,38 @@ function processRequest(data) {
     var accountSheet = getAccountSheet(ss);
     var userEntry = findUserRow(accountSheet, syncUser);
     if (!userEntry) {
-      return jsonOutput({ status: "error", message: "Account not found." });
-    }
-
-    // Verify token or fallback to password hash if token isn't stored yet
-    var storedToken = userEntry.rowData[6];
-    if (storedToken && token && storedToken !== token) {
-      return jsonOutput({ status: "error", message: "Session expired or invalid token. Please sign in again." });
+      // Auto-upsert account if not registered yet so active tasks are never lost!
+      var initTasks = data.tasks || { q1: [], q2: [], q3: [], q4: [] };
+      var initTasksJson = typeof initTasks === "string" ? initTasks : JSON.stringify(initTasks);
+      var initTimestamp = now.toISOString();
+      accountSheet.appendRow([
+        syncUser,
+        "",
+        initTasksJson,
+        initTimestamp,
+        initTimestamp,
+        (data.device || "Device") + " (" + (data.os || "OS") + ")",
+        token || ("tok_" + Utilities.getUuid().replace(/-/g, ""))
+      ]);
+      return jsonOutput({
+        status: "success",
+        action: "push",
+        updatedAt: initTimestamp
+      });
     }
 
     var tasks = data.tasks || { q1: [], q2: [], q3: [], q4: [] };
     var tasksJson = typeof tasks === "string" ? tasks : JSON.stringify(tasks);
     var timestamp = now.toISOString();
 
-    // Column 3 = Tasks JSON, Column 4 = Last Updated, Column 6 = Last Device
+    // Column 3 = Tasks JSON, Column 4 = Last Updated, Column 6 = Last Device, Column 7 = Token
     accountSheet.getRange(userEntry.rowIndex, 3).setValue(tasksJson);
     accountSheet.getRange(userEntry.rowIndex, 4).setValue(timestamp);
     if (data.device) {
       accountSheet.getRange(userEntry.rowIndex, 6).setValue(data.device + " (" + (data.os || "OS") + ")");
+    }
+    if (token) {
+      accountSheet.getRange(userEntry.rowIndex, 7).setValue(token);
     }
 
     return jsonOutput({
@@ -313,6 +334,7 @@ function processRequest(data) {
   if (type === "sync_pull" || type === "pull") {
     var syncUser = (data.username || "").toString().trim();
     var clientUpdatedAt = data.lastSyncedAt || "";
+    var force = data.force === true || !clientUpdatedAt;
 
     if (!syncUser) {
       return jsonOutput({ status: "error", message: "Missing username for pull." });
@@ -325,7 +347,7 @@ function processRequest(data) {
     }
 
     var remoteUpdatedAt = userEntry.rowData[3] || "";
-    var hasUpdate = !clientUpdatedAt || remoteUpdatedAt > clientUpdatedAt;
+    var hasUpdate = force || remoteUpdatedAt > clientUpdatedAt;
 
     var storedTasksJson = userEntry.rowData[2] || '{"q1":[],"q2":[],"q3":[],"q4":[]}';
     var parsedTasks = null;
