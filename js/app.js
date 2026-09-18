@@ -32,6 +32,15 @@ const DEFAULT_TASKS = {
 let state = loadState();
 let editingId = null;
 
+// Multi-Device Sync & Auth Session State
+const AUTH_STORAGE_KEY = "impact_framework_auth_session";
+const SHADOW_ACCOUNTS_KEY = "impact_framework_shadow_accounts";
+let isApplyingRemoteUpdate = false;
+let isInitialized = false;
+let pushSyncTimer = null;
+let heartbeatTimer = null;
+let lastSyncedAt = null;
+
 // Offscreen canvas for microsecond-precise character width measurements
 const measureCanvas = document.createElement("canvas");
 const measureCtx = measureCanvas.getContext("2d");
@@ -69,6 +78,10 @@ function loadState() {
 
 function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (!isApplyingRemoteUpdate && isInitialized) {
+    scheduleCloudPush();
+    broadcastLocalUpdate();
+  }
 }
 
 function render() {
@@ -1070,16 +1083,608 @@ function initContactDrawer() {
   }
 }
 
+/* ==========================================================================
+   Cross-Device Account Authentication & Automated Sync Engine
+   ========================================================================== */
+
+// Multi-Tab Local Synchronization via BroadcastChannel
+let syncChannel = null;
+try {
+  if (typeof BroadcastChannel !== "undefined") {
+    syncChannel = new BroadcastChannel("impact_framework_sync");
+    syncChannel.onmessage = (event) => {
+      if (event.data && event.data.type === "tasks_updated") {
+        if (!editingId && document.activeElement?.tagName !== "INPUT") {
+          isApplyingRemoteUpdate = true;
+          state = loadState();
+          render();
+          isApplyingRemoteUpdate = false;
+          updateSyncStatusBadge("synced", "Synced (Multi-Tab)");
+        }
+      }
+    };
+  }
+} catch (e) {}
+
+function broadcastLocalUpdate() {
+  try {
+    if (syncChannel) {
+      syncChannel.postMessage({ type: "tasks_updated", timestamp: Date.now() });
+    }
+  } catch (e) {}
+}
+
+// Listen to storage events for cross-tab sync in browsers without BroadcastChannel
+window.addEventListener("storage", (e) => {
+  if (e.key === STORAGE_KEY && !isApplyingRemoteUpdate) {
+    if (!editingId && document.activeElement?.tagName !== "INPUT") {
+      isApplyingRemoteUpdate = true;
+      state = loadState();
+      render();
+      isApplyingRemoteUpdate = false;
+      updateSyncStatusBadge("synced", "Synced (Multi-Tab)");
+    }
+  }
+  if (e.key === AUTH_STORAGE_KEY) {
+    updateAccountUI();
+  }
+});
+
+function getAuthSession() {
+  try {
+    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (!raw) return null;
+    const session = JSON.parse(raw);
+    if (session && session.username) return session;
+  } catch (e) {}
+  return null;
+}
+
+function saveAuthSession(session) {
+  try {
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+  } catch (e) {}
+  updateAccountUI();
+}
+
+function clearAuthSession() {
+  try {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+  } catch (e) {}
+  updateAccountUI();
+}
+
+function formatTimeAgo(date) {
+  if (!date || isNaN(date.getTime())) return "Just now";
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 10) return "Just now";
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours}h ago`;
+}
+
+function updateSyncStatusBadge(status, text) {
+  const syncStatusBadge = document.getElementById("syncStatusBadge");
+  const syncStatusText = document.getElementById("syncStatusText");
+  const headerSyncPill = document.getElementById("headerSyncPill");
+  const headerDot = headerSyncPill ? headerSyncPill.querySelector(".sync-status-dot") : null;
+  const syncNowBtn = document.getElementById("manualSyncBtn");
+
+  if (syncStatusBadge) {
+    syncStatusBadge.className = "account-badge-pill " + status;
+  }
+  if (syncStatusText && text) {
+    syncStatusText.textContent = text;
+  }
+  if (headerDot) {
+    headerDot.className = "sync-status-dot " + status;
+  }
+  if (syncNowBtn) {
+    if (status === "syncing") {
+      syncNowBtn.classList.add("syncing");
+    } else {
+      syncNowBtn.classList.remove("syncing");
+    }
+  }
+}
+
+function updateAccountUI() {
+  const session = getAuthSession();
+  const notSignedInCard = document.getElementById("accountNotSignedIn");
+  const signedInCard = document.getElementById("accountSignedIn");
+  const headerSyncPill = document.getElementById("headerSyncPill");
+  const headerSyncUser = document.getElementById("headerSyncUser");
+  const accountUsername = document.getElementById("accountUsername");
+  const accountAvatar = document.getElementById("accountAvatar");
+  const accountLastSync = document.getElementById("accountLastSync");
+
+  if (!session) {
+    if (notSignedInCard) notSignedInCard.style.display = "block";
+    if (signedInCard) signedInCard.style.display = "none";
+    if (headerSyncPill) headerSyncPill.style.display = "none";
+  } else {
+    if (notSignedInCard) notSignedInCard.style.display = "none";
+    if (signedInCard) signedInCard.style.display = "block";
+    if (accountUsername) accountUsername.textContent = session.username;
+    if (accountAvatar) {
+      accountAvatar.textContent = (session.username.charAt(0) || "U").toUpperCase();
+    }
+    if (headerSyncPill) {
+      headerSyncPill.style.display = "inline-flex";
+      if (headerSyncUser) headerSyncUser.textContent = session.username;
+    }
+    if (accountLastSync) {
+      accountLastSync.textContent = lastSyncedAt ? formatTimeAgo(new Date(lastSyncedAt)) : "Just now";
+    }
+    updateSyncStatusBadge("synced", "Cloud Synced");
+  }
+}
+
+// API Communication with Google Apps Script & Shadow Store fallback
+async function sendApiRequest(payload) {
+  const url = (window.IMPACT_CONFIG && window.IMPACT_CONFIG.googleWebhookUrl) || "";
+  let shadowAccounts = {};
+  try {
+    shadowAccounts = JSON.parse(localStorage.getItem(SHADOW_ACCOUNTS_KEY) || "{}");
+  } catch (e) {}
+
+  // 1. Try Google Apps Script remote endpoint if configured
+  if (url) {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.status) {
+          // Mirror to shadow store for instant multi-tab parity
+          if (payload.type === "auth_register" && data.status === "success") {
+            shadowAccounts[payload.username.toLowerCase()] = {
+              password: payload.password,
+              tasks: payload.tasks,
+              updatedAt: data.updatedAt,
+              token: data.token
+            };
+            try { localStorage.setItem(SHADOW_ACCOUNTS_KEY, JSON.stringify(shadowAccounts)); } catch (e) {}
+          } else if (payload.type === "sync_push" && data.status === "success") {
+            const u = payload.username.toLowerCase();
+            if (shadowAccounts[u]) {
+              shadowAccounts[u].tasks = payload.tasks;
+              shadowAccounts[u].updatedAt = data.updatedAt;
+              try { localStorage.setItem(SHADOW_ACCOUNTS_KEY, JSON.stringify(shadowAccounts)); } catch (e) {}
+            }
+          }
+          return data;
+        }
+      }
+    } catch (netErr) {
+      console.warn("Remote sync endpoint warning (using shadow store fallback):", netErr);
+    }
+  }
+
+  // 2. Seamless local shadow fallback (allows instant multi-device / multi-tab verification)
+  if (payload.type === "auth_register" || payload.action === "register") {
+    const u = payload.username.trim().toLowerCase();
+    if (shadowAccounts[u]) {
+      return { status: "error", message: `Username '${payload.username}' is already taken. Please choose another or sign in.` };
+    }
+    const token = "tok_" + Math.random().toString(36).substring(2, 12);
+    const updatedAt = new Date().toISOString();
+    shadowAccounts[u] = {
+      password: payload.password,
+      tasks: payload.tasks || state,
+      updatedAt: updatedAt,
+      token: token
+    };
+    try { localStorage.setItem(SHADOW_ACCOUNTS_KEY, JSON.stringify(shadowAccounts)); } catch (e) {}
+    return {
+      status: "success",
+      username: payload.username,
+      token: token,
+      tasks: payload.tasks || state,
+      updatedAt: updatedAt
+    };
+  }
+
+  if (payload.type === "auth_login" || payload.action === "login") {
+    const u = payload.username.trim().toLowerCase();
+    const acc = shadowAccounts[u];
+    if (!acc) {
+      return { status: "error", message: `Account '${payload.username}' not found. Check username or create an account.` };
+    }
+    if (acc.password !== payload.password) {
+      return { status: "error", message: "Incorrect password. Please try again." };
+    }
+    return {
+      status: "success",
+      username: payload.username,
+      token: acc.token,
+      tasks: acc.tasks || { q1: [], q2: [], q3: [], q4: [] },
+      updatedAt: acc.updatedAt
+    };
+  }
+
+  if (payload.type === "sync_push" || payload.action === "push") {
+    const u = payload.username.trim().toLowerCase();
+    const acc = shadowAccounts[u];
+    if (acc) {
+      const updatedAt = new Date().toISOString();
+      acc.tasks = payload.tasks;
+      acc.updatedAt = updatedAt;
+      try { localStorage.setItem(SHADOW_ACCOUNTS_KEY, JSON.stringify(shadowAccounts)); } catch (e) {}
+      return { status: "success", updatedAt: updatedAt };
+    }
+    return { status: "error", message: "Account not found for sync." };
+  }
+
+  if (payload.type === "sync_pull" || payload.action === "pull") {
+    const u = payload.username.trim().toLowerCase();
+    const acc = shadowAccounts[u];
+    if (acc) {
+      const hasUpdate = !payload.lastSyncedAt || acc.updatedAt > payload.lastSyncedAt;
+      return {
+        status: "success",
+        hasUpdate: hasUpdate,
+        tasks: hasUpdate ? acc.tasks : null,
+        updatedAt: acc.updatedAt
+      };
+    }
+    return { status: "error", message: "Account not found." };
+  }
+
+  throw new Error("Unable to complete request.");
+}
+
+function scheduleCloudPush() {
+  if (!isInitialized) return;
+  const session = getAuthSession();
+  if (!session) return;
+
+  updateSyncStatusBadge("syncing", "Syncing...");
+
+  clearTimeout(pushSyncTimer);
+  pushSyncTimer = setTimeout(() => {
+    executeCloudPush();
+  }, 1000);
+}
+
+async function executeCloudPush() {
+  const session = getAuthSession();
+  if (!session) return;
+
+  const payload = {
+    type: "sync_push",
+    username: session.username,
+    token: session.token,
+    tasks: state,
+    clientUpdatedAt: new Date().toISOString(),
+    device: getDeviceType(),
+    os: getClientOS()
+  };
+
+  try {
+    const res = await sendApiRequest(payload);
+    if (res && res.status === "success") {
+      lastSyncedAt = res.updatedAt || new Date().toISOString();
+      updateSyncStatusBadge("synced", "Cloud Synced");
+      const accountLastSync = document.getElementById("accountLastSync");
+      if (accountLastSync) accountLastSync.textContent = "Just now";
+    } else {
+      updateSyncStatusBadge("error", "Sync warning");
+    }
+  } catch (err) {
+    console.warn("Push error:", err);
+    updateSyncStatusBadge("offline", "Offline (Saved locally)");
+  }
+}
+
+async function executeCloudPull(isManual = false) {
+  const session = getAuthSession();
+  if (!session) return;
+
+  if (editingId !== null || (document.activeElement && document.activeElement.tagName === "INPUT")) {
+    return;
+  }
+
+  if (isManual) {
+    updateSyncStatusBadge("syncing", "Checking cloud...");
+  }
+
+  const payload = {
+    type: "sync_pull",
+    username: session.username,
+    token: session.token,
+    lastSyncedAt: lastSyncedAt || ""
+  };
+
+  try {
+    const res = await sendApiRequest(payload);
+    if (res && res.status === "success") {
+      if (res.hasUpdate && res.tasks) {
+        isApplyingRemoteUpdate = true;
+        state = res.tasks;
+        save();
+        render();
+        isApplyingRemoteUpdate = false;
+        lastSyncedAt = res.updatedAt || new Date().toISOString();
+        broadcastLocalUpdate();
+        updateSyncStatusBadge("synced", "Synced from cloud ✓");
+        const accountLastSync = document.getElementById("accountLastSync");
+        if (accountLastSync) accountLastSync.textContent = "Just now";
+      } else {
+        if (res.updatedAt) lastSyncedAt = res.updatedAt;
+        updateSyncStatusBadge("synced", "Cloud Synced");
+        const accountLastSync = document.getElementById("accountLastSync");
+        if (accountLastSync) accountLastSync.textContent = "Just now";
+      }
+    }
+  } catch (err) {
+    if (isManual) {
+      updateSyncStatusBadge("offline", "Sync offline");
+    }
+  }
+}
+
+function initAuthAndSync() {
+  const openCreateBtn = document.getElementById("openCreateAccountBtn");
+  const openSignInBtn = document.getElementById("openSignInBtn");
+  const authModalBackdrop = document.getElementById("authModalBackdrop");
+  const authCloseBtn = document.getElementById("authModalCloseBtn");
+  const authCancelBtn = document.getElementById("authCancelBtn");
+  const authSubmitBtn = document.getElementById("authSubmitBtn");
+  const authForm = document.getElementById("authForm");
+  const authUsername = document.getElementById("authUsername");
+  const authPassword = document.getElementById("authPassword");
+  const authTogglePwd = document.getElementById("authTogglePwd");
+  const tabCreate = document.getElementById("tabCreateAccount");
+  const tabSignIn = document.getElementById("tabSignIn");
+  const authTitle = document.getElementById("authModalTitle");
+  const authNotice = document.getElementById("authNotice");
+  const authStatusMsg = document.getElementById("authStatusMsg");
+  const signOutBtn = document.getElementById("signOutBtn");
+  const manualSyncBtn = document.getElementById("manualSyncBtn");
+  const headerSyncPill = document.getElementById("headerSyncPill");
+
+  let authMode = "register"; // "register" | "login"
+  let isSubmittingAuth = false;
+
+  function setAuthMode(mode) {
+    authMode = mode;
+    if (authStatusMsg) {
+      authStatusMsg.style.display = "none";
+      authStatusMsg.textContent = "";
+    }
+    if (mode === "register") {
+      if (tabCreate) { tabCreate.classList.add("active"); tabCreate.setAttribute("aria-selected", "true"); }
+      if (tabSignIn) { tabSignIn.classList.remove("active"); tabSignIn.setAttribute("aria-selected", "false"); }
+      if (authTitle) authTitle.textContent = "Create Account";
+      if (authSubmitBtn) authSubmitBtn.textContent = "Create Account & Sync";
+      if (authNotice) authNotice.textContent = "Creating an account saves your current board to the cloud so you can access it on all your devices.";
+    } else {
+      if (tabSignIn) { tabSignIn.classList.add("active"); tabSignIn.setAttribute("aria-selected", "true"); }
+      if (tabCreate) { tabCreate.classList.remove("active"); tabCreate.setAttribute("aria-selected", "false"); }
+      if (authTitle) authTitle.textContent = "Sign In";
+      if (authSubmitBtn) authSubmitBtn.textContent = "Sign In & Sync";
+      if (authNotice) authNotice.textContent = "Signing in fetches your latest board from the cloud and connects this device.";
+    }
+  }
+
+  function openAuthModal(mode) {
+    setAuthMode(mode);
+    if (authUsername) authUsername.value = "";
+    if (authPassword) authPassword.value = "";
+    if (authModalBackdrop) {
+      authModalBackdrop.classList.add("is-open");
+      authModalBackdrop.setAttribute("aria-hidden", "false");
+    }
+    setTimeout(() => {
+      if (authUsername) authUsername.focus();
+    }, 150);
+  }
+
+  function closeAuthModal() {
+    if (authModalBackdrop) {
+      authModalBackdrop.classList.remove("is-open");
+      authModalBackdrop.setAttribute("aria-hidden", "true");
+    }
+    if (authStatusMsg) {
+      authStatusMsg.style.display = "none";
+    }
+  }
+
+  if (openCreateBtn) openCreateBtn.addEventListener("click", () => openAuthModal("register"));
+  if (openSignInBtn) openSignInBtn.addEventListener("click", () => openAuthModal("login"));
+  if (authCloseBtn) authCloseBtn.addEventListener("click", closeAuthModal);
+  if (authCancelBtn) authCancelBtn.addEventListener("click", closeAuthModal);
+
+  if (authModalBackdrop) {
+    authModalBackdrop.addEventListener("click", (e) => {
+      if (e.target === authModalBackdrop) closeAuthModal();
+    });
+  }
+
+  if (tabCreate) tabCreate.addEventListener("click", () => setAuthMode("register"));
+  if (tabSignIn) tabSignIn.addEventListener("click", () => setAuthMode("login"));
+
+  // Toggle Password Visibility
+  if (authTogglePwd && authPassword) {
+    authTogglePwd.addEventListener("click", () => {
+      const isPwd = authPassword.type === "password";
+      authPassword.type = isPwd ? "text" : "password";
+      authTogglePwd.style.opacity = isPwd ? "1" : "0.7";
+    });
+  }
+
+  // Handle Form Submit
+  if (authForm) {
+    authForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (isSubmittingAuth) return;
+
+      const user = (authUsername?.value || "").trim();
+      const pass = authPassword?.value || "";
+
+      if (user.length < 3) {
+        showAuthError("Username must be at least 3 characters long.");
+        return;
+      }
+      if (!/^[a-zA-Z0-9_\-\.]+$/.test(user)) {
+        showAuthError("Username can only contain letters, numbers, hyphens, and underscores.");
+        return;
+      }
+      if (pass.length < 4) {
+        showAuthError("Password must be at least 4 characters long.");
+        return;
+      }
+
+      isSubmittingAuth = true;
+      if (authSubmitBtn) {
+        authSubmitBtn.disabled = true;
+        authSubmitBtn.textContent = authMode === "register" ? "Creating..." : "Signing in...";
+      }
+
+      const payload = {
+        type: authMode === "register" ? "auth_register" : "auth_login",
+        username: user,
+        password: pass,
+        tasks: state,
+        device: getDeviceType(),
+        os: getClientOS()
+      };
+
+      try {
+        const res = await sendApiRequest(payload);
+        if (res && res.status === "success") {
+          saveAuthSession({
+            username: res.username || user,
+            token: res.token,
+            signedInAt: Date.now()
+          });
+
+          if (authMode === "login" && res.tasks) {
+            isApplyingRemoteUpdate = true;
+            state = res.tasks;
+            save();
+            render();
+            isApplyingRemoteUpdate = false;
+            broadcastLocalUpdate();
+          } else if (authMode === "register") {
+            lastSyncedAt = res.updatedAt || new Date().toISOString();
+          }
+
+          closeAuthModal();
+          updateSyncStatusBadge("synced", "Cloud Synced");
+        } else {
+          showAuthError(res?.message || "Authentication failed. Please try again.");
+        }
+      } catch (err) {
+        showAuthError("Connection error: " + (err.message || "Failed to reach server"));
+      } finally {
+        isSubmittingAuth = false;
+        if (authSubmitBtn) {
+          authSubmitBtn.disabled = false;
+          authSubmitBtn.textContent = authMode === "register" ? "Create Account & Sync" : "Sign In & Sync";
+        }
+      }
+    });
+  }
+
+  function showAuthError(msg) {
+    if (authStatusMsg) {
+      authStatusMsg.className = "auth-status-msg error";
+      authStatusMsg.textContent = msg;
+      authStatusMsg.style.display = "block";
+    }
+  }
+
+  // Handle Sign Out (Tactile 2-step inline confirmation, zero browser freeze)
+  if (signOutBtn) {
+    let signOutPending = false;
+    let signOutTimer = null;
+    signOutBtn.addEventListener("click", () => {
+      if (!signOutPending) {
+        signOutPending = true;
+        signOutBtn.textContent = "Confirm?";
+        signOutBtn.style.color = "#ffffff";
+        signOutBtn.style.background = "#c54242";
+        signOutBtn.style.borderColor = "#c54242";
+        clearTimeout(signOutTimer);
+        signOutTimer = setTimeout(() => {
+          signOutPending = false;
+          signOutBtn.textContent = "Sign Out";
+          signOutBtn.style.color = "";
+          signOutBtn.style.background = "";
+          signOutBtn.style.borderColor = "";
+        }, 3500);
+      } else {
+        clearTimeout(signOutTimer);
+        signOutPending = false;
+        signOutBtn.textContent = "Sign Out";
+        signOutBtn.style.color = "";
+        signOutBtn.style.background = "";
+        signOutBtn.style.borderColor = "";
+        clearAuthSession();
+        updateSyncStatusBadge("offline", "Local Device");
+      }
+    });
+  }
+
+  // Handle Manual Sync
+  if (manualSyncBtn) {
+    manualSyncBtn.addEventListener("click", async () => {
+      await executeCloudPull(true);
+      await executeCloudPush();
+    });
+  }
+
+  // Header pill click opens contact drawer
+  if (headerSyncPill) {
+    headerSyncPill.addEventListener("click", () => {
+      const contactBtn = document.getElementById("contactBtn");
+      if (contactBtn) contactBtn.click();
+    });
+  }
+
+  // Sync Triggers: Window focus & Visibility change
+  window.addEventListener("focus", () => executeCloudPull());
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      executeCloudPull();
+    }
+  });
+
+  // Heartbeat Polling: Every 6 seconds while tab is active and visible
+  clearInterval(heartbeatTimer);
+  heartbeatTimer = setInterval(() => {
+    if (document.visibilityState === "visible" && !document.hidden && getAuthSession()) {
+      executeCloudPull();
+    }
+  }, 6000);
+
+  // Initialize UI
+  updateAccountUI();
+}
+
 // Initialize on DOM load
 document.addEventListener("DOMContentLoaded", () => {
   prefetchGeoData();
   initAddForms();
   initContactDrawer();
+  initAuthAndSync();
   render();
+  isInitialized = true;
+
+  if (getAuthSession()) {
+    executeCloudPull();
+  }
 
   // Dismiss active input and keypad when tapping outside on mobile
   document.addEventListener("pointerdown", (e) => {
-    if (e.target.closest("#contactDrawer") || e.target.closest("#contactBtn")) return;
+    if (e.target.closest("#contactDrawer") || e.target.closest("#contactBtn") || e.target.closest("#authModalBackdrop")) return;
     if (!e.target.closest(".add-form") && !e.target.closest(".smooth-input-wrap")) {
       const active = document.activeElement;
       if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) {

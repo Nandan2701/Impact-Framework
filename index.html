@@ -14,7 +14,12 @@
 <body>
   <div class="app-container" id="appContainer">
     <header class="app-header">
-      <div class="header-spacer"></div>
+      <div class="header-left">
+        <div class="sync-indicator-pill" id="headerSyncPill" style="display: none;" title="Cloud sync status">
+          <span class="sync-status-dot"></span>
+          <span class="sync-status-label" id="headerSyncUser">Synced</span>
+        </div>
+      </div>
       <h1 class="app-title">
         <span class="title-impact">IMPACT</span>
         <span class="title-framework">— Framework</span>
@@ -129,7 +134,55 @@
 
       <hr class="drawer-divider">
 
-      <!-- Item 3: Rate this app (Google Play clean format) -->
+      <!-- Item 3: Account & Cross-Device Sync (Zero-Intrusion) -->
+      <div class="account-section" id="accountSection">
+        <!-- State A: Not Signed In (Local Device Only) -->
+        <div class="account-card not-signed-in" id="accountNotSignedIn">
+          <div class="account-card-header">
+            <span class="account-badge-pill offline">
+              <span class="pulse-dot"></span>
+              <span>Local Device</span>
+            </span>
+          </div>
+          <h3 class="account-title">Cross-Device Sync</h3>
+          <p class="account-desc">Create an account or sign in to seamlessly sync your matrix across your phone, tablet, and laptop.</p>
+          <div class="account-cta-group">
+            <button class="account-btn primary" id="openCreateAccountBtn" type="button">Create Account</button>
+            <button class="account-btn secondary" id="openSignInBtn" type="button">Sign In</button>
+          </div>
+        </div>
+
+        <!-- State B: Signed In -->
+        <div class="account-card signed-in" id="accountSignedIn" style="display: none;">
+          <div class="account-card-header">
+            <span class="account-badge-pill synced" id="syncStatusBadge">
+              <span class="sync-status-dot"></span>
+              <span id="syncStatusText">Cloud Synced</span>
+            </span>
+            <span class="account-last-sync" id="accountLastSync">Just now</span>
+          </div>
+          <div class="account-user-row">
+            <div class="account-avatar" id="accountAvatar">U</div>
+            <div class="account-user-details">
+              <div class="account-username" id="accountUsername">user</div>
+              <div class="account-sync-info">Active on this device</div>
+            </div>
+          </div>
+          <div class="account-actions-row">
+            <button class="account-btn-sync-now" id="manualSyncBtn" type="button" title="Sync changes now">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+                <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+              </svg>
+              <span>Sync Now</span>
+            </button>
+            <button class="account-btn-signout" id="signOutBtn" type="button">Sign Out</button>
+          </div>
+        </div>
+      </div>
+
+      <hr class="drawer-divider">
+
+      <!-- Item 4: Rate this app (Google Play clean format) -->
       <div class="rate-app-section">
         <h3 class="rate-app-title">Rate this app</h3>
         <p class="rate-app-subtitle">Tell others what you think</p>
@@ -167,7 +220,7 @@
       </div>
     </div>
 
-    <!-- Floating Focus Card Modal Overlay (Variation 3: Modal Elevation) -->
+    <!-- Floating Focus Card Modal Overlay (Reviews) -->
     <div class="focus-review-backdrop" id="focusReviewBackdrop" aria-hidden="true">
       <div class="focus-review-card" role="dialog" aria-modal="true" aria-labelledby="focusReviewTitle">
         <div class="focus-review-header">
@@ -204,6 +257,52 @@
           <button class="focus-btn-cancel" id="focusReviewCancelBtn" type="button">Cancel</button>
           <button class="focus-btn-post" id="focusReviewPostBtn" type="button">Post</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Floating Focus Card Modal Overlay (Auth: Create Account / Sign In) -->
+    <div class="focus-review-backdrop" id="authModalBackdrop" aria-hidden="true">
+      <div class="focus-review-card auth-modal-card" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+        <div class="focus-review-header">
+          <h4 class="focus-review-title" id="authModalTitle">Sync Across Devices</h4>
+          <button class="focus-review-close" id="authModalCloseBtn" type="button" aria-label="Close modal">&times;</button>
+        </div>
+
+        <div class="auth-modal-tabs" role="tablist">
+          <button class="auth-tab active" id="tabCreateAccount" type="button" role="tab" aria-selected="true">Create Account</button>
+          <button class="auth-tab" id="tabSignIn" type="button" role="tab" aria-selected="false">Sign In</button>
+        </div>
+
+        <form class="auth-form" id="authForm" autocomplete="on">
+          <div class="auth-field-group">
+            <label class="auth-label" for="authUsername">Username</label>
+            <input class="auth-input" id="authUsername" type="text" placeholder="e.g. alex_runner" required autocomplete="username" autocapitalize="none" spellcheck="false">
+            <span class="auth-hint">3–20 letters, numbers, or underscores</span>
+          </div>
+
+          <div class="auth-field-group">
+            <label class="auth-label" for="authPassword">Password</label>
+            <div class="auth-password-wrap">
+              <input class="auth-input" id="authPassword" type="password" placeholder="Enter password (min 4 chars)" required autocomplete="current-password">
+              <button class="auth-toggle-pwd" id="authTogglePwd" type="button" aria-label="Toggle password visibility" title="Show/hide password">
+                <svg viewBox="0 0 24 24" class="pwd-eye-icon" width="16" height="16" fill="currentColor">
+                  <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="auth-notice" id="authNotice">
+            Creating an account saves your current board to the cloud so you can access it on all your devices.
+          </div>
+
+          <div class="auth-status-msg" id="authStatusMsg" style="display: none;"></div>
+
+          <div class="focus-actions auth-actions">
+            <button class="focus-btn-cancel" id="authCancelBtn" type="button">Cancel</button>
+            <button class="focus-btn-post" id="authSubmitBtn" type="submit">Create Account & Sync</button>
+          </div>
+        </form>
       </div>
     </div>
   </aside>

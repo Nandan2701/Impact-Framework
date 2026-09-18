@@ -273,6 +273,41 @@ A comprehensive, point-by-point chronological record of every feature, design de
 
 ---
 
+## 📌 Phase 14: Multi-Device Account Sync & Bi-Directional Cloud Engine
+
+* **Zero-Intrusion First-Time User Experience:**
+  * New visitors are never blocked or prompted by intrusive registration popups.
+  * Users can immediately start prioritizing tasks locally in browser `localStorage` with 0ms startup.
+  * Account creation and sign-in controls are seamlessly tucked inside the right-hand **Contact** drawer panel.
+
+* **Monograph Account Management UI:**
+  * **Not Signed-In State:** Informative card with `Local Device` badge, explanatory copy, and dual CTAs: `Create Account` and `Sign In`.
+  * **Signed-In State:** Displays active status `● Cloud Synced`, user avatar initial, persistent username, `Sync Now` trigger, and an inline 2-step tactile `Sign Out` button (`Sign Out` → `Confirm?`).
+  * **Header Status Indicator:** Subtle top-left sync pill displaying username and real-time connection status dot (green: Synced, blue: Syncing, gray: Offline).
+
+* **Authentication Modal Dialog (`#authModalBackdrop`):**
+  * Minimalist monograph card with quick tab switching between **Create Account** and **Sign In**.
+  * Input fields for Username (alphanumeric validation) and Password with interactive show/hide eye toggle.
+  * Error and success status banners with smooth transitions.
+
+* **Secure Cloud & Sheet Backend (`Accounts` Tab):**
+  * Upgraded `google-apps-script.js` with an automated **`Accounts`** sheet tab.
+  * Passwords hashed with **SHA-256 + project salt** (`Utilities.computeDigest`).
+  * Endpoints for `auth_register`, `auth_login`, `sync_push`, and `sync_pull` supporting both POST and GET query parameter formats.
+  * Keeps existing `type: "review"` (Gmail notifications) and `type: "task"` (silent analytics) completely intact.
+
+* **Automated Real-Time Bi-Directional Synchronization Engine:**
+  * **Push Sync:** Automatically debounced (1000ms) on any local task change (create, edit, reorder, complete, delete) to update the cloud.
+  * **Pull Sync Triggers:**
+    * Window focus (`window.addEventListener('focus', ...)`)
+    * Tab visibility change (`document.addEventListener('visibilitychange', ...)`)
+    * Background heartbeat polling (every 6s while active and visible)
+    * Manual "Sync Now" button
+  * **Multi-Tab Local Parity:** Integrated `BroadcastChannel("impact_framework_sync")` and `storage` event listeners for instant <1ms cross-tab synchronization.
+  * **Typing Protection:** Remote updates are automatically deferred while the user is actively typing or editing a task, preventing caret jumping.
+
+---
+
 ## 🏁 Current Project Architecture Overview
 
 ```

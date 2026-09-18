@@ -80,8 +80,59 @@ body.drawer-open .app-container {
   user-select: none;
 }
 
-.header-spacer {
-  width: 80px;
+.header-left {
+  display: flex;
+  align-items: center;
+  min-width: 80px;
+}
+
+.sync-indicator-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0eee6;
+  border: 1px solid #dcd7ca;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #3b3732;
+  user-select: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sync-indicator-pill:hover {
+  background: #e7e3d7;
+  border-color: #cfc8b8;
+}
+
+.sync-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2b7757;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.sync-status-dot.syncing {
+  background: #1a73e8;
+  animation: pulseSync 1.2s infinite ease-in-out;
+}
+
+.sync-status-dot.offline {
+  background: #a6a39b;
+}
+
+.sync-status-dot.error {
+  background: #c54242;
+}
+
+@keyframes pulseSync {
+  0% { transform: scale(0.9); opacity: 0.5; }
+  50% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.5; }
 }
 
 /* Header Title — Exactly matching prototype */
@@ -1118,3 +1169,356 @@ body.drawer-open .app-container {
   background: #1557b0;
   box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
 }
+
+/* ==========================================================================
+   Account & Cross-Device Sync Card (Contact Drawer)
+   ========================================================================== */
+.account-section {
+  margin: 14px 0;
+}
+
+.account-card {
+  background: #ffffff;
+  border: 1px solid #e5e1d8;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(32, 27, 23, 0.03);
+  transition: all 0.2s ease;
+}
+
+.account-card.signed-in {
+  background: #faf9f5;
+  border-color: #dcd6c8;
+}
+
+.account-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.account-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.account-badge-pill.offline {
+  background: #f1ede3;
+  color: #7a7367;
+}
+
+.account-badge-pill.synced {
+  background: #e6f4ea;
+  color: #137333;
+}
+
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #8e8779;
+}
+
+.account-last-sync {
+  font-size: 11px;
+  color: #8c8577;
+}
+
+.account-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 5px;
+  letter-spacing: -0.01em;
+}
+
+.account-desc {
+  font-size: 12px;
+  color: #635d53;
+  line-height: 1.45;
+  margin-bottom: 14px;
+}
+
+.account-cta-group {
+  display: flex;
+  gap: 8px;
+}
+
+.account-btn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.16s ease;
+  text-align: center;
+}
+
+.account-btn.primary {
+  background: var(--text-main);
+  color: #ffffff;
+  border: 1px solid var(--text-main);
+}
+
+.account-btn.primary:hover {
+  background: #333940;
+  border-color: #333940;
+}
+
+.account-btn.secondary {
+  background: #f7f4ed;
+  color: var(--text-main);
+  border: 1px solid #d4ccbd;
+}
+
+.account-btn.secondary:hover {
+  background: #ebe5d8;
+  border-color: #c4baaa;
+}
+
+/* User Logged In State */
+.account-user-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 4px 0;
+}
+
+.account-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #2b7757;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.account-user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.account-username {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-sync-info {
+  font-size: 11.5px;
+  color: #7a7367;
+  margin-top: 1px;
+}
+
+.account-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid #eae5db;
+  padding-top: 12px;
+}
+
+.account-btn-sync-now {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #ffffff;
+  border: 1px solid #d4ccbd;
+  color: #333940;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.16s ease;
+}
+
+.account-btn-sync-now:hover {
+  background: #f4efe4;
+  border-color: #b8ac97;
+}
+
+.account-btn-sync-now.syncing svg {
+  animation: spinSync 1s infinite linear;
+}
+
+@keyframes spinSync {
+  100% { transform: rotate(360deg); }
+}
+
+.account-btn-signout {
+  background: none;
+  border: 1px solid transparent;
+  color: #c54242;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.16s ease;
+  margin-left: auto;
+}
+
+.account-btn-signout:hover {
+  background: #fdf2f2;
+  border-color: #f5c6c6;
+}
+
+/* ==========================================================================
+   Auth Modal Dialog (Create Account / Sign In)
+   ========================================================================== */
+.auth-modal-card {
+  max-width: 360px;
+  padding: 22px 24px;
+}
+
+.auth-modal-tabs {
+  display: flex;
+  background: #f1ede3;
+  padding: 3px;
+  border-radius: 8px;
+  margin: 14px 0 18px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: none;
+  border: none;
+  color: #635d53;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.16s ease;
+}
+
+.auth-tab.active {
+  background: #ffffff;
+  color: var(--text-main);
+  box-shadow: 0 1px 3px rgba(32, 27, 23, 0.08);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.auth-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.auth-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b3732;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  border: 1px solid #d8d2c4;
+  border-radius: 6px;
+  background: #faf8f3;
+  color: var(--text-main);
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.auth-input:focus {
+  border-color: var(--text-main);
+  background: #ffffff;
+}
+
+.auth-password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-toggle-pwd {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #747775;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.16s;
+}
+
+.auth-toggle-pwd:hover {
+  opacity: 1;
+}
+
+.auth-hint {
+  font-size: 11px;
+  color: #8c8577;
+}
+
+.auth-notice {
+  font-size: 11.5px;
+  color: #635d53;
+  background: #f7f4ed;
+  border: 1px solid #e7e1d4;
+  border-radius: 6px;
+  padding: 8px 10px;
+  line-height: 1.4;
+}
+
+.auth-status-msg {
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  line-height: 1.4;
+}
+
+.auth-status-msg.error {
+  background: #fdf2f2;
+  border: 1px solid #f5c6c6;
+  color: #c54242;
+}
+
+.auth-status-msg.success {
+  background: #e6f4ea;
+  border: 1px solid #ceead6;
+  color: #137333;
+}
+
+.auth-actions {
+  margin-top: 6px;
+}
+
