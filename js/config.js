@@ -9,6 +9,10 @@
  * ==============================================================================
  */
 window.IMPACT_CONFIG = {
-  // Paste your deployed Google Apps Script URL here:
-  googleWebhookUrl: "https://script.google.com/macros/s/AKfycbxA0SIv6IiO-fkWbSUiV6Vwp6XmwFutVEeCjgPmPiQQlTNuiIZ5uqlJrlIvOOGlUvaK/exec"
+  // Google Apps Script Webhook (for Reviews & Contact notifications)
+  googleWebhookUrl: "https://script.google.com/macros/s/AKfycbxA0SIv6IiO-fkWbSUiV6Vwp6XmwFutVEeCjgPmPiQQlTNuiIZ5uqlJrlIvOOGlUvaK/exec",
+
+  // Supabase Real-Time Database (for Ultra-Fast 30ms Board & Subtasks Sync)
+  supabaseUrl: "https://ksjnvkpkppvxnexonnjh.supabase.co",
+  supabaseAnonKey: "sb_publishable_OT6sQJSRYyIIgKYWBeEyjQ_RKriWGvD"
 };

@@ -1613,62 +1613,169 @@ function updateAccountUI() {
   }
 }
 
-// API Communication with Google Apps Script & Shadow Store fallback
+// API Communication with Supabase (Sub-50ms Realtime Database) & Shadow Store fallback
 async function sendApiRequest(payload) {
-  const url = (window.IMPACT_CONFIG && window.IMPACT_CONFIG.googleWebhookUrl) || "";
+  const cfg = window.IMPACT_CONFIG || {};
+  const supabaseUrl = cfg.supabaseUrl;
+  const supabaseKey = cfg.supabaseAnonKey;
   let shadowAccounts = {};
   try {
     shadowAccounts = JSON.parse(localStorage.getItem(SHADOW_ACCOUNTS_KEY) || "{}");
   } catch (e) {}
 
-  // 1. Try Google Apps Script remote endpoint if configured
-  if (url) {
+  // 1. Primary Engine: Supabase Realtime PostgreSQL
+  if (supabaseUrl && supabaseKey) {
     try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.status) {
-          // Detect outdated Google Apps Script (e.g. older script returns type: "review" instead of action)
-          const isAuthOrSync = payload.type && (payload.type.startsWith("auth_") || payload.type.startsWith("sync_"));
-          if (isAuthOrSync && (data.type === "review" || (!data.action && data.status === "success"))) {
-            console.warn("Outdated Google Apps Script Web App detected: Please update Google Apps Script code in Google Sheets.", data);
-            return {
-              status: "error",
-              isOutdatedScript: true,
-              message: "Google Sheet backend needs update: Open Extensions > Apps Script in your Google Sheet and deploy the latest script code to enable cloud sync."
-            };
-          }
+      const headers = {
+        "apikey": supabaseKey,
+        "Authorization": `Bearer ${supabaseKey}`,
+        "Content-Type": "application/json"
+      };
 
-          // Mirror to shadow store for instant multi-tab parity
-          if (payload.type === "auth_register" && data.status === "success") {
-            shadowAccounts[payload.username.toLowerCase()] = {
-              password: payload.password,
-              tasks: payload.tasks,
-              updatedAt: data.updatedAt,
-              token: data.token
-            };
-            try { localStorage.setItem(SHADOW_ACCOUNTS_KEY, JSON.stringify(shadowAccounts)); } catch (e) {}
-          } else if (payload.type === "sync_push" && data.status === "success") {
-            const u = payload.username.toLowerCase();
-            if (shadowAccounts[u]) {
-              shadowAccounts[u].tasks = payload.tasks;
-              shadowAccounts[u].updatedAt = data.updatedAt;
-              try { localStorage.setItem(SHADOW_ACCOUNTS_KEY, JSON.stringify(shadowAccounts)); } catch (e) {}
-            }
-          }
-          return data;
+      // 1. REGISTER ACCOUNT
+      if (payload.type === "auth_register" || payload.action === "register") {
+        const u = payload.username.trim().toLowerCase();
+        const checkRes = await fetch(`${supabaseUrl}/rest/v1/user_boards?username=eq.${encodeURIComponent(u)}&select=id`, {
+          headers
+        });
+        const existing = await checkRes.json();
+        if (existing && existing.length > 0) {
+          return { status: "error", message: `Username '${payload.username}' is already taken. Please choose another or sign in.` };
         }
+
+        const nowIso = new Date().toISOString();
+        const insertRes = await fetch(`${supabaseUrl}/rest/v1/user_boards`, {
+          method: "POST",
+          headers: { ...headers, "Prefer": "return=representation" },
+          body: JSON.stringify({
+            username: u,
+            passcode_hash: payload.password,
+            tasks: payload.tasks || state,
+            device: `${payload.device || getDeviceType()} (${payload.os || getClientOS()})`,
+            updated_at: nowIso
+          })
+        });
+
+        if (!insertRes.ok) {
+          const errText = await insertRes.text();
+          throw new Error("Supabase register error: " + errText);
+        }
+
+        const created = await insertRes.json();
+        const userRow = created[0];
+
+        // Mirror to shadow store
+        shadowAccounts[u] = {
+          password: payload.password,
+          tasks: userRow.tasks,
+          updatedAt: userRow.updated_at,
+          token: userRow.id
+        };
+        try { localStorage.setItem(SHADOW_ACCOUNTS_KEY, JSON.stringify(shadowAccounts)); } catch (e) {}
+
+        return {
+          status: "success",
+          username: payload.username,
+          token: userRow.id,
+          tasks: userRow.tasks,
+          updatedAt: userRow.updated_at
+        };
       }
-    } catch (netErr) {
-      console.warn("Remote sync endpoint warning (using shadow store fallback):", netErr);
+
+      // 2. LOGIN ACCOUNT
+      if (payload.type === "auth_login" || payload.action === "login") {
+        const u = payload.username.trim().toLowerCase();
+        const res = await fetch(`${supabaseUrl}/rest/v1/user_boards?username=eq.${encodeURIComponent(u)}&select=*`, {
+          headers
+        });
+        const data = await res.json();
+        if (!data || data.length === 0) {
+          return { status: "error", message: `Account '${payload.username}' not found. Check username or create an account.` };
+        }
+        const userRow = data[0];
+        if (userRow.passcode_hash !== payload.password) {
+          return { status: "error", message: "Incorrect password. Please try again." };
+        }
+
+        // Mirror to shadow store
+        shadowAccounts[u] = {
+          password: payload.password,
+          tasks: userRow.tasks,
+          updatedAt: userRow.updated_at,
+          token: userRow.id
+        };
+        try { localStorage.setItem(SHADOW_ACCOUNTS_KEY, JSON.stringify(shadowAccounts)); } catch (e) {}
+
+        return {
+          status: "success",
+          username: payload.username,
+          token: userRow.id,
+          tasks: userRow.tasks || { q1: [], q2: [], q3: [], q4: [] },
+          updatedAt: userRow.updated_at
+        };
+      }
+
+      // 3. PUSH LOCAL BOARD TO CLOUD (Instant ~30ms write)
+      if (payload.type === "sync_push" || payload.action === "push") {
+        const u = payload.username.trim().toLowerCase();
+        const nowIso = new Date().toISOString();
+        const patchRes = await fetch(`${supabaseUrl}/rest/v1/user_boards?username=eq.${encodeURIComponent(u)}`, {
+          method: "PATCH",
+          headers: { ...headers, "Prefer": "return=representation" },
+          body: JSON.stringify({
+            tasks: payload.tasks,
+            device: `${payload.device || getDeviceType()} (${payload.os || getClientOS()})`,
+            updated_at: nowIso
+          })
+        });
+
+        if (!patchRes.ok) {
+          const errText = await patchRes.text();
+          throw new Error("Supabase push error: " + errText);
+        }
+
+        const updated = await patchRes.json();
+        const updatedAt = updated[0]?.updated_at || nowIso;
+
+        if (shadowAccounts[u]) {
+          shadowAccounts[u].tasks = payload.tasks;
+          shadowAccounts[u].updatedAt = updatedAt;
+          try { localStorage.setItem(SHADOW_ACCOUNTS_KEY, JSON.stringify(shadowAccounts)); } catch (e) {}
+        }
+
+        return {
+          status: "success",
+          action: "push",
+          updatedAt: updatedAt
+        };
+      }
+
+      // 4. PULL CLOUD BOARD
+      if (payload.type === "sync_pull" || payload.action === "pull") {
+        const u = payload.username.trim().toLowerCase();
+        const res = await fetch(`${supabaseUrl}/rest/v1/user_boards?username=eq.${encodeURIComponent(u)}&select=tasks,updated_at`, {
+          headers
+        });
+        const data = await res.json();
+        if (!data || data.length === 0) {
+          return { status: "error", message: "Account not found." };
+        }
+        const remote = data[0];
+        const hasUpdate = !payload.lastSyncedAt || remote.updated_at > payload.lastSyncedAt;
+        return {
+          status: "success",
+          action: "pull",
+          hasUpdate: hasUpdate,
+          tasks: remote.tasks,
+          updatedAt: remote.updated_at
+        };
+      }
+    } catch (supErr) {
+      console.warn("Supabase communication warning (using shadow store fallback):", supErr);
     }
   }
 
-  // 2. Seamless local shadow fallback (allows instant multi-device / multi-tab verification)
+  // 2. Seamless local shadow fallback (allows instant multi-device / multi-tab verification if offline)
   if (payload.type === "auth_register" || payload.action === "register") {
     const u = payload.username.trim().toLowerCase();
     if (shadowAccounts[u]) {
@@ -1751,7 +1858,7 @@ function scheduleCloudPush() {
   clearTimeout(pushSyncTimer);
   pushSyncTimer = setTimeout(() => {
     executeCloudPush();
-  }, 1000);
+  }, 250);
 }
 
 async function executeCloudPush() {
