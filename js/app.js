@@ -100,7 +100,10 @@ function loadState() {
   }
 }
 
+let lastLocalChangeTimestamp = 0;
+
 function save() {
+  lastLocalChangeTimestamp = Date.now();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   if (!isApplyingRemoteUpdate && isInitialized) {
     scheduleCloudPush();
@@ -117,7 +120,6 @@ function render() {
       list.appendChild(createTaskElement(q, task, index));
     });
   }
-  save();
 
   // If a sub-checklist input is active, focus it automatically
   if (activeSubInputTaskId) {
@@ -206,9 +208,11 @@ function createTaskElement(q, task, index) {
     foldBtn.innerHTML = "&#9654;"; // ▶
     foldBtn.title = isExpanded ? "Collapse subtasks" : "Expand subtasks";
     foldBtn.setAttribute("aria-label", "Toggle subtasks");
+    foldBtn.addEventListener("pointerdown", (e) => e.preventDefault());
     foldBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       task.collapsed = !task.collapsed;
+      activeSubInputTaskId = null;
       render();
     });
   }
@@ -222,17 +226,22 @@ function createTaskElement(q, task, index) {
   const text = document.createElement("span");
   text.className = "task-text";
   text.textContent = task.text;
-  text.title = "Click to expand & add subtasks • Double-click to edit headline";
+  text.title = hasSubtasks ? "Click to expand/collapse subtasks • Double-click to edit headline" : "Click to add subtasks • Double-click to edit headline";
 
-  // Single-click expands & opens subtask input; Double-click edits headline
+  // Single-click expands & opens subtask input if empty, or toggles if subtasks exist
   let headlineClickTimer = null;
   text.addEventListener("click", (e) => {
     e.stopPropagation();
     if (editingId === task.id) return;
     clearTimeout(headlineClickTimer);
     headlineClickTimer = setTimeout(() => {
-      task.collapsed = false;
-      activeSubInputTaskId = task.id;
+      if (hasSubtasks) {
+        task.collapsed = !task.collapsed;
+        activeSubInputTaskId = null;
+      } else {
+        task.collapsed = false;
+        activeSubInputTaskId = task.id;
+      }
       render();
     }, 220);
   });
@@ -271,6 +280,7 @@ function createTaskElement(q, task, index) {
     progressPill.className = "task-progress-pill" + (allDone ? " all-done" : "");
     progressPill.textContent = `${doneCount}/${subtasks.length} done`;
     progressPill.title = isExpanded ? "Click to collapse subtasks" : "Click to expand subtasks";
+    progressPill.addEventListener("pointerdown", (e) => e.preventDefault());
     progressPill.addEventListener("click", (e) => {
       e.stopPropagation();
       task.collapsed = !task.collapsed;
@@ -288,6 +298,7 @@ function createTaskElement(q, task, index) {
   delBtn.title = "Delete task";
   delBtn.setAttribute("aria-label", "Delete task");
   delBtn.textContent = "\u00D7";
+  delBtn.addEventListener("pointerdown", (e) => e.preventDefault());
   delBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     removeTask(q, task.id);
@@ -298,6 +309,7 @@ function createTaskElement(q, task, index) {
   doneBtn.className = "task-done-square";
   doneBtn.title = task.done ? "Mark as active" : "Mark as done";
   doneBtn.setAttribute("aria-label", "Toggle done");
+  doneBtn.addEventListener("pointerdown", (e) => e.preventDefault());
   doneBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     task.done = !task.done;
@@ -322,6 +334,7 @@ function createTaskElement(q, task, index) {
         }
       }
     }
+    save();
     render();
   });
 
@@ -362,9 +375,11 @@ function createTaskElement(q, task, index) {
       subChk.className = "subtask-checkbox";
       subChk.title = sub.done ? "Mark active" : "Mark done";
       subChk.setAttribute("aria-label", "Toggle subtask done");
+      subChk.addEventListener("pointerdown", (e) => e.preventDefault());
       subChk.addEventListener("click", (e) => {
         e.stopPropagation();
         sub.done = !sub.done;
+        save();
         render();
       });
 
@@ -379,6 +394,7 @@ function createTaskElement(q, task, index) {
           if (val) sub.text = val;
           else task.subtasks.splice(subIdx, 1);
           editingSubtaskId = null;
+          save();
           render();
         }
 
@@ -431,9 +447,11 @@ function createTaskElement(q, task, index) {
         subDel.textContent = "\u00D7";
         subDel.title = "Delete subtask";
         subDel.setAttribute("aria-label", "Delete subtask");
+        subDel.addEventListener("pointerdown", (e) => e.preventDefault());
         subDel.addEventListener("click", (e) => {
           e.stopPropagation();
           task.subtasks.splice(subIdx, 1);
+          save();
           render();
         });
 
@@ -475,9 +493,11 @@ function createTaskElement(q, task, index) {
             text: val,
             done: false
           });
+          save();
         }
         activeSubInputTaskId = keepOpen && val ? task.id : null;
         render();
+        setTimeout(() => { isSubmitting = false; }, 50);
       }
 
       subInput.addEventListener("keydown", (e) => {
@@ -506,8 +526,10 @@ function createTaskElement(q, task, index) {
       addTriggerBtn.type = "button";
       addTriggerBtn.className = "btn-add-subtask-trigger";
       addTriggerBtn.innerHTML = "<span>+</span> <span>Add sub-checklist item...</span>";
+      addTriggerBtn.addEventListener("pointerdown", (e) => e.preventDefault());
       addTriggerBtn.addEventListener("click", (e) => {
         e.stopPropagation();
+        task.collapsed = false;
         activeSubInputTaskId = task.id;
         render();
       });
@@ -537,6 +559,7 @@ function commitEdit(q, id, value) {
     removeTask(q, id);
     return;
   }
+  save();
   render();
 }
 
@@ -551,6 +574,7 @@ function removeTask(q, id) {
   if (totalRemaining === 0) {
     localStorage.setItem("impact_board_explicitly_emptied", "true");
   }
+  save();
   render();
   if (taskText) {
     logTaskToGoogleSheets("Deleted", q, taskText);
@@ -852,7 +876,7 @@ function initAddForms() {
     });
 
     let isSubmittingForm = false;
-    function submitTask(openSubtasks = true) {
+    function submitTask(openSubtasks = false) {
       if (isSubmittingForm) return;
       const text = input.value.trim();
       if (!text) return;
@@ -868,8 +892,11 @@ function initAddForms() {
       state[q].unshift(newTask);
       input.value = "";
       if (openSubtasks) {
-        activeSubInputTaskId = newTask.id; // Automatically open tray and focus + add sub-checklist item!
+        activeSubInputTaskId = newTask.id;
+      } else {
+        activeSubInputTaskId = null;
       }
+      save();
       render();
 
       // Silent sync to Google Sheet "User Tasks" tab
@@ -880,16 +907,16 @@ function initAddForms() {
         input.blur();
         document.body.classList.remove("shift-bottom-active");
       }
-      setTimeout(() => { isSubmittingForm = false; }, 100);
+      setTimeout(() => { isSubmittingForm = false; }, 150);
     }
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      submitTask(true);
+      submitTask(false);
     });
 
     input.addEventListener("blur", () => {
-      submitTask(true);
+      submitTask(false);
       setTimeout(() => {
         const active = document.activeElement;
         const activeQuadrant = active?.closest("[data-quadrant]")?.dataset?.quadrant;
@@ -1029,6 +1056,7 @@ function setupSubtaskDrag(subItem, gripEl, task) {
           if (targetIdx > task.subtasks.length) targetIdx = task.subtasks.length;
           task.subtasks.splice(targetIdx, 0, moved);
         }
+        save();
         render();
       }
     }
@@ -1156,6 +1184,7 @@ function setupPointerDrag(li, fromQuadrant, task) {
           state[currentTargetQuadrant].splice(currentInsertIndex, 0, movedTask);
         }
 
+        save();
         render();
       }
     }
@@ -1843,7 +1872,9 @@ async function sendApiRequest(payload) {
           return { status: "error", message: "Account not found." };
         }
         const remote = data[0];
-        const hasUpdate = !payload.lastSyncedAt || remote.updated_at > payload.lastSyncedAt;
+        const remoteTime = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
+        const localTime = payload.lastSyncedAt ? new Date(payload.lastSyncedAt).getTime() : 0;
+        const hasUpdate = !payload.lastSyncedAt || remoteTime > localTime;
         return {
           status: "success",
           action: "pull",
@@ -1977,14 +2008,27 @@ async function executeCloudPush() {
   }
 }
 
+let lastCloudPullTime = 0;
+
 async function executeCloudPull(isManual = false) {
   const session = getAuthSession();
   if (!session) return;
 
-  // Never pull and overwrite if user is editing, an input is focused, or local push is pending
-  if (editingId !== null || pushSyncTimer !== null || (document.activeElement && document.activeElement.tagName === "INPUT")) {
+  const now = Date.now();
+  // Throttle automatic background pulls to once every 8 seconds
+  if (!isManual && now - lastCloudPullTime < 8000) {
     return;
   }
+  // Never pull and overwrite if local edits occurred recently (< 4s) or a push is pending
+  if (!isManual && (now - lastLocalChangeTimestamp < 4000 || pushSyncTimer !== null)) {
+    return;
+  }
+  // Never pull if user is editing or an input is focused
+  if (editingId !== null || editingSubtaskId !== null || (document.activeElement && document.activeElement.tagName === "INPUT")) {
+    return;
+  }
+
+  lastCloudPullTime = now;
 
   if (isManual) {
     updateSyncStatusBadge("syncing", "Checking cloud...");
@@ -2002,9 +2046,14 @@ async function executeCloudPull(isManual = false) {
     const res = await sendApiRequest(payload);
     if (res && res.status === "success") {
       if (res.hasUpdate && res.tasks) {
+        // If user made a local edit while request was in-flight, protect local state
+        if (Date.now() - lastLocalChangeTimestamp < 4000) {
+          scheduleCloudPush();
+          return;
+        }
         isApplyingRemoteUpdate = true;
         state = res.tasks;
-        save();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         render();
         isApplyingRemoteUpdate = false;
         lastSyncedAt = res.updatedAt || new Date().toISOString();
