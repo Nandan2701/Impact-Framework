@@ -851,20 +851,12 @@ function initAddForms() {
       }
     });
 
-    input.addEventListener("blur", () => {
-      setTimeout(() => {
-        const active = document.activeElement;
-        const activeQuadrant = active?.closest("[data-quadrant]")?.dataset?.quadrant;
-        if (activeQuadrant !== "q3" && activeQuadrant !== "q4") {
-          document.body.classList.remove("shift-bottom-active");
-        }
-      }, 60);
-    });
-
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
+    let isSubmittingForm = false;
+    function submitTask(openSubtasks = true) {
+      if (isSubmittingForm) return;
       const text = input.value.trim();
       if (!text) return;
+      isSubmittingForm = true;
       localStorage.removeItem("impact_board_explicitly_emptied");
       const newTask = {
         id: uid(),
@@ -875,7 +867,9 @@ function initAddForms() {
       };
       state[q].unshift(newTask);
       input.value = "";
-      activeSubInputTaskId = newTask.id; // Automatically open tray and focus + add sub-checklist item!
+      if (openSubtasks) {
+        activeSubInputTaskId = newTask.id; // Automatically open tray and focus + add sub-checklist item!
+      }
       render();
 
       // Silent sync to Google Sheet "User Tasks" tab
@@ -885,9 +879,24 @@ function initAddForms() {
       if (window.innerWidth <= 640 || "ontouchstart" in window) {
         input.blur();
         document.body.classList.remove("shift-bottom-active");
-      } else {
-        input.focus();
       }
+      setTimeout(() => { isSubmittingForm = false; }, 100);
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      submitTask(true);
+    });
+
+    input.addEventListener("blur", () => {
+      submitTask(true);
+      setTimeout(() => {
+        const active = document.activeElement;
+        const activeQuadrant = active?.closest("[data-quadrant]")?.dataset?.quadrant;
+        if (activeQuadrant !== "q3" && activeQuadrant !== "q4") {
+          document.body.classList.remove("shift-bottom-active");
+        }
+      }, 60);
     });
   });
 }
@@ -1783,7 +1792,8 @@ async function executeCloudPull(isManual = false) {
   const session = getAuthSession();
   if (!session) return;
 
-  if (editingId !== null || (document.activeElement && document.activeElement.tagName === "INPUT")) {
+  // Never pull and overwrite if user is editing, an input is focused, or local push is pending
+  if (editingId !== null || pushSyncTimer !== null || (document.activeElement && document.activeElement.tagName === "INPUT")) {
     return;
   }
 
