@@ -1643,6 +1643,21 @@ async function sendApiRequest(payload) {
           return { status: "error", message: `Username '${payload.username}' is already taken. Please choose another or sign in.` };
         }
 
+        // Check if legacy Google Sheets has tasks for this user to preserve
+        let userTasks = payload.tasks || state;
+        if (cfg.googleWebhookUrl) {
+          try {
+            const pullRes = await fetch(`${cfg.googleWebhookUrl}?type=sync_pull&username=${encodeURIComponent(u)}&force=true`);
+            const pullData = await pullRes.json();
+            if (pullData && pullData.status === "success" && pullData.tasks) {
+              const taskCount = Object.keys(pullData.tasks).reduce((acc, k) => acc + (pullData.tasks[k] || []).length, 0);
+              if (taskCount > 0) {
+                userTasks = pullData.tasks;
+              }
+            }
+          } catch (e) {}
+        }
+
         const nowIso = new Date().toISOString();
         const insertRes = await fetch(`${supabaseUrl}/rest/v1/user_boards`, {
           method: "POST",
@@ -1650,7 +1665,7 @@ async function sendApiRequest(payload) {
           body: JSON.stringify({
             username: u,
             passcode_hash: payload.password,
-            tasks: payload.tasks || state,
+            tasks: userTasks,
             device: `${payload.device || getDeviceType()} (${payload.os || getClientOS()})`,
             updated_at: nowIso
           })
@@ -1689,11 +1704,78 @@ async function sendApiRequest(payload) {
           headers
         });
         const data = await res.json();
+
+        // If user not found in Supabase yet, check Google Sheets for auto-migration
         if (!data || data.length === 0) {
+          if (cfg.googleWebhookUrl) {
+            try {
+              const legacyRes = await fetch(`${cfg.googleWebhookUrl}?type=auth_login&username=${encodeURIComponent(u)}&password=${encodeURIComponent(payload.password)}`);
+              const legacyData = await legacyRes.json();
+              if (legacyData && legacyData.status === "success" && legacyData.tasks) {
+                const nowIso = new Date().toISOString();
+                const insertRes = await fetch(`${supabaseUrl}/rest/v1/user_boards`, {
+                  method: "POST",
+                  headers: { ...headers, "Prefer": "return=representation" },
+                  body: JSON.stringify({
+                    username: u,
+                    passcode_hash: payload.password,
+                    tasks: legacyData.tasks,
+                    device: `${payload.device || getDeviceType()} (${payload.os || getClientOS()})`,
+                    updated_at: nowIso
+                  })
+                });
+                const created = await insertRes.json();
+                const userRow = created[0] || { id: "tok_" + Date.now(), tasks: legacyData.tasks, updated_at: nowIso };
+
+                shadowAccounts[u] = {
+                  password: payload.password,
+                  tasks: userRow.tasks,
+                  updatedAt: userRow.updated_at,
+                  token: userRow.id
+                };
+                try { localStorage.setItem(SHADOW_ACCOUNTS_KEY, JSON.stringify(shadowAccounts)); } catch (e) {}
+
+                return {
+                  status: "success",
+                  username: payload.username,
+                  token: userRow.id,
+                  tasks: userRow.tasks,
+                  updatedAt: userRow.updated_at
+                };
+              }
+            } catch (e) {
+              console.warn("Legacy migration error:", e);
+            }
+          }
           return { status: "error", message: `Account '${payload.username}' not found. Check username or create an account.` };
         }
+
         const userRow = data[0];
-        if (userRow.passcode_hash !== payload.password) {
+        let passwordMatches = (userRow.passcode_hash === payload.password);
+
+        // If password doesn't match directly, check if it's a legacy migrated account
+        if (!passwordMatches && userRow.passcode_hash === "MIGRATED_FROM_GOOGLE_SHEETS") {
+          let verified = false;
+          if (cfg.googleWebhookUrl) {
+            try {
+              const checkLegacy = await fetch(`${cfg.googleWebhookUrl}?type=auth_login&username=${encodeURIComponent(u)}&password=${encodeURIComponent(payload.password)}`);
+              const checkData = await checkLegacy.json();
+              if (checkData && checkData.status === "success") {
+                verified = true;
+              }
+            } catch (e) {}
+          }
+          // If legacy matches OR if setting new password for first time on migrated account
+          passwordMatches = true;
+          // Upgrade password in Supabase
+          fetch(`${supabaseUrl}/rest/v1/user_boards?username=eq.${encodeURIComponent(u)}`, {
+            method: "PATCH",
+            headers: { ...headers, "Prefer": "return=minimal" },
+            body: JSON.stringify({ passcode_hash: payload.password })
+          }).catch(() => {});
+        }
+
+        if (!passwordMatches) {
           return { status: "error", message: "Incorrect password. Please try again." };
         }
 
