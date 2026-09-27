@@ -200,22 +200,21 @@ function createTaskElement(q, task, index) {
   const headerRow = document.createElement("div");
   headerRow.className = "task-header-row";
 
-  // Fold Button (only if has subtasks or expanding to add them)
-  let foldBtn = null;
-  if (hasSubtasks || (isExpanded && activeSubInputTaskId === task.id)) {
-    foldBtn = document.createElement("button");
-    foldBtn.className = "btn-fold-toggle" + (isExpanded ? " open" : "");
-    foldBtn.innerHTML = "&#9654;"; // ▶
-    foldBtn.title = isExpanded ? "Collapse subtasks" : "Expand subtasks";
-    foldBtn.setAttribute("aria-label", "Toggle subtasks");
-    foldBtn.addEventListener("pointerdown", (e) => e.preventDefault());
-    foldBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      task.collapsed = !task.collapsed;
-      activeSubInputTaskId = null;
-      render();
-    });
-  }
+  // Fold Chevron Toggle (always present on every task card)
+  const foldBtn = document.createElement("button");
+  foldBtn.className = "btn-fold-toggle" + (isExpanded ? " open" : "");
+  foldBtn.innerHTML = "&#9654;"; // ▶
+  foldBtn.title = isExpanded ? "Collapse subtasks" : "Expand subtasks";
+  foldBtn.setAttribute("aria-label", "Toggle subtasks");
+  foldBtn.addEventListener("pointerdown", (e) => e.preventDefault());
+  foldBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    task.collapsed = !task.collapsed;
+    if (!task.collapsed && (!task.subtasks || task.subtasks.length === 0)) {
+      activeSubInputTaskId = task.id;
+    }
+    render();
+  });
 
   // Task Number (1, 2, 3...)
   const num = document.createElement("span");
@@ -269,24 +268,28 @@ function createTaskElement(q, task, index) {
     lastTap = currentTime;
   });
 
-  // Progress Badge Pill (only shown when task has subtasks)
+  // Progress Badge Pill (always visible on every task card: shows "+ subtask" when empty, or "X/Y done" when items exist)
   const subtasks = task.subtasks || [];
   const doneCount = subtasks.filter((s) => s.done).length;
   const allDone = subtasks.length > 0 && doneCount === subtasks.length;
 
-  let progressPill = null;
+  const progressPill = document.createElement("span");
   if (subtasks.length > 0) {
-    progressPill = document.createElement("span");
     progressPill.className = "task-progress-pill" + (allDone ? " all-done" : "");
     progressPill.textContent = `${doneCount}/${subtasks.length} done`;
     progressPill.title = isExpanded ? "Click to collapse subtasks" : "Click to expand subtasks";
-    progressPill.addEventListener("pointerdown", (e) => e.preventDefault());
-    progressPill.addEventListener("click", (e) => {
-      e.stopPropagation();
-      task.collapsed = !task.collapsed;
-      render();
-    });
+  } else {
+    progressPill.className = "task-progress-pill empty-add";
+    progressPill.textContent = "+ subtask";
+    progressPill.title = "Click to add sub-checklist items";
   }
+  progressPill.addEventListener("pointerdown", (e) => e.preventDefault());
+  progressPill.addEventListener("click", (e) => {
+    e.stopPropagation();
+    task.collapsed = false;
+    activeSubInputTaskId = task.id;
+    render();
+  });
 
   // Actions Container (Delete button + Square Checkbox at far right)
   const actions = document.createElement("div");
@@ -339,10 +342,10 @@ function createTaskElement(q, task, index) {
   });
 
   actions.append(delBtn, doneBtn);
-  if (foldBtn) headerRow.appendChild(foldBtn);
+  headerRow.appendChild(foldBtn);
   headerRow.appendChild(num);
   headerRow.appendChild(text);
-  if (progressPill) headerRow.appendChild(progressPill);
+  headerRow.appendChild(progressPill);
   headerRow.appendChild(actions);
   li.appendChild(headerRow);
 
@@ -350,7 +353,7 @@ function createTaskElement(q, task, index) {
   // Sub-Checklist Tray (Accordion Content)
   // -------------------------------------------------------------------------
   const isInputActive = activeSubInputTaskId === task.id;
-  if (isExpanded && (hasSubtasks || isInputActive)) {
+  if (isExpanded) {
     const tray = document.createElement("div");
     tray.className = "subtask-tray";
 

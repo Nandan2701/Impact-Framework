@@ -421,6 +421,26 @@ body.drawer-open .app-container {
   border-color: rgba(43, 119, 87, 0.25);
 }
 
+.task-progress-pill.empty-add {
+  font-size: 10px;
+  color: var(--text-faint);
+  background: transparent;
+  border: 1px dashed rgba(0, 0, 0, 0.15);
+  opacity: 0.6;
+}
+
+.task:hover .task-progress-pill.empty-add {
+  opacity: 1;
+  color: var(--text-muted);
+  border-color: rgba(0, 0, 0, 0.25);
+}
+
+.task-progress-pill.empty-add:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-main);
+  border-color: var(--line-color);
+}
+
 /* Sub-Checklist Tray */
 .subtask-tray {
   background: transparent;
