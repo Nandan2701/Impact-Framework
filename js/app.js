@@ -31,6 +31,8 @@ const DEFAULT_TASKS = {
 
 let state = loadState();
 let editingId = null;
+let editingSubtaskId = null;
+let activeSubInputTaskId = null;
 
 // Multi-Device Sync & Auth Session State
 const AUTH_STORAGE_KEY = "impact_framework_auth_session";
@@ -50,8 +52,8 @@ if (typeof navigator !== "undefined" && navigator.storage && navigator.storage.p
   navigator.storage.persist().catch(() => {});
 }
 
-function uid() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+function uid(prefix = "t") {
+  return prefix + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
 function loadState() {
@@ -63,7 +65,29 @@ function loadState() {
     let totalCount = 0;
     for (const q of QUADRANTS) {
       out[q] = Array.isArray(parsed[q])
-        ? parsed[q].filter((t) => t && typeof t.text === "string")
+        ? parsed[q].filter((t) => t && typeof t.text === "string").map((t) => {
+            let subtasks = [];
+            if (Array.isArray(t.subtasks)) {
+              subtasks = t.subtasks.map((s) => ({
+                id: s.id || uid("sub"),
+                text: s.text || "",
+                done: !!s.done
+              }));
+            } else if (Array.isArray(t.bullets)) {
+              subtasks = t.bullets.map((b) => ({
+                id: uid("sub"),
+                text: typeof b === "string" ? b : (b.text || ""),
+                done: false
+              }));
+            }
+            return {
+              id: t.id || uid(),
+              text: t.text,
+              done: !!t.done,
+              collapsed: typeof t.collapsed === "boolean" ? t.collapsed : false,
+              subtasks: subtasks
+            };
+          })
         : [];
       totalCount += out[q].length;
     }
@@ -94,11 +118,24 @@ function render() {
     });
   }
   save();
+
+  // If a sub-checklist input is active, focus it automatically
+  if (activeSubInputTaskId) {
+    requestAnimationFrame(() => {
+      const input = document.querySelector(`.task[data-id="${activeSubInputTaskId}"] .subtask-input-active`);
+      if (input) {
+        input.focus();
+      }
+    });
+  }
 }
 
 function createTaskElement(q, task, index) {
+  const hasSubtasks = Array.isArray(task.subtasks) && task.subtasks.length > 0;
+  const isExpanded = !task.collapsed;
+
   const li = document.createElement("li");
-  li.className = "task" + (task.done ? " done" : "");
+  li.className = "task" + (task.done ? " done" : "") + (hasSubtasks ? " has-subtasks" : "") + (isExpanded && hasSubtasks ? " expanded" : "");
   li.dataset.id = task.id;
   li.dataset.quadrant = q;
 
@@ -106,11 +143,14 @@ function createTaskElement(q, task, index) {
 
   // Editing Mode with smooth Docs Silk caret
   if (editingId === task.id) {
+    const headerRow = document.createElement("div");
+    headerRow.className = "task-header-row";
+
     if (numText) {
       const num = document.createElement("span");
       num.className = "task-num";
       num.textContent = numText;
-      li.appendChild(num);
+      headerRow.appendChild(num);
     }
 
     const wrap = document.createElement("div");
@@ -120,7 +160,7 @@ function createTaskElement(q, task, index) {
     const input = document.createElement("input");
     input.className = "edit-input";
     input.value = task.text;
-    input.setAttribute("aria-label", "Edit task");
+    input.setAttribute("aria-label", "Edit task headline");
 
     const caret = document.createElement("span");
     caret.className = "smooth-caret";
@@ -138,7 +178,8 @@ function createTaskElement(q, task, index) {
     });
 
     input.addEventListener("blur", () => commitEdit(q, task.id, input.value));
-    li.appendChild(wrap);
+    headerRow.appendChild(wrap);
+    li.appendChild(headerRow);
 
     requestAnimationFrame(() => {
       if (q === "q3" || q === "q4") {
@@ -151,20 +192,56 @@ function createTaskElement(q, task, index) {
     return li;
   }
 
-  // Task Number (1, 2, 3...) on the left side
+  // -------------------------------------------------------------------------
+  // Main Task Header Row
+  // -------------------------------------------------------------------------
+  const headerRow = document.createElement("div");
+  headerRow.className = "task-header-row";
+
+  // Fold Button (only if has subtasks or expanding to add them)
+  let foldBtn = null;
+  if (hasSubtasks || (isExpanded && activeSubInputTaskId === task.id)) {
+    foldBtn = document.createElement("button");
+    foldBtn.className = "btn-fold-toggle" + (isExpanded ? " open" : "");
+    foldBtn.innerHTML = "&#9654;"; // ▶
+    foldBtn.title = isExpanded ? "Collapse subtasks" : "Expand subtasks";
+    foldBtn.setAttribute("aria-label", "Toggle subtasks");
+    foldBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      task.collapsed = !task.collapsed;
+      render();
+    });
+  }
+
+  // Task Number (1, 2, 3...)
   const num = document.createElement("span");
   num.className = "task-num";
   num.textContent = numText;
 
-  // Task Text (Double-click or double-tap only to edit)
+  // Task Text (Headline)
   const text = document.createElement("span");
   text.className = "task-text";
   text.textContent = task.text;
-  text.title = "Double-click to edit";
+  text.title = "Click to expand & add subtasks • Double-click to edit headline";
+
+  // Single-click expands & opens subtask input; Double-click edits headline
+  let headlineClickTimer = null;
+  text.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (editingId === task.id) return;
+    clearTimeout(headlineClickTimer);
+    headlineClickTimer = setTimeout(() => {
+      task.collapsed = false;
+      activeSubInputTaskId = task.id;
+      render();
+    }, 220);
+  });
 
   text.addEventListener("dblclick", (e) => {
     e.stopPropagation();
+    clearTimeout(headlineClickTimer);
     editingId = task.id;
+    activeSubInputTaskId = null;
     render();
   });
 
@@ -175,11 +252,31 @@ function createTaskElement(q, task, index) {
     const tapLength = currentTime - lastTap;
     if (tapLength < 300 && tapLength > 0) {
       e.preventDefault();
+      clearTimeout(headlineClickTimer);
       editingId = task.id;
+      activeSubInputTaskId = null;
       render();
     }
     lastTap = currentTime;
   });
+
+  // Progress Badge Pill (only shown when task has subtasks)
+  const subtasks = task.subtasks || [];
+  const doneCount = subtasks.filter((s) => s.done).length;
+  const allDone = subtasks.length > 0 && doneCount === subtasks.length;
+
+  let progressPill = null;
+  if (subtasks.length > 0) {
+    progressPill = document.createElement("span");
+    progressPill.className = "task-progress-pill" + (allDone ? " all-done" : "");
+    progressPill.textContent = `${doneCount}/${subtasks.length} done`;
+    progressPill.title = isExpanded ? "Click to collapse subtasks" : "Click to expand subtasks";
+    progressPill.addEventListener("click", (e) => {
+      e.stopPropagation();
+      task.collapsed = !task.collapsed;
+      render();
+    });
+  }
 
   // Actions Container (Delete button + Square Checkbox at far right)
   const actions = document.createElement("div");
@@ -188,7 +285,7 @@ function createTaskElement(q, task, index) {
   // Delete button (subtle × icon)
   const delBtn = document.createElement("button");
   delBtn.className = "btn-delete";
-  delBtn.title = "Delete";
+  delBtn.title = "Delete task";
   delBtn.setAttribute("aria-label", "Delete task");
   delBtn.textContent = "\u00D7";
   delBtn.addEventListener("click", (e) => {
@@ -229,7 +326,198 @@ function createTaskElement(q, task, index) {
   });
 
   actions.append(delBtn, doneBtn);
-  li.append(num, text, actions);
+  if (foldBtn) headerRow.appendChild(foldBtn);
+  headerRow.appendChild(num);
+  headerRow.appendChild(text);
+  if (progressPill) headerRow.appendChild(progressPill);
+  headerRow.appendChild(actions);
+  li.appendChild(headerRow);
+
+  // -------------------------------------------------------------------------
+  // Sub-Checklist Tray (Accordion Content)
+  // -------------------------------------------------------------------------
+  const isInputActive = activeSubInputTaskId === task.id;
+  if (isExpanded && (hasSubtasks || isInputActive)) {
+    const tray = document.createElement("div");
+    tray.className = "subtask-tray";
+
+    // Subtask List Wrapper
+    const subListWrapper = document.createElement("div");
+    subListWrapper.className = "subtask-list-wrapper";
+
+    subtasks.forEach((sub, subIdx) => {
+      const subItem = document.createElement("div");
+      subItem.className = `subtask-item ${sub.done ? "done" : ""}`;
+      subItem.dataset.subId = sub.id;
+      subItem.dataset.subIdx = subIdx;
+
+      // Drag Grip Handle
+      const grip = document.createElement("span");
+      grip.className = "subtask-grip";
+      grip.innerHTML = "&#8942;&#8942;"; // ⋮⋮
+      grip.title = "Drag to reorder subtask up/down";
+
+      // Mini Sub-Checkbox
+      const subChk = document.createElement("button");
+      subChk.className = "subtask-checkbox";
+      subChk.title = sub.done ? "Mark active" : "Mark done";
+      subChk.setAttribute("aria-label", "Toggle subtask done");
+      subChk.addEventListener("click", (e) => {
+        e.stopPropagation();
+        sub.done = !sub.done;
+        render();
+      });
+
+      // Text / Inline Edit Mode
+      if (editingSubtaskId === sub.id) {
+        const editSubInput = document.createElement("input");
+        editSubInput.className = "subtask-edit-input";
+        editSubInput.value = sub.text;
+
+        function commitSubEdit() {
+          const val = editSubInput.value.trim();
+          if (val) sub.text = val;
+          else task.subtasks.splice(subIdx, 1);
+          editingSubtaskId = null;
+          render();
+        }
+
+        editSubInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") commitSubEdit();
+          else if (e.key === "Escape") {
+            editingSubtaskId = null;
+            render();
+          }
+        });
+        editSubInput.addEventListener("blur", commitSubEdit);
+
+        subItem.append(grip, subChk, editSubInput);
+        subListWrapper.appendChild(subItem);
+
+        requestAnimationFrame(() => {
+          editSubInput.focus();
+          editSubInput.select();
+        });
+      } else {
+        const subText = document.createElement("span");
+        subText.className = "subtask-text";
+        subText.textContent = sub.text;
+        subText.title = "Double-click to edit subtask";
+
+        // Double-click to edit subtask
+        subText.addEventListener("dblclick", (e) => {
+          e.stopPropagation();
+          editingSubtaskId = sub.id;
+          activeSubInputTaskId = null;
+          render();
+        });
+
+        // Mobile double-tap detection
+        let subLastTap = 0;
+        subText.addEventListener("touchend", (e) => {
+          const cur = Date.now();
+          if (cur - subLastTap < 300) {
+            e.preventDefault();
+            editingSubtaskId = sub.id;
+            activeSubInputTaskId = null;
+            render();
+          }
+          subLastTap = cur;
+        });
+
+        // Delete subtask button
+        const subDel = document.createElement("button");
+        subDel.className = "btn-subtask-del";
+        subDel.textContent = "\u00D7";
+        subDel.title = "Delete subtask";
+        subDel.setAttribute("aria-label", "Delete subtask");
+        subDel.addEventListener("click", (e) => {
+          e.stopPropagation();
+          task.subtasks.splice(subIdx, 1);
+          render();
+        });
+
+        subItem.append(grip, subChk, subText, subDel);
+        subListWrapper.appendChild(subItem);
+
+        // Bind Subtask Pointer Drag & Drop Reordering
+        setupSubtaskDrag(subItem, grip, task);
+      }
+    });
+
+    tray.appendChild(subListWrapper);
+
+    // + Add Sub-Checklist Item Input / Button
+    const addWrap = document.createElement("div");
+    addWrap.className = "add-subtask-wrap";
+
+    if (isInputActive) {
+      const dummyChk = document.createElement("div");
+      dummyChk.className = "subtask-checkbox";
+      dummyChk.style.opacity = "0.4";
+
+      const subInput = document.createElement("input");
+      subInput.type = "text";
+      subInput.className = "subtask-input-active";
+      subInput.placeholder = "+ Add sub-checklist item (Enter = next)...";
+      subInput.setAttribute("aria-label", "Add sub-checklist item");
+
+      let isSubmitting = false;
+
+      function commitSubtask(textVal, keepOpen) {
+        if (isSubmitting) return;
+        isSubmitting = true;
+        const val = (textVal || "").trim();
+        if (val) {
+          if (!task.subtasks) task.subtasks = [];
+          task.subtasks.push({
+            id: uid("sub"),
+            text: val,
+            done: false
+          });
+        }
+        activeSubInputTaskId = keepOpen && val ? task.id : null;
+        render();
+      }
+
+      subInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const val = subInput.value;
+          subInput.value = ""; // clear immediately so blur sees empty
+          commitSubtask(val, true); // keep open for continuous typing
+        } else if (e.key === "Escape" || (e.key === "Backspace" && subInput.value === "")) {
+          subInput.value = "";
+          commitSubtask("", false); // close
+        }
+      });
+
+      // Blur / click outside finalizes what was added
+      subInput.addEventListener("blur", () => {
+        if (isSubmitting) return;
+        const val = subInput.value;
+        subInput.value = "";
+        commitSubtask(val, false); // close on blur
+      });
+
+      addWrap.append(dummyChk, subInput);
+    } else {
+      const addTriggerBtn = document.createElement("button");
+      addTriggerBtn.type = "button";
+      addTriggerBtn.className = "btn-add-subtask-trigger";
+      addTriggerBtn.innerHTML = "<span>+</span> <span>Add sub-checklist item...</span>";
+      addTriggerBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        activeSubInputTaskId = task.id;
+        render();
+      });
+
+      addWrap.appendChild(addTriggerBtn);
+    }
+
+    tray.appendChild(addWrap);
+    li.appendChild(tray);
+  }
 
   // Setup Manual Pointer Drag
   setupPointerDrag(li, q, task);
@@ -578,9 +866,16 @@ function initAddForms() {
       const text = input.value.trim();
       if (!text) return;
       localStorage.removeItem("impact_board_explicitly_emptied");
-      const newTask = { id: uid(), text, done: false };
+      const newTask = {
+        id: uid(),
+        text,
+        done: false,
+        collapsed: false,
+        subtasks: []
+      };
       state[q].unshift(newTask);
       input.value = "";
+      activeSubInputTaskId = newTask.id; // Automatically open tray and focus + add sub-checklist item!
       render();
 
       // Silent sync to Google Sheet "User Tasks" tab
@@ -649,11 +944,98 @@ function bindSmoothCaret(input, caret) {
 }
 
 /* ==========================================================================
+   Subtask Pointer Drag & Drop Reordering (Up & Down within parent task)
+   ========================================================================== */
+function setupSubtaskDrag(subItem, gripEl, task) {
+  gripEl.addEventListener("pointerdown", (e) => {
+    e.stopPropagation();
+
+    const startY = e.clientY;
+    const subId = subItem.dataset.subId;
+    const subIdx = parseInt(subItem.dataset.subIdx, 10);
+    let isDragging = false;
+    let floatingEl = null;
+    let dropIndicator = null;
+    let insertIndex = subIdx;
+    const trayWrapper = subItem.closest(".subtask-list-wrapper");
+    if (!trayWrapper) return;
+
+    function onPointerMove(moveEvt) {
+      const dy = moveEvt.clientY - startY;
+      if (!isDragging && Math.abs(dy) > 3) {
+        isDragging = true;
+        const rect = subItem.getBoundingClientRect();
+
+        floatingEl = document.createElement("div");
+        floatingEl.className = "dragged-subtask-floating";
+        floatingEl.style.width = rect.width + "px";
+        floatingEl.style.left = rect.left + "px";
+        floatingEl.style.top = (moveEvt.clientY - 12) + "px";
+        floatingEl.innerHTML = subItem.innerHTML;
+        document.body.appendChild(floatingEl);
+
+        subItem.classList.add("being-dragged");
+        dropIndicator = document.createElement("div");
+        dropIndicator.className = "drop-indicator-line";
+      }
+
+      if (isDragging && floatingEl) {
+        floatingEl.style.top = (moveEvt.clientY - 12) + "px";
+
+        const siblings = [...trayWrapper.querySelectorAll(".subtask-item:not(.being-dragged)")];
+        let found = false;
+
+        for (let i = 0; i < siblings.length; i++) {
+          const sib = siblings[i];
+          const sRect = sib.getBoundingClientRect();
+          if (moveEvt.clientY < sRect.top + sRect.height / 2) {
+            trayWrapper.insertBefore(dropIndicator, sib);
+            insertIndex = parseInt(sib.dataset.subIdx, 10);
+            found = true;
+            break;
+          }
+        }
+
+        if (!found) {
+          trayWrapper.appendChild(dropIndicator);
+          insertIndex = task.subtasks.length;
+        }
+      }
+    }
+
+    function onPointerUp() {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
+
+      if (isDragging) {
+        if (floatingEl && floatingEl.parentNode) floatingEl.parentNode.removeChild(floatingEl);
+        if (dropIndicator && dropIndicator.parentNode) dropIndicator.parentNode.removeChild(dropIndicator);
+
+        const fromIdx = task.subtasks.findIndex(s => s.id === subId);
+        if (fromIdx !== -1) {
+          const [moved] = task.subtasks.splice(fromIdx, 1);
+          let targetIdx = insertIndex;
+          if (fromIdx < targetIdx) targetIdx = Math.max(0, targetIdx - 1);
+          if (targetIdx > task.subtasks.length) targetIdx = task.subtasks.length;
+          task.subtasks.splice(targetIdx, 0, moved);
+        }
+        render();
+      }
+    }
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
+  });
+}
+
+/* ==========================================================================
    Pure Manual Pointer Drag & Drop (Zero Shadow, Zero Ghosting, Zero Animation)
    ========================================================================== */
 function setupPointerDrag(li, fromQuadrant, task) {
   li.addEventListener("pointerdown", (e) => {
-    if (editingId === task.id || e.target.closest("button, input")) return;
+    if (editingId === task.id || e.target.closest("button, input, .subtask-tray")) return;
 
     const startX = e.clientX;
     const startY = e.clientY;
