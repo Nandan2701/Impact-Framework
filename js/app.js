@@ -12,20 +12,20 @@ const STORAGE_KEY = "impact-framework-tasks.v1";
 
 const DEFAULT_TASKS = {
   q1: [
-    { id: "t-1", text: "Fix high priority user onboarding friction", done: false },
-    { id: "t-2", text: "Ship core value feature to early adopters", done: false }
+    { id: "t-1", text: "Fix high priority user onboarding friction", done: false, collapsed: true },
+    { id: "t-2", text: "Ship core value feature to early adopters", done: false, collapsed: true }
   ],
   q2: [
-    { id: "t-3", text: "Redesign full system database architecture", done: false },
-    { id: "t-4", text: "Build automated test & deployment pipeline", done: false }
+    { id: "t-3", text: "Redesign full system database architecture", done: false, collapsed: true },
+    { id: "t-4", text: "Build automated test & deployment pipeline", done: false, collapsed: true }
   ],
   q3: [
-    { id: "t-5", text: "Weekly operational review & vendor replies", done: false },
-    { id: "t-6", text: "Coordinate routine team sync schedule", done: false }
+    { id: "t-5", text: "Weekly operational review & vendor replies", done: false, collapsed: true },
+    { id: "t-6", text: "Coordinate routine team sync schedule", done: false, collapsed: true }
   ],
   q4: [
-    { id: "t-7", text: "Re-organize non-critical document folders", done: false },
-    { id: "t-8", text: "Clean up old temporary export files", done: false }
+    { id: "t-7", text: "Re-organize non-critical document folders", done: false, collapsed: true },
+    { id: "t-8", text: "Clean up old temporary export files", done: false, collapsed: true }
   ]
 };
 
@@ -85,7 +85,7 @@ function loadState() {
               id: t.id || uid(),
               text: t.text,
               done: !!t.done,
-              collapsed: typeof t.collapsed === "boolean" ? t.collapsed : false,
+              collapsed: true,
               subtasks: subtasks
             };
           })
@@ -903,7 +903,7 @@ function initAddForms() {
         id: uid(),
         text,
         done: false,
-        collapsed: false,
+        collapsed: !openSubtasks,
         subtasks: []
       };
       state[q].unshift(newTask);
@@ -2070,6 +2070,25 @@ async function executeCloudPull(isManual = false) {
           return;
         }
         isApplyingRemoteUpdate = true;
+        const localCollapsedMap = new Map();
+        for (const q of QUADRANTS) {
+          if (Array.isArray(state[q])) {
+            state[q].forEach((t) => { if (t && t.id) localCollapsedMap.set(t.id, t.collapsed); });
+          }
+        }
+        for (const q of QUADRANTS) {
+          if (Array.isArray(res.tasks[q])) {
+            res.tasks[q].forEach((t) => {
+              if (t) {
+                if (localCollapsedMap.has(t.id)) {
+                  t.collapsed = localCollapsedMap.get(t.id);
+                } else if (typeof t.collapsed !== "boolean") {
+                  t.collapsed = true;
+                }
+              }
+            });
+          }
+        }
         state = res.tasks;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         render();
