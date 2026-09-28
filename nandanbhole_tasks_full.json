@@ -1,0 +1,368 @@
+{
+  "q1": [
+    {
+      "id": "t_mulsz3sf59j14",
+      "text": "Figure out way to Manage all startups. Each and Everything about them",
+      "done": false,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_mulswtlp1idoq",
+      "text": "Excel Review.",
+      "done": false,
+      "collapsed": true,
+      "subtasks": [
+        {
+          "id": "sub_mulsxgi9390oi",
+          "text": "1. Continue reviewing from stage 2.",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "t_q3_5",
+      "text": "Revise 5 Questions/topics of SQL.",
+      "done": false,
+      "collapsed": true,
+      "subtasks": [
+        {
+          "id": "sub_mukb8ms49vs8b",
+          "text": "Revise the Date Function Completely.",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "muisysbjb8b0d",
+      "text": "Planning to create Directory of VNIT Startups.",
+      "done": false,
+      "collapsed": true,
+      "subtasks": [
+        {
+          "id": "sub_mukb9c0h4wr8f",
+          "text": "ask few more peoples",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "t_q1_1",
+      "text": "Prepare for Category Manager Interview.",
+      "done": false,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q1_7",
+      "text": "Improving the Post 3 of Rapido Case Study",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q1_10",
+      "text": "messaging gmail person about case study.",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q1_11",
+      "text": "Messaging all Linkedin Product Connections about Case- Study.",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q1_13",
+      "text": "Reply to Ankit Kumar Yadav on Linekdin. and Gmail also.",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q1_15",
+      "text": "Reply Starred peoples on linekdin",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q1_23",
+      "text": "- Minute 0 \u2013 10 (The 3 Building Blocks): - Block 1: Chunking text (the sliding window character slice). - Block 2: Generating dense vector embeddings with FastEmbed (embedding_model.embed(chunks)). - Block 3: Scoring similarity using dot-product cosine similarity in NumPy. - Minute 10 \u2013 20 (The Top-K Retrieval Recipe): - Storing chunks in an in-memory list/dict and returning the top 3 most relevant chunks for a user query. - Minute 20 \u2013 30 (Code Quality & The HackerRank Pattern): - Structuring it into the 3 clean functions that pass the automated code quality audit.",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q1_24",
+      "text": "Frontend Coding(morning)",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q1_25",
+      "text": "Level 3 and 4 of DSA.(afternoon)",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q1_26",
+      "text": "Prompt Engineering(Evening)",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q1_34",
+      "text": "Apply for Bain.",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q1_35",
+      "text": "Apply for Accenture",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q1_39",
+      "text": "Messaging all important friends from VNIT about case Study.",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q1_40",
+      "text": "Finish that Bain Process before 10 a.m tomorrow.",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q1_42",
+      "text": "Verify the FYP Slides",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q1_43",
+      "text": "prompting framework for bain oa.",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q1_47",
+      "text": "Start working on portfolio website",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q1_3",
+      "text": "Sending Follow Up G-mails to Rapido Product Folks",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "mu8e6ja6yvz2n",
+      "text": "Sign a deal With Feedzo(Presenting all the Points).",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q1_45",
+      "text": "learn 2 hrs about what is distribution and build a foundational understanding on the top of it.",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "mubpdi4dte7eb",
+      "text": "Stripe Head of Design Katie Dill Reviews Startup Websites",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "mubpef1q3t7na",
+      "text": "Cursor Head of Design Roasts Startup Websites",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "mubpetw4p34bh",
+      "text": "Brand Design Tips From Linear Founder Karri Saarinen",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "mubpf5boz8a51",
+      "text": "How Stripe Built Their New Website",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "mubpff8kfjgye",
+      "text": "Common Mistakes With Vibe Coded Websites",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "mubpdmu5vko67",
+      "text": ".",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "mu9t4ah746qnp",
+      "text": "Follow the YC Process.",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "mu8t3d4r5lge7",
+      "text": "Give Replies on LinkedIn",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "mu8x000mxjyy8",
+      "text": "Bringing Portfolio website to the life.",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "mubpd5dd6kyxq",
+      "text": "Does Your Startup Website Pass The First Impression Test? | Design Review",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    }
+  ],
+  "q2": [
+    {
+      "id": "mu8v479kqrnw4",
+      "text": "Figuring Out YC startups to Apply. Documenting there Directory.",
+      "done": false,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q2_6",
+      "text": "Prepare for Technical Round of Cognizant.",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q2_18",
+      "text": "Hands on DSA Coding 45%",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q2_19",
+      "text": "Advanced SQL Querying 25%",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q2_21",
+      "text": "Agentic AI, LLMOps & Cloud 10%",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q2_22",
+      "text": "Frontend (React / Angular 5%",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q2_41",
+      "text": "GenAI, RAG & Prompt Engineering 15%",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    }
+  ],
+  "q3": [
+    {
+      "id": "t_q1_2",
+      "text": "Solve 25 Puzzles of gfg.",
+      "done": false,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q3_14",
+      "text": "apply for omli",
+      "done": false,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q3_4",
+      "text": "Apply for mathCo.",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "t_q3_36",
+      "text": "Select 5 Friends from VNIT to aware them about case study.",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    },
+    {
+      "id": "muattw3za2ln0",
+      "text": "Update the Epoch.",
+      "done": true,
+      "collapsed": true,
+      "subtasks": []
+    }
+  ],
+  "q4": [
+    {
+      "id": "t_muk0s4ggroibq",
+      "text": "Blinkit",
+      "done": false,
+      "collapsed": true,
+      "subtasks": [
+        {
+          "id": "sub_muk0s93xyp26f",
+          "text": "Plan",
+          "done": false
+        },
+        {
+          "id": "sub_muk0sdnlq0nat",
+          "text": "Execute",
+          "done": false
+        }
+      ]
+    }
+  ]
+}

@@ -2076,6 +2076,25 @@ async function executeCloudPull(isManual = false) {
             state[q].forEach((t) => { if (t && t.id) localCollapsedMap.set(t.id, t.collapsed); });
           }
         }
+
+        // Non-destructive merge: preserve any local tasks not yet present in cloud response
+        const remoteIds = new Set();
+        for (const q of QUADRANTS) {
+          if (Array.isArray(res.tasks[q])) {
+            res.tasks[q].forEach((t) => { if (t && t.id) remoteIds.add(t.id); });
+          }
+        }
+        let hadLocalOnly = false;
+        for (const q of QUADRANTS) {
+          if (Array.isArray(state[q]) && Array.isArray(res.tasks[q])) {
+            const localOnly = state[q].filter((t) => t && t.id && !remoteIds.has(t.id));
+            if (localOnly.length > 0) {
+              res.tasks[q].unshift(...localOnly);
+              hadLocalOnly = true;
+            }
+          }
+        }
+
         for (const q of QUADRANTS) {
           if (Array.isArray(res.tasks[q])) {
             res.tasks[q].forEach((t) => {
@@ -2095,6 +2114,9 @@ async function executeCloudPull(isManual = false) {
         isApplyingRemoteUpdate = false;
         lastSyncedAt = res.updatedAt || new Date().toISOString();
         broadcastLocalUpdate();
+        if (hadLocalOnly) {
+          scheduleCloudPush();
+        }
         updateSyncStatusBadge("synced", "Synced from cloud ✓");
         const accountLastSync = document.getElementById("accountLastSync");
         if (accountLastSync) accountLastSync.textContent = "Just now";
