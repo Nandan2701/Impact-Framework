@@ -42,6 +42,7 @@ let isInitialized = false;
 let pushSyncTimer = null;
 let heartbeatTimer = null;
 let lastSyncedAt = null;
+let lastDragEndTime = 0;
 
 // Offscreen canvas for microsecond-precise character width measurements
 const measureCanvas = document.createElement("canvas");
@@ -200,6 +201,16 @@ function createTaskElement(q, task, index) {
   const headerRow = document.createElement("div");
   headerRow.className = "task-header-row";
 
+  // Central toggle function to collapse/expand subtasks cleanly and persistently
+  function toggleCollapse() {
+    task.collapsed = !task.collapsed;
+    if (task.collapsed) {
+      activeSubInputTaskId = null;
+    }
+    save();
+    render();
+  }
+
   // Fold Chevron Toggle (always present on every task card)
   const foldBtn = document.createElement("button");
   foldBtn.className = "btn-fold-toggle" + (isExpanded ? " open" : "");
@@ -209,11 +220,7 @@ function createTaskElement(q, task, index) {
   foldBtn.addEventListener("pointerdown", (e) => e.preventDefault());
   foldBtn.addEventListener("click", (e) => {
     e.stopPropagation();
-    task.collapsed = !task.collapsed;
-    if (!task.collapsed && (!task.subtasks || task.subtasks.length === 0)) {
-      activeSubInputTaskId = task.id;
-    }
-    render();
+    toggleCollapse();
   });
 
   // Task Number (1, 2, 3...)
@@ -225,25 +232,11 @@ function createTaskElement(q, task, index) {
   const text = document.createElement("span");
   text.className = "task-text";
   text.textContent = task.text;
-  text.title = hasSubtasks ? "Click to expand/collapse subtasks • Double-click to edit headline" : "Click to add subtasks • Double-click to edit headline";
+  text.title = isExpanded
+    ? "Click to collapse subtasks • Double-click to edit headline"
+    : "Click to expand subtasks • Double-click to edit headline";
 
-  // Single-click expands & opens subtask input if empty, or toggles if subtasks exist
   let headlineClickTimer = null;
-  text.addEventListener("click", (e) => {
-    e.stopPropagation();
-    if (editingId === task.id) return;
-    clearTimeout(headlineClickTimer);
-    headlineClickTimer = setTimeout(() => {
-      if (hasSubtasks) {
-        task.collapsed = !task.collapsed;
-        activeSubInputTaskId = null;
-      } else {
-        task.collapsed = false;
-        activeSubInputTaskId = task.id;
-      }
-      render();
-    }, 220);
-  });
 
   text.addEventListener("dblclick", (e) => {
     e.stopPropagation();
@@ -286,9 +279,14 @@ function createTaskElement(q, task, index) {
   progressPill.addEventListener("pointerdown", (e) => e.preventDefault());
   progressPill.addEventListener("click", (e) => {
     e.stopPropagation();
-    task.collapsed = false;
-    activeSubInputTaskId = task.id;
-    render();
+    if (subtasks.length > 0) {
+      toggleCollapse();
+    } else {
+      task.collapsed = false;
+      activeSubInputTaskId = task.id;
+      save();
+      render();
+    }
   });
 
   // Actions Container (Delete button + Square Checkbox at far right)
@@ -339,6 +337,22 @@ function createTaskElement(q, task, index) {
     }
     save();
     render();
+  });
+
+  // Main task click handler: clicking anywhere on the main task collapses/expands subtasks
+  headerRow.addEventListener("click", (e) => {
+    if (Date.now() - lastDragEndTime < 250) return;
+    if (editingId === task.id) return;
+    if (e.target.closest(".task-actions, button, input, textarea, .subtask-tray, .smooth-input-wrap")) return;
+
+    if (e.target.closest(".task-text")) {
+      clearTimeout(headlineClickTimer);
+      headlineClickTimer = setTimeout(() => {
+        toggleCollapse();
+      }, 200);
+    } else {
+      toggleCollapse();
+    }
   });
 
   actions.append(delBtn, doneBtn);
@@ -1165,6 +1179,7 @@ function setupPointerDrag(li, fromQuadrant, task) {
       window.removeEventListener("pointercancel", onPointerUp);
 
       if (isDragging) {
+        lastDragEndTime = Date.now();
         if (floatingEl && floatingEl.parentNode) {
           floatingEl.parentNode.removeChild(floatingEl);
         }
