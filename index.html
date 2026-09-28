@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=5.3">
+  <link rel="stylesheet" href="style.css?v=5.4">
 </head>
 <body>
   <div class="app-container" id="appContainer">
@@ -35,6 +35,35 @@
         <span>Contact</span>
       </button>
     </header>
+
+    <!-- Mobile Quadrant Switcher Bar (Visible only on mobile screens) -->
+    <nav class="mobile-nav-bar" id="mobileNavBar" aria-label="Quadrant navigation">
+      <button class="mobile-nav-btn active" data-target="all" type="button">
+        <svg viewBox="0 0 16 16" width="11" height="11" class="mobile-grid-icon">
+          <rect x="1" y="1" width="6" height="6" rx="1" fill="currentColor"/>
+          <rect x="9" y="1" width="6" height="6" rx="1" fill="currentColor"/>
+          <rect x="1" y="9" width="6" height="6" rx="1" fill="currentColor"/>
+          <rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor"/>
+        </svg>
+        <span>All</span>
+      </button>
+      <button class="mobile-nav-btn" data-target="q1" type="button">
+        <span class="mobile-nav-dot dot-q1"></span>
+        <span>Do First</span>
+      </button>
+      <button class="mobile-nav-btn" data-target="q2" type="button">
+        <span class="mobile-nav-dot dot-q2"></span>
+        <span>Schedule</span>
+      </button>
+      <button class="mobile-nav-btn" data-target="q3" type="button">
+        <span class="mobile-nav-dot dot-q3"></span>
+        <span>Delegate</span>
+      </button>
+      <button class="mobile-nav-btn" data-target="q4" type="button">
+        <span class="mobile-nav-dot dot-q4"></span>
+        <span>Eliminate</span>
+      </button>
+    </nav>
 
     <!-- Full-screen 4-block matrix canvas -->
     <main class="matrix-canvas" id="matrix">
@@ -314,7 +343,7 @@
     </div>
   </aside>
   <script src="js/config.js?v=5.0"></script>
-  <script src="js/app.js?v=5.5"></script>
+  <script src="js/app.js?v=5.6"></script>
   <!-- Vercel Web Analytics & Speed Insights -->
   <script defer src="/_vercel/insights/script.js"></script>
   <script defer src="/_vercel/speed-insights/script.js"></script>

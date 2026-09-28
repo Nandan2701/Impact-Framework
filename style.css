@@ -359,11 +359,19 @@ body.drawer-open .app-container {
 /* Header Row of the Task */
 .task-header-row {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 6px;
   width: 100%;
   cursor: grab;
   cursor: -webkit-grab;
+}
+
+.task-content-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
 }
 
 .task-header-row:active {
@@ -385,7 +393,12 @@ body.drawer-open .app-container {
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
+  margin-top: 3px;
   transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.task:not(.has-subtasks) .btn-fold-toggle {
+  display: none !important;
 }
 
 .btn-fold-toggle:hover {
@@ -699,7 +712,9 @@ body.drawer-open .app-container {
 /* Task Content Text */
 .task-text {
   flex: 1;
-  word-break: break-word;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: normal;
   outline: none;
   cursor: inherit;
   line-height: 1.4;
@@ -767,10 +782,11 @@ body.drawer-open .app-container {
   border-radius: 3px;
   background: transparent;
   cursor: pointer;
-  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
   padding: 0;
   box-shadow: none !important;
   transition: none;
@@ -875,8 +891,13 @@ body.drawer-open .app-container {
   50% { opacity: 0; }
 }
 
+/* Desktop: Hide Mobile Nav Bar */
+.mobile-nav-bar {
+  display: none;
+}
+
 /* ==========================================================================
-   Mobile Optimization — Preserving 2x2 Desktop Matrix Layout
+   Mobile Optimization — Responsive 2x2 Matrix & Focus Views
    ========================================================================== */
 @media (max-width: 640px) {
   .app-header {
@@ -891,15 +912,124 @@ body.drawer-open .app-container {
   .header-spacer {
     width: 50px;
   }
+
+  /* Mobile Navigation Bar */
+  .mobile-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 34px;
+    background: #f2eee3;
+    border-bottom: 1.5px solid var(--line-color);
+    padding: 0 6px;
+    gap: 4px;
+    overflow-x: auto;
+    user-select: none;
+    -webkit-overflow-scrolling: touch;
+    flex-shrink: 0;
+  }
+  .mobile-nav-bar::-webkit-scrollbar {
+    display: none;
+  }
+  .mobile-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 3px 7px;
+    border-radius: 4px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+  }
+  .mobile-nav-btn:hover {
+    color: var(--text-main);
+  }
+  .mobile-nav-btn.active {
+    background: #fff;
+    color: var(--text-main);
+    border-color: rgba(34, 38, 43, 0.2);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .mobile-nav-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .dot-q1 { background: var(--accent-q1); }
+  .dot-q2 { background: var(--accent-q2); }
+  .dot-q3 { background: var(--accent-q3); }
+  .dot-q4 { background: var(--accent-q4); }
+
   .matrix-canvas {
     width: 100vw;
-    height: calc(100vh - 38px);
-    height: calc(100dvh - 38px);
+    height: calc(100vh - 38px - 34px);
+    height: calc(100dvh - 38px - 34px);
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
     overflow: hidden;
   }
-  /* Retain exact 2 intersecting lines */
+
+  /* Single-Quadrant Focus View when selected via tabs */
+  .matrix-canvas[data-mobile-view] {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 1fr !important;
+  }
+  .matrix-canvas[data-mobile-view="q1"] .quadrant:not([data-quadrant="q1"]),
+  .matrix-canvas[data-mobile-view="q2"] .quadrant:not([data-quadrant="q2"]),
+  .matrix-canvas[data-mobile-view="q3"] .quadrant:not([data-quadrant="q3"]),
+  .matrix-canvas[data-mobile-view="q4"] .quadrant:not([data-quadrant="q4"]) {
+    display: none !important;
+  }
+  .matrix-canvas[data-mobile-view] .quadrant {
+    border-right: none !important;
+    border-bottom: none !important;
+    padding: 12px 14px 10px !important;
+  }
+  .matrix-canvas[data-mobile-view] .quadrant-title {
+    font-size: 14.5px !important;
+  }
+  .matrix-canvas[data-mobile-view] .quadrant-tag {
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+  }
+  .matrix-canvas[data-mobile-view] .task {
+    font-size: 13.5px !important;
+    border-radius: 4px !important;
+  }
+  .matrix-canvas[data-mobile-view] .task-header-row {
+    padding: 6px 8px !important;
+    gap: 8px !important;
+  }
+  .matrix-canvas[data-mobile-view] .task-num {
+    font-size: 12.5px !important;
+    min-width: 16px !important;
+  }
+  .matrix-canvas[data-mobile-view] .task-text {
+    font-size: 13.5px !important;
+    line-height: 1.35 !important;
+  }
+  .matrix-canvas[data-mobile-view] .task-content-col {
+    flex-direction: row !important;
+    align-items: baseline !important;
+    gap: 6px !important;
+  }
+  .matrix-canvas[data-mobile-view] .task-progress-pill {
+    font-size: 10px !important;
+    padding: 1px 5px !important;
+  }
+  .matrix-canvas[data-mobile-view] .task-done-square {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  /* 2x2 Overview: Retain exact 2 intersecting lines */
   .quadrant[data-quadrant="q1"],
   .quadrant[data-quadrant="q3"] {
     border-right: var(--line-width) solid var(--line-color);
@@ -918,11 +1048,12 @@ body.drawer-open .app-container {
   }
 
   .quadrant {
-    padding: 8px 8px 6px;
+    padding: 6px 6px 4px;
   }
   .quadrant-header {
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     gap: 4px;
+    cursor: pointer;
   }
   .quadrant-title {
     font-size: 11px;
@@ -936,8 +1067,12 @@ body.drawer-open .app-container {
     flex-shrink: 0;
   }
   .task-list {
-    gap: 1px;
+    gap: 2px;
     padding-right: 2px;
+    scrollbar-width: thin;
+  }
+  .task-list::-webkit-scrollbar {
+    width: 2px;
   }
   .task {
     padding: 0;
@@ -946,23 +1081,50 @@ body.drawer-open .app-container {
     border-radius: 3px;
   }
   .task-header-row {
-    padding: 4px 6px;
-    gap: 5px;
+    padding: 3px 4px;
+    gap: 4px;
+    align-items: flex-start;
+  }
+  .task-content-col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
   }
   .task-num {
     font-size: 10.5px;
-    min-width: 13px;
-    line-height: 1.25;
+    min-width: 12px;
+    line-height: 1.35;
+    margin-top: 0;
+    text-align: right;
   }
   .task-text {
-    line-height: 1.25;
+    line-height: 1.3;
+    font-size: 11px;
+    overflow-wrap: break-word;
+    word-break: normal;
   }
   .task-progress-pill {
-    font-size: 8.5px;
+    font-size: 8px;
     padding: 1px 4px;
+    margin-top: 1px;
+  }
+  .task-progress-pill.empty-add {
+    display: none !important;
+  }
+  .task:not(.has-subtasks) .btn-fold-toggle {
+    display: none !important;
+  }
+  .btn-fold-toggle {
+    width: 12px;
+    height: 12px;
+    font-size: 7px;
+    margin-top: 2px;
   }
   .subtask-tray {
-    padding: 4px 6px 6px 8px;
+    padding: 3px 4px 4px 6px;
     gap: 2px;
   }
   .subtask-item {
@@ -984,6 +1146,8 @@ body.drawer-open .app-container {
   .task-done-square {
     width: 13px;
     height: 13px;
+    margin-top: 1px;
+    flex-shrink: 0;
   }
   .task.done .task-done-square::after {
     width: 3px;

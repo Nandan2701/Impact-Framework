@@ -211,17 +211,20 @@ function createTaskElement(q, task, index) {
     render();
   }
 
-  // Fold Chevron Toggle (always present on every task card)
-  const foldBtn = document.createElement("button");
-  foldBtn.className = "btn-fold-toggle" + (isExpanded ? " open" : "");
-  foldBtn.innerHTML = "&#9654;"; // ▶
-  foldBtn.title = isExpanded ? "Collapse subtasks" : "Expand subtasks";
-  foldBtn.setAttribute("aria-label", "Toggle subtasks");
-  foldBtn.addEventListener("pointerdown", (e) => e.preventDefault());
-  foldBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    toggleCollapse();
-  });
+  // Fold Chevron Toggle (only displayed when task has subtasks)
+  let foldBtn = null;
+  if (hasSubtasks) {
+    foldBtn = document.createElement("button");
+    foldBtn.className = "btn-fold-toggle" + (isExpanded ? " open" : "");
+    foldBtn.innerHTML = "&#9654;"; // ▶
+    foldBtn.title = isExpanded ? "Collapse subtasks" : "Expand subtasks";
+    foldBtn.setAttribute("aria-label", "Toggle subtasks");
+    foldBtn.addEventListener("pointerdown", (e) => e.preventDefault());
+    foldBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleCollapse();
+    });
+  }
 
   // Task Number (1, 2, 3...)
   const num = document.createElement("span");
@@ -261,7 +264,7 @@ function createTaskElement(q, task, index) {
     lastTap = currentTime;
   });
 
-  // Progress Badge Pill (always visible on every task card: shows "+ subtask" when empty, or "X/Y done" when items exist)
+  // Progress Badge Pill (displays "X/Y done" when subtasks exist, or "+ subtask" on desktop when empty)
   const subtasks = task.subtasks || [];
   const doneCount = subtasks.filter((s) => s.done).length;
   const allDone = subtasks.length > 0 && doneCount === subtasks.length;
@@ -288,6 +291,12 @@ function createTaskElement(q, task, index) {
       render();
     }
   });
+
+  // Task Content Column (allows text full available width and stacks badge neatly below on mobile)
+  const contentCol = document.createElement("div");
+  contentCol.className = "task-content-col";
+  contentCol.appendChild(text);
+  contentCol.appendChild(progressPill);
 
   // Actions Container (Delete button + Square Checkbox at far right)
   const actions = document.createElement("div");
@@ -356,10 +365,11 @@ function createTaskElement(q, task, index) {
   });
 
   actions.append(delBtn, doneBtn);
-  headerRow.appendChild(foldBtn);
+  if (foldBtn) {
+    headerRow.appendChild(foldBtn);
+  }
   headerRow.appendChild(num);
-  headerRow.appendChild(text);
-  headerRow.appendChild(progressPill);
+  headerRow.appendChild(contentCol);
   headerRow.appendChild(actions);
   li.appendChild(headerRow);
 
@@ -2380,12 +2390,54 @@ function initAuthAndSync() {
   updateAccountUI();
 }
 
+function initMobileNavigation() {
+  const nav = document.getElementById("mobileNavBar");
+  const matrix = document.getElementById("matrix");
+  if (!nav || !matrix) return;
+
+  nav.addEventListener("click", (e) => {
+    const btn = e.target.closest(".mobile-nav-btn");
+    if (!btn) return;
+    const target = btn.dataset.target;
+    nav.querySelectorAll(".mobile-nav-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    if (target === "all") {
+      matrix.removeAttribute("data-mobile-view");
+    } else {
+      matrix.setAttribute("data-mobile-view", target);
+    }
+  });
+
+  // Tapping a quadrant header in 2x2 view expands that quadrant into focused view
+  document.querySelectorAll(".quadrant-header").forEach((header) => {
+    header.style.cursor = "pointer";
+    header.addEventListener("click", () => {
+      if (window.innerWidth <= 640) {
+        const quad = header.closest(".quadrant");
+        if (!quad) return;
+        const q = quad.dataset.quadrant;
+        if (matrix.getAttribute("data-mobile-view") === q) {
+          // If already zoomed in, toggle back to All 2x2
+          const allBtn = nav.querySelector('.mobile-nav-btn[data-target="all"]');
+          if (allBtn) allBtn.click();
+        } else {
+          // Zoom into this quadrant
+          const targetBtn = nav.querySelector(`.mobile-nav-btn[data-target="${q}"]`);
+          if (targetBtn) targetBtn.click();
+        }
+      }
+    });
+  });
+}
+
 // Initialize on DOM load
 document.addEventListener("DOMContentLoaded", () => {
   prefetchGeoData();
   initAddForms();
   initContactDrawer();
   initAuthAndSync();
+  initMobileNavigation();
   render();
   isInitialized = true;
 
