@@ -253,20 +253,106 @@ body.drawer-open .app-container {
 
 .quadrant-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
   flex-shrink: 0;
   user-select: none;
+  gap: 12px;
 }
 
-/* Quadrant Title — Plus Jakarta Sans 700 matching prototype */
+.quadrant-header-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Quadrant Title — Plus Jakarta Sans 700 */
 .quadrant-title {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 14.5px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text-main);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  margin: -3px -6px;
+  border-radius: 4px;
+  transition: all 0.16s ease;
+}
+
+.quadrant-title-text {
+  transition: color 0.15s ease;
+}
+
+.matrix-canvas:not([data-focus-view]) .quadrant-title:hover {
+  background: rgba(34, 38, 43, 0.05);
+}
+
+.matrix-canvas:not([data-focus-view]) .quadrant-title:hover .quadrant-title-text {
+  color: #000000;
+}
+
+/* Micro expand hint icon */
+.quadrant-expand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  opacity: 0;
+  transform: scale(0.85);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  vertical-align: middle;
+}
+
+.matrix-canvas:not([data-focus-view]) .quadrant-header:hover .quadrant-expand-icon,
+.matrix-canvas:not([data-focus-view]) .quadrant-title:hover .quadrant-expand-icon {
+  opacity: 0.8;
+  transform: scale(1);
+}
+
+/* "Back to Matrix" button in Full View */
+.quadrant-back-btn {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: #faf8f3;
+  border: 1px solid #cfc7b7;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(32, 27, 23, 0.04);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.quadrant-back-btn:hover {
+  background: var(--text-main);
+  color: var(--bg-color);
+  border-color: var(--text-main);
+  transform: translateX(-1px);
+}
+
+.quadrant-back-btn svg {
+  width: 13px;
+  height: 13px;
+  stroke: currentColor;
+  transition: transform 0.16s ease;
+}
+
+.quadrant-back-btn:hover svg {
+  transform: translateX(-2px);
 }
 
 .quadrant-tag {
@@ -277,12 +363,76 @@ body.drawer-open .app-container {
   padding: 2px 6px;
   border-radius: 3px;
   border: 1px solid currentColor;
+  flex-shrink: 0;
 }
 
 .quadrant[data-quadrant="q1"] .quadrant-tag { color: var(--accent-q1); }
 .quadrant[data-quadrant="q2"] .quadrant-tag { color: var(--accent-q2); }
 .quadrant[data-quadrant="q3"] .quadrant-tag { color: var(--accent-q3); }
 .quadrant[data-quadrant="q4"] .quadrant-tag { color: var(--accent-q4); }
+
+/* ==========================================================================
+   Full View / Single-Quadrant Focus Mode (Universal Desktop & Mobile)
+   ========================================================================== */
+.matrix-canvas[data-focus-view] {
+  grid-template-columns: 1fr !important;
+  grid-template-rows: 1fr !important;
+}
+
+.matrix-canvas[data-focus-view="q1"] .quadrant:not([data-quadrant="q1"]),
+.matrix-canvas[data-focus-view="q2"] .quadrant:not([data-quadrant="q2"]),
+.matrix-canvas[data-focus-view="q3"] .quadrant:not([data-quadrant="q3"]),
+.matrix-canvas[data-focus-view="q4"] .quadrant:not([data-quadrant="q4"]) {
+  display: none !important;
+}
+
+.matrix-canvas[data-focus-view] .quadrant {
+  border-right: none !important;
+  border-bottom: none !important;
+  padding: 24px 36px 18px !important;
+  max-width: 1080px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.matrix-canvas[data-focus-view] .quadrant::before {
+  left: 36px;
+  right: 36px;
+  height: 3.5px;
+}
+
+.matrix-canvas[data-focus-view] .quadrant-header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(34, 38, 43, 0.08);
+}
+
+.matrix-canvas[data-focus-view] .quadrant-title {
+  font-size: 16.5px !important;
+  cursor: default;
+}
+
+.matrix-canvas[data-focus-view] .quadrant-title:hover {
+  background: transparent !important;
+}
+
+.matrix-canvas[data-focus-view] .quadrant-back-btn {
+  display: inline-flex !important;
+}
+
+.matrix-canvas[data-focus-view] .quadrant-expand-icon {
+  display: none !important;
+}
+
+.matrix-canvas[data-focus-view] .task-list {
+  padding-right: 10px;
+  gap: 3px;
+}
+
+.matrix-canvas[data-focus-view] .add-form {
+  padding-top: 14px;
+}
 
 /* ==========================================================================
    Task List
@@ -976,26 +1126,43 @@ body.drawer-open .app-container {
     overflow: hidden;
   }
 
-  /* Single-Quadrant Focus View when selected via tabs */
-  .matrix-canvas[data-mobile-view] {
+  /* Single-Quadrant Focus View when selected via tabs or tapping header */
+  .matrix-canvas[data-mobile-view],
+  .matrix-canvas[data-focus-view] {
     grid-template-columns: 1fr !important;
     grid-template-rows: 1fr !important;
   }
   .matrix-canvas[data-mobile-view="q1"] .quadrant:not([data-quadrant="q1"]),
   .matrix-canvas[data-mobile-view="q2"] .quadrant:not([data-quadrant="q2"]),
   .matrix-canvas[data-mobile-view="q3"] .quadrant:not([data-quadrant="q3"]),
-  .matrix-canvas[data-mobile-view="q4"] .quadrant:not([data-quadrant="q4"]) {
+  .matrix-canvas[data-mobile-view="q4"] .quadrant:not([data-quadrant="q4"]),
+  .matrix-canvas[data-focus-view="q1"] .quadrant:not([data-quadrant="q1"]),
+  .matrix-canvas[data-focus-view="q2"] .quadrant:not([data-quadrant="q2"]),
+  .matrix-canvas[data-focus-view="q3"] .quadrant:not([data-quadrant="q3"]),
+  .matrix-canvas[data-focus-view="q4"] .quadrant:not([data-quadrant="q4"]) {
     display: none !important;
   }
-  .matrix-canvas[data-mobile-view] .quadrant {
+  .matrix-canvas[data-mobile-view] .quadrant,
+  .matrix-canvas[data-focus-view] .quadrant {
     border-right: none !important;
     border-bottom: none !important;
     padding: 12px 14px 10px !important;
+    max-width: 100% !important;
   }
-  .matrix-canvas[data-mobile-view] .quadrant-title {
+  .matrix-canvas[data-focus-view] .quadrant::before {
+    left: 14px !important;
+    right: 14px !important;
+  }
+  .matrix-canvas[data-mobile-view] .quadrant-title,
+  .matrix-canvas[data-focus-view] .quadrant-title {
     font-size: 14.5px !important;
   }
-  .matrix-canvas[data-mobile-view] .quadrant-tag {
+  .matrix-canvas[data-focus-view] .quadrant-back-btn {
+    padding: 3px 8px !important;
+    font-size: 11px !important;
+  }
+  .matrix-canvas[data-mobile-view] .quadrant-tag,
+  .matrix-canvas[data-focus-view] .quadrant-tag {
     font-size: 10px !important;
     padding: 2px 6px !important;
   }

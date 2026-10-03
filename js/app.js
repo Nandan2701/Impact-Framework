@@ -2390,44 +2390,90 @@ function initAuthAndSync() {
   updateAccountUI();
 }
 
-function initMobileNavigation() {
-  const nav = document.getElementById("mobileNavBar");
+function setFocusView(targetQ) {
   const matrix = document.getElementById("matrix");
-  if (!nav || !matrix) return;
+  const nav = document.getElementById("mobileNavBar");
+  if (!matrix) return;
 
-  nav.addEventListener("click", (e) => {
-    const btn = e.target.closest(".mobile-nav-btn");
-    if (!btn) return;
-    const target = btn.dataset.target;
-    nav.querySelectorAll(".mobile-nav-btn").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-
-    if (target === "all") {
-      matrix.removeAttribute("data-mobile-view");
-    } else {
-      matrix.setAttribute("data-mobile-view", target);
+  if (!targetQ || targetQ === "all") {
+    matrix.removeAttribute("data-focus-view");
+    matrix.removeAttribute("data-mobile-view");
+    if (nav) {
+      nav.querySelectorAll(".mobile-nav-btn").forEach((b) => {
+        b.classList.toggle("active", b.dataset.target === "all");
+      });
     }
+  } else {
+    matrix.setAttribute("data-focus-view", targetQ);
+    matrix.setAttribute("data-mobile-view", targetQ);
+    if (nav) {
+      nav.querySelectorAll(".mobile-nav-btn").forEach((b) => {
+        b.classList.toggle("active", b.dataset.target === targetQ);
+      });
+    }
+    const activeQuadrant = document.querySelector(`.quadrant[data-quadrant="${targetQ}"]`);
+    if (activeQuadrant) {
+      const taskList = activeQuadrant.querySelector(".task-list");
+      if (taskList) taskList.scrollTop = 0;
+    }
+  }
+}
+
+function initFocusModeAndNavigation() {
+  const matrix = document.getElementById("matrix");
+  const nav = document.getElementById("mobileNavBar");
+  if (!matrix) return;
+
+  // Mobile nav bar switcher
+  if (nav) {
+    nav.addEventListener("click", (e) => {
+      const btn = e.target.closest(".mobile-nav-btn");
+      if (!btn) return;
+      setFocusView(btn.dataset.target);
+    });
+  }
+
+  // Back to Matrix buttons inside each quadrant header
+  document.querySelectorAll(".quadrant-back-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setFocusView(null);
+    });
   });
 
-  // Tapping a quadrant header in 2x2 view expands that quadrant into focused view
+  // Clicking quadrant header / top text opens that section in Full View
   document.querySelectorAll(".quadrant-header").forEach((header) => {
-    header.style.cursor = "pointer";
-    header.addEventListener("click", () => {
-      if (window.innerWidth <= 640) {
-        const quad = header.closest(".quadrant");
-        if (!quad) return;
-        const q = quad.dataset.quadrant;
-        if (matrix.getAttribute("data-mobile-view") === q) {
-          // If already zoomed in, toggle back to All 2x2
-          const allBtn = nav.querySelector('.mobile-nav-btn[data-target="all"]');
-          if (allBtn) allBtn.click();
-        } else {
-          // Zoom into this quadrant
-          const targetBtn = nav.querySelector(`.mobile-nav-btn[data-target="${q}"]`);
-          if (targetBtn) targetBtn.click();
-        }
+    header.addEventListener("click", (e) => {
+      if (e.target.closest(".quadrant-back-btn")) return;
+
+      const quad = header.closest(".quadrant");
+      if (!quad) return;
+      const q = quad.dataset.quadrant;
+      const currentFocus = matrix.getAttribute("data-focus-view") || matrix.getAttribute("data-mobile-view");
+
+      if (currentFocus === q) {
+        setFocusView(null);
+      } else {
+        setFocusView(q);
       }
     });
+  });
+
+  // Global Escape key shortcut to return to normal landing page
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      const active = document.activeElement;
+      if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) {
+        return;
+      }
+      if (document.body.classList.contains("drawer-open")) return;
+      const authModal = document.getElementById("authModalBackdrop");
+      if (authModal && authModal.classList.contains("show")) return;
+
+      if (matrix.hasAttribute("data-focus-view") || matrix.hasAttribute("data-mobile-view")) {
+        setFocusView(null);
+      }
+    }
   });
 }
 
@@ -2437,7 +2483,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initAddForms();
   initContactDrawer();
   initAuthAndSync();
-  initMobileNavigation();
+  initFocusModeAndNavigation();
   render();
   isInitialized = true;
 
