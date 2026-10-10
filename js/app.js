@@ -883,6 +883,31 @@ function logTaskToGoogleSheets(action, q, text) {
   } catch (err) {}
 }
 
+let lastWowSoundTime = 0;
+function playWowSound() {
+  const now = Date.now();
+  if (now - lastWowSoundTime < 250) return;
+  lastWowSoundTime = now;
+  try {
+    const el = document.getElementById("wowSound");
+    if (el) {
+      el.currentTime = 0;
+      const p = el.play();
+      if (p !== undefined) {
+        p.catch(() => {
+          try {
+            const fallback = new Audio("audio/wow.mp3");
+            fallback.play().catch(() => {});
+          } catch (e) {}
+        });
+      }
+    } else {
+      const fallback = new Audio("audio/wow.mp3");
+      fallback.play().catch(() => {});
+    }
+  } catch (err) {}
+}
+
 function initAddForms() {
   document.querySelectorAll(".add-form").forEach((form) => {
     const q = form.dataset.quadrant;
@@ -903,11 +928,14 @@ function initAddForms() {
     });
 
     let isSubmittingForm = false;
-    function submitTask(openSubtasks = false) {
+    function submitTask(openSubtasks = false, playSound = false) {
       if (isSubmittingForm) return;
       const text = input.value.trim();
       if (!text) return;
       isSubmittingForm = true;
+      if (playSound) {
+        playWowSound();
+      }
       localStorage.removeItem("impact_board_explicitly_emptied");
       const newTask = {
         id: uid(),
@@ -937,13 +965,22 @@ function initAddForms() {
       setTimeout(() => { isSubmittingForm = false; }, 150);
     }
 
+    // Instant trigger when user presses Enter key while typing a task
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        if (input.value.trim()) {
+          playWowSound();
+        }
+      }
+    });
+
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      submitTask(false);
+      submitTask(false, true);
     });
 
     input.addEventListener("blur", () => {
-      submitTask(false);
+      submitTask(false, false);
       setTimeout(() => {
         const active = document.activeElement;
         const activeQuadrant = active?.closest("[data-quadrant]")?.dataset?.quadrant;
