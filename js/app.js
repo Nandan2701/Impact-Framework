@@ -324,7 +324,6 @@ function createTaskElement(q, task, index) {
     e.stopPropagation();
     task.done = !task.done;
     if (task.done) {
-      playTaskDoneSound();
       // Automatically move completed task to the bottom of its quadrant section
       const idx = state[q].findIndex((t) => t.id === task.id);
       if (idx !== -1) {
@@ -533,9 +532,6 @@ function createTaskElement(q, task, index) {
           e.preventDefault();
           const val = subInput.value;
           subInput.value = ""; // clear immediately so blur sees empty
-          if (val.trim()) {
-            playSubtaskSound();
-          }
           commitSubtask(val, true); // keep open for continuous typing
         } else if (e.key === "Escape" || (e.key === "Backspace" && subInput.value === "")) {
           subInput.value = "";
@@ -887,51 +883,6 @@ function logTaskToGoogleSheets(action, q, text) {
   } catch (err) {}
 }
 
-function playSoundEffect(elementId, fallbackSrc) {
-  try {
-    const el = document.getElementById(elementId);
-    if (el) {
-      el.currentTime = 0;
-      const p = el.play();
-      if (p !== undefined) {
-        p.catch(() => {
-          try {
-            const fallback = new Audio(fallbackSrc);
-            fallback.play().catch(() => {});
-          } catch (e) {}
-        });
-      }
-    } else {
-      const fallback = new Audio(fallbackSrc);
-      fallback.play().catch(() => {});
-    }
-  } catch (err) {}
-}
-
-let lastNewTaskSoundTime = 0;
-function playNewTaskSound() {
-  const now = Date.now();
-  if (now - lastNewTaskSoundTime < 250) return;
-  lastNewTaskSoundTime = now;
-  playSoundEffect("soundNewTask", "audio/abhi-maza-aayega.mp3");
-}
-
-let lastSubtaskSoundTime = 0;
-function playSubtaskSound() {
-  const now = Date.now();
-  if (now - lastSubtaskSoundTime < 250) return;
-  lastSubtaskSoundTime = now;
-  playSoundEffect("soundSubtask", "audio/shabash-beta.mp3");
-}
-
-let lastTaskDoneSoundTime = 0;
-function playTaskDoneSound() {
-  const now = Date.now();
-  if (now - lastTaskDoneSoundTime < 250) return;
-  lastTaskDoneSoundTime = now;
-  playSoundEffect("soundTaskDone", "audio/7-crore.mp3");
-}
-
 function initAddForms() {
   document.querySelectorAll(".add-form").forEach((form) => {
     const q = form.dataset.quadrant;
@@ -952,14 +903,11 @@ function initAddForms() {
     });
 
     let isSubmittingForm = false;
-    function submitTask(openSubtasks = false, playSound = false) {
+    function submitTask(openSubtasks = false) {
       if (isSubmittingForm) return;
       const text = input.value.trim();
       if (!text) return;
       isSubmittingForm = true;
-      if (playSound) {
-        playNewTaskSound();
-      }
       localStorage.removeItem("impact_board_explicitly_emptied");
       const newTask = {
         id: uid(),
@@ -989,22 +937,13 @@ function initAddForms() {
       setTimeout(() => { isSubmittingForm = false; }, 150);
     }
 
-    // Instant trigger when user presses Enter key while typing a task
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        if (input.value.trim()) {
-          playNewTaskSound();
-        }
-      }
-    });
-
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      submitTask(false, true);
+      submitTask(false);
     });
 
     input.addEventListener("blur", () => {
-      submitTask(false, false);
+      submitTask(false);
       setTimeout(() => {
         const active = document.activeElement;
         const activeQuadrant = active?.closest("[data-quadrant]")?.dataset?.quadrant;
